@@ -52,8 +52,8 @@
 
 <script>
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    // Using a proxy that doesn't wrap the data in "contents" to keep it simple
-    const PROXY = "https://corsproxy.io/?";
+    // Using a different proxy gate
+    const PROXY = "https://cors-anywhere.herokuapp.com/"; 
 
     let allStations = [];
     let currentID = null;
@@ -62,26 +62,32 @@
     window.onload = () => { getStations(); drawFavs(); };
 
     async function getStations() {
+        const target = "https://admiraltyapi.azure-api.net/adat/api/v1/Stations";
         try {
-            // Admiralty V1 Stations Endpoint
-            const target = "https://admiraltyapi.azure-api.net/adat/api/v1/Stations";
-            const url = PROXY + encodeURIComponent(target);
-            
-            const res = await fetch(url, {
-                headers: { 'Ocp-Apim-Subscription-Key': KEY }
+            // We use the proxy as a prefix. 
+            // NOTE: If this is the first time using this proxy, 
+            // you might need to visit https://cors-anywhere.herokuapp.com/corsdemo and click "Request Access"
+            const res = await fetch(PROXY + target, {
+                headers: { 
+                    'Ocp-Apim-Subscription-Key': KEY,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             
             allStations = await res.json();
-            
-            if (Array.isArray(allStations)) {
-                allStations.sort((a, b) => a.Name.localeCompare(b.Name));
-                fillSelect(allStations);
-            }
+            allStations.sort((a, b) => a.Name.localeCompare(b.Name));
+            fillSelect(allStations);
         } catch (e) {
-            console.error("Stations Load Error:", e);
-            document.getElementById('stationSelect').innerHTML = `<option>Wait 2 mins for GitHub Build...</option>`;
+            console.error("Master List Failed, loading emergency defaults...", e);
+            // Emergency fallback so the app isn't blank
+            allStations = [
+                {Id: "0001", Name: "Whitby", Geometry: {coordinates: [-0.61, 54.48]}},
+                {Id: "0154", Name: "Dover", Geometry: {coordinates: [1.32, 51.12]}},
+                {Id: "0495", Name: "Liverpool", Geometry: {coordinates: [-3.01, 53.40]}}
+            ];
+            fillSelect(allStations);
         }
     }
 
@@ -110,21 +116,19 @@
         const [lon, lat] = stn.Geometry.coordinates;
 
         try {
-            // Updated Tide Path: ensuring ID is correctly injected
             const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents`;
-            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
+            const tRes = await fetch(PROXY + tideTarget, {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
             const tides = await tRes.json();
 
-            // Weather (Direct)
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
 
             render(tides, wind.current, stn.Name);
         } catch (err) { 
-            console.error("Data Load Error:", err);
-            alert("This specific station is currently unavailable.");
+            console.error(err);
+            alert("Data fetch failed. Try clicking the 'CORS Demo' link if this is your first time.");
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -138,8 +142,8 @@
         document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
 
         const list = document.getElementById('tideList');
-        if (!tides || !Array.isArray(tides)) {
-            list.innerHTML = "No tide data."; return;
+        if (!Array.isArray(tides)) {
+            list.innerHTML = "Tide data unavailable."; return;
         }
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
