@@ -63,22 +63,18 @@
     window.onload = () => { getStations(); drawFavs(); };
 
     async function getStations() {
-        try {
-            const target = `${API_BASE}/Stations`;
-            const res = await fetch(PROXY + encodeURIComponent(target), {
-                headers: { 'Ocp-Apim-Subscription-Key': KEY }
-            });
+    try {
+        // THE FIX: Move ?subscription-key=... into the URL string
+        const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations?subscription-key=${KEY}`;
+        
+        // THE FIX: Remove the { headers: ... } section entirely
+        const res = await fetch(PROXY + encodeURIComponent(target)); 
 
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-            allStations = await res.json();
-            allStations.sort((a,b) => a.Name.localeCompare(b.Name));
-            fillSelect(allStations);
-        } catch (e) {
-            console.error(e);
-            alert("Error 404/Connection: The Admiralty server could not be reached via the proxy. Trying again...");
-        }
-    }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allStations = await res.json();
+        // ... rest of the code
+    } catch (e) { ... }
+}
 
     function fillSelect(data) {
         const s = document.getElementById('stationSelect');
