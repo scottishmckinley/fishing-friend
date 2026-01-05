@@ -42,11 +42,13 @@
         .good { background: rgba(52, 232, 158, 0.1); color: var(--sea); border-color: var(--sea); }
         
         .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .day-header { background: var(--navy); padding: 6px 12px; font-size: 0.75rem; font-weight: 800; color: var(--gold); margin-top: 15px; border-radius: 8px; }
+        
+        .btn-outline { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; }
         
         /* Catch Log UI */
         .log-form { display: grid; gap: 5px; margin-bottom: 15px; }
         .log-item { background: var(--navy); padding: 12px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--gold); font-size: 0.85rem; position: relative; }
-        .log-item b { color: var(--sea); }
         .log-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
         .btn-small { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; }
         .btn-log { background: var(--gold); color: var(--navy); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; }
@@ -97,8 +99,10 @@
         </div>
 
         <div class="card">
-            <span class="label">Tides</span>
+            <span class="label">Tidal Schedule</span>
             <div id="tideList"></div>
+            <button class="btn-outline" onclick="toggleExtendedTides()">📅 VIEW 7-DAY OUTLOOK</button>
+            <div id="extendedTides" style="display:none;"></div>
         </div>
 
         <div class="card">
@@ -121,7 +125,7 @@
     const PROXY = "https://corsproxy.io/?"; 
     const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
-    let allStations = [], currentID = null, map = null, marker = null;
+    let allStations = [], currentID = null, map = null, marker = null, allTides = [];
     let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
     let catches = JSON.parse(localStorage.getItem('fishingCatches')) || [];
 
@@ -160,6 +164,7 @@
         document.getElementById('stationSelect').value = id;
         document.getElementById('loader').style.display = 'block';
         document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('extendedTides').style.display = 'none';
         updateFavBtn();
 
         const stn = allStations.find(x => x.Id === id);
@@ -174,9 +179,9 @@
         try {
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const weather = await wRes.json();
-            const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=2`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
-            const tides = await tRes.json();
-            renderData(weather.current, tides);
+            const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=7`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
+            allTides = await tRes.json();
+            renderData(weather.current, allTides);
         } finally { document.getElementById('loader').style.display = 'none'; }
     }
 
@@ -193,6 +198,8 @@
         document.getElementById('clouds').innerText = codes[w.weather_code] || "Cloudy";
 
         const future = tides.filter(t => new Date(t.DateTime) > new Date());
+        
+        // Render Top 3 Tides
         document.getElementById('tideList').innerHTML = future.slice(0, 3).map(t => `
             <div class="tide-row">
                 <span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'var(--gold)'}">${t.EventType.toUpperCase()}</span>
@@ -201,35 +208,46 @@
             </div>
         `).join('');
 
+        // Render Extended Tides
+        let extendedHTML = "";
+        let currentDay = "";
+        future.slice(3, 28).forEach(t => {
+            const d = new Date(t.DateTime).toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'short'});
+            if(d !== currentDay) { currentDay = d; extendedHTML += `<div class="day-header">${d}</div>`; }
+            extendedHTML += `
+                <div class="tide-row">
+                    <span>${t.EventType.includes('High')?'High':'Low'}</span>
+                    <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    <span>${t.Height.toFixed(1)}m</span>
+                </div>`;
+        });
+        document.getElementById('extendedTides').innerHTML = extendedHTML;
+
         const rating = document.getElementById('fishingRating');
         rating.innerText = future[0].EventType.includes("High") ? "🎣 PRIME FEEDING WINDOW" : "⏳ STEADY ACTIVITY";
         rating.className = "rating-box good";
     }
 
-    /* --- CATCH LOG LOGIC --- */
+    function toggleExtendedTides() {
+        const div = document.getElementById('extendedTides');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
 
     function addCatch() {
         const fish = document.getElementById('logFish').value;
         const size = document.getElementById('logSize').value;
         const bait = document.getElementById('logBait').value;
         const editIdx = parseInt(document.getElementById('editIndex').value);
-        
         if(!fish) return alert("Enter species name");
         const port = allStations.find(x => x.Id === currentID).Name;
-
         const entry = { fish, size, bait, port, date: new Date().toLocaleDateString() };
-
         if (editIdx > -1) {
-            catches[editIdx] = entry; // Update
+            catches[editIdx] = entry;
             document.getElementById('editIndex').value = "-1";
             document.getElementById('logSubmitBtn').innerText = "🎣 SAVE TO LOG";
-        } else {
-            catches.unshift(entry); // New
-        }
-
+        } else { catches.unshift(entry); }
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
-        resetForm();
-        renderCatches();
+        resetForm(); renderCatches();
     }
 
     function editCatch(index) {
@@ -259,8 +277,7 @@
                 </div>
                 <b>${c.fish}</b> (${c.size})<br>
                 <small>📍 ${c.port} | 🪱 ${c.bait}<br>${c.date}</small>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     function resetForm() {
@@ -268,8 +285,6 @@
         document.getElementById('logSize').value = '';
         document.getElementById('logBait').value = '';
     }
-
-    /* --- FAVS & SEARCH --- */
 
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
