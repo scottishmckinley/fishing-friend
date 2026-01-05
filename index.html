@@ -47,8 +47,6 @@
         
         .btn-outline { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; }
         
-        /* Catch Log UI */
-        .log-form { display: grid; gap: 5px; margin-bottom: 15px; }
         .log-item { background: var(--navy); padding: 12px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--gold); font-size: 0.85rem; position: relative; }
         .log-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
         .btn-small { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; }
@@ -82,27 +80,24 @@
         <div id="map"></div>
         <div id="fishingRating" class="rating-box">Analysing...</div>
 
-        <div class="grid-2">
-            <div class="card">
-                <span class="label">Tidal Flow</span>
-                <div class="val" id="tideFlow">--</div>
-                <div id="tideSpeed" class="sub-val">--</div>
-            </div>
-            <div class="card">
-                <span class="label">Wind</span>
-                <div class="val">
-                    <span id="windSpd">--</span> 
-                    <span id="windArrow" style="display:inline-block">↑</span>
-                </div>
-                <div id="windFullDesc" class="sub-val" style="color:var(--white)">--</div>
-                <div id="windGst" class="sub-val" style="color:var(--red)">--</div>
-            </div>
-        </div>
-
         <div class="card">
-            <span class="label">Weather</span>
-            <div class="val" id="temp">--°C</div>
-            <div id="clouds" class="sub-val">--</div>
+            <span class="label">Conditions & Flow</span>
+            <div class="grid-2">
+                <div style="border-right: 1px solid var(--border); padding-right: 5px;">
+                    <div class="val" id="tideFlow">--</div>
+                    <div id="tideSpeed" class="sub-val">--</div>
+                    <div id="temp" class="val" style="margin-top:15px; font-size:1.1rem;">--°C</div>
+                    <div id="clouds" class="sub-val" style="color:var(--text); opacity:0.8;">--</div>
+                </div>
+                <div style="padding-left: 5px;">
+                    <div class="val">
+                        <span id="windSpd">--</span> 
+                        <span id="windArrow" style="display:inline-block">↑</span>
+                    </div>
+                    <div id="windFullDesc" class="sub-val" style="color:var(--white)">--</div>
+                    <div id="windGst" class="sub-val" style="color:var(--red)">--</div>
+                </div>
+            </div>
         </div>
 
         <div class="card">
@@ -114,7 +109,7 @@
 
         <div class="card">
             <span class="label">Session Record</span>
-            <div class="log-form">
+            <div style="display: grid; gap: 5px; margin-bottom: 15px;">
                 <input type="hidden" id="editIndex" value="-1">
                 <input type="text" id="logFish" placeholder="Species (e.g. Bass)">
                 <input type="text" id="logSize" placeholder="Size/Weight">
@@ -161,7 +156,7 @@
                 if(d < minDist) { minDist = d; nearest = stn; }
             });
             if(nearest) loadData(nearest.Id);
-        }, () => alert("GPS Failed. Please search manually."));
+        }, () => alert("GPS Failed."));
     }
 
     async function loadData(sid = null) {
@@ -171,7 +166,6 @@
         document.getElementById('stationSelect').value = id;
         document.getElementById('loader').style.display = 'block';
         document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('extendedTides').style.display = 'none';
         updateFavBtn();
 
         const stn = allStations.find(x => x.Id === id);
@@ -197,122 +191,91 @@
         const windDirText = dirs[Math.round(w.wind_direction_10m / 22.5) % 16];
         document.getElementById('temp').innerText = `${Math.round(w.temperature_2m)}°C`;
         document.getElementById('windSpd').innerText = `${Math.round(w.wind_speed_10m)} mph`;
-        document.getElementById('windFullDesc').innerText = `Dir: ${windDirText} (${w.wind_direction_10m}°)`;
+        document.getElementById('windFullDesc').innerText = `${windDirText} (${w.wind_direction_10m}°)`;
         document.getElementById('windArrow').style.transform = `rotate(${w.wind_direction_10m}deg)`;
-        document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(w.wind_gusts_10m)} mph`;
+        document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(w.wind_gusts_10m)}`;
         
-        const codes = { 0: "Clear Skies", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Foggy", 61: "Slight Rain" };
+        const codes = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain" };
         document.getElementById('clouds').innerText = codes[w.weather_code] || "Cloudy";
 
         const now = new Date();
         const future = tides.filter(t => new Date(t.DateTime) > now);
         const past = tides.filter(t => new Date(t.DateTime) <= now).reverse();
 
-        // FLOW STATUS
         if (past.length > 0 && future.length > 0) {
-            const nextEvent = future[0];
-            const isRising = nextEvent.EventType.includes("High");
+            const isRising = future[0].EventType.includes("High");
             document.getElementById('tideFlow').innerText = isRising ? "RISING" : "FALLING";
             document.getElementById('tideFlow').style.color = isRising ? "var(--sea)" : "var(--gold)";
             
-            // Calculate Current Speed Indicator (0-100%)
             const prevTime = new Date(past[0].DateTime);
-            const nextTime = new Date(nextEvent.DateTime);
-            const totalDur = nextTime - prevTime;
-            const elapsed = now - prevTime;
-            const progress = (elapsed / totalDur) * 100;
-            // Rule of Twelfths approximation for flow speed
+            const nextTime = new Date(future[0].DateTime);
+            const progress = ((now - prevTime) / (nextTime - prevTime)) * 100;
             const speed = Math.sin((progress / 100) * Math.PI) * 100;
-            document.getElementById('tideSpeed').innerText = `Current Flow: ${Math.round(speed)}% Strength`;
+            document.getElementById('tideSpeed').innerText = `${Math.round(speed)}% Flow`;
         }
 
-        // Render Top 3 Tides
         document.getElementById('tideList').innerHTML = future.slice(0, 3).map(t => `
             <div class="tide-row">
                 <span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'var(--gold)'}">${t.EventType.toUpperCase()}</span>
                 <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                 <span>${t.Height.toFixed(1)}m</span>
-            </div>
-        `).join('');
+            </div>`).join('');
 
-        // Render Extended Tides with High Highlight
-        let extendedHTML = "";
-        let currentDay = "";
+        let extHTML = ""; let curDay = "";
         future.slice(3, 28).forEach(t => {
             const d = new Date(t.DateTime).toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'short'});
-            if(d !== currentDay) { currentDay = d; extendedHTML += `<div class="day-header">${d}</div>`; }
+            if(d !== curDay) { curDay = d; extHTML += `<div class="day-header">${d}</div>`; }
             const isHigh = t.EventType.includes('High');
-            extendedHTML += `
-                <div class="tide-row ${isHigh ? 'high-tide-highlight' : ''}">
-                    <span>${isHigh ? 'HIGH' : 'Low'}</span>
-                    <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                    <span>${t.Height.toFixed(1)}m ${isHigh ? '🎣' : ''}</span>
-                </div>`;
+            extHTML += `<div class="tide-row ${isHigh ? 'high-tide-highlight' : ''}">
+                <span>${isHigh ? 'HIGH' : 'Low'}</span>
+                <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                <span>${t.Height.toFixed(1)}m</span>
+            </div>`;
         });
-        document.getElementById('extendedTides').innerHTML = extendedHTML;
+        document.getElementById('extendedTides').innerHTML = extHTML;
 
         const rating = document.getElementById('fishingRating');
-        rating.innerText = future[0].EventType.includes("High") ? "🏆 PRIME FLOOD TIDE" : "⏳ EBB TIDE FEEDING";
+        rating.innerText = future[0].EventType.includes("High") ? "🎣 PRIME FLOOD TIDE" : "⏳ EBB TIDE FEEDING";
         rating.className = "rating-box good";
     }
 
     function toggleExtendedTides() {
-        const div = document.getElementById('extendedTides');
-        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+        const d = document.getElementById('extendedTides');
+        d.style.display = d.style.display === 'none' ? 'block' : 'none';
     }
 
-    /* --- LOGIC FOR CATCHES, FAVS, ETC --- */
     function addCatch() {
         const fish = document.getElementById('logFish').value;
         const size = document.getElementById('logSize').value;
         const bait = document.getElementById('logBait').value;
         const editIdx = parseInt(document.getElementById('editIndex').value);
-        if(!fish) return alert("Enter species name");
+        if(!fish) return;
         const port = allStations.find(x => x.Id === currentID).Name;
         const entry = { fish, size, bait, port, date: new Date().toLocaleDateString() };
-        if (editIdx > -1) {
-            catches[editIdx] = entry;
-            document.getElementById('editIndex').value = "-1";
-            document.getElementById('logSubmitBtn').innerText = "🎣 SAVE TO LOG";
-        } else { catches.unshift(entry); }
+        if (editIdx > -1) { catches[editIdx] = entry; document.getElementById('editIndex').value = "-1"; document.getElementById('logSubmitBtn').innerText = "🎣 SAVE TO LOG"; }
+        else { catches.unshift(entry); }
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
-        resetForm(); renderCatches();
+        document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; document.getElementById('logBait').value = '';
+        renderCatches();
     }
 
-    function editCatch(index) {
-        const c = catches[index];
+    function editCatch(i) {
+        const c = catches[i];
         document.getElementById('logFish').value = c.fish;
         document.getElementById('logSize').value = c.size;
         document.getElementById('logBait').value = c.bait;
-        document.getElementById('editIndex').value = index;
-        document.getElementById('logSubmitBtn').innerText = "💾 UPDATE ENTRY";
-        document.getElementById('logFish').focus();
+        document.getElementById('editIndex').value = i;
+        document.getElementById('logSubmitBtn').innerText = "💾 UPDATE";
     }
 
-    function deleteCatch(index) {
-        if(confirm("Delete this catch entry?")) {
-            catches.splice(index, 1);
-            localStorage.setItem('fishingCatches', JSON.stringify(catches));
-            renderCatches();
-        }
-    }
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderCatches(); } }
 
     function renderCatches() {
         document.getElementById('catchList').innerHTML = catches.map((c, i) => `
             <div class="log-item">
-                <div class="log-actions">
-                    <button class="btn-small" onclick="editCatch(${i})">✏️</button>
-                    <button class="btn-small" onclick="deleteCatch(${i})">🗑️</button>
-                </div>
-                <b>${c.fish}</b> (${c.size})<br>
-                <small>📍 ${c.port} | 🪱 ${c.bait}<br>${c.date}</small>
+                <div class="log-actions"><button onclick="editCatch(${i})">✏️</button><button onclick="deleteCatch(${i})">🗑️</button></div>
+                <b>${c.fish}</b> (${c.size})<br><small>📍 ${c.port} | 🪱 ${c.bait} | ${c.date}</small>
             </div>`).join('');
-    }
-
-    function resetForm() {
-        document.getElementById('logFish').value = '';
-        document.getElementById('logSize').value = '';
-        document.getElementById('logBait').value = '';
     }
 
     function toggleFav() {
@@ -324,11 +287,10 @@
     }
 
     function updateFavBtn() {
-        const btn = document.getElementById('mainFavBtn');
-        btn.style.display = 'block';
+        const b = document.getElementById('mainFavBtn'); b.style.display = 'block';
         const isFav = favs.some(f => f.id === currentID);
-        btn.innerText = isFav ? "⭐ REMOVE FROM FAVORITES" : "⭐ SAVE TO FAVORITES";
-        btn.className = isFav ? "btn-fav active" : "btn-fav";
+        b.innerText = isFav ? "⭐ REMOVE FAVORITE" : "⭐ SAVE FAVORITE";
+        b.className = isFav ? "btn-fav active" : "btn-fav";
     }
 
     function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
