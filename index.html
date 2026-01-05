@@ -8,71 +8,120 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --navy: #0a2342; --sea: #2ca58d; --gold: #f4af1b; --bg: #eef2f3; --white: #ffffff; --text: #2d3436; --red: #d63031; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .app-container { max-width: 450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); box-sizing: border-box; }
+        :root { 
+            --navy: #050b14; 
+            --card: #121c2b;
+            --sea: #34e89e; 
+            --gold: #f4af1b; 
+            --white: #f1f2f6; 
+            --text: #cbd5e0; 
+            --red: #ff4757;
+            --border: #1e293b;
+        }
         
-        .header { text-align: center; margin-bottom: 20px; }
-        .logo-svg { width: 50px; height: 50px; fill: var(--navy); margin-bottom: 5px; }
-        h1 { color: var(--navy); margin: 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: var(--navy); 
+            margin: 0; 
+            padding: 10px; 
+            color: var(--text); 
+        }
 
-        .btn-gps { width: 100%; background: var(--sea); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 1rem; }
-        .label { font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #f1f2f6; border-radius: 12px; font-size: 16px; background: #fbfbfb; box-sizing: border-box; }
+        .app-container { 
+            max-width: 450px; 
+            margin: 0 auto; 
+            background: var(--navy); 
+            padding: 20px; 
+            border-radius: 30px; 
+            box-sizing: border-box; 
+        }
         
+        /* Permanent Professional Logo */
+        .header { text-align: center; margin-bottom: 25px; }
+        .logo-svg { width: 55px; height: 55px; fill: var(--sea); margin-bottom: 8px; filter: drop-shadow(0 0 8px rgba(52, 232, 158, 0.3)); }
+        h1 { color: var(--white); margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+
+        .btn-gps { 
+            width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; 
+            border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem;
+            transition: transform 0.1s;
+        }
+        .btn-gps:active { transform: scale(0.98); }
+
+        .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 1px; }
+        
+        input, select { 
+            width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); 
+            border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white);
+            box-sizing: border-box; outline: none;
+        }
+        input:focus { border-color: var(--sea); }
+
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .fav-tag { background: var(--navy); color: white; padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: none; font-weight: 600; cursor: pointer; }
+        .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--border); font-weight: 700; cursor: pointer; }
         
-        .btn-fav { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: transparent; color: var(--navy); font-weight: bold; cursor: pointer; margin-bottom: 15px; display: none; }
-        .btn-fav.active { background: var(--gold); }
+        .btn-fav { 
+            width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); 
+            background: transparent; color: var(--gold); font-weight: bold; cursor: pointer; 
+            margin-bottom: 15px; display: none; 
+        }
+        .btn-fav.active { background: var(--gold); color: var(--navy); }
 
-        .card { background: #fff; border: 1px solid #f1f2f6; padding: 15px; border-radius: 20px; margin-bottom: 12px; }
+        /* Dashboard Styling */
+        .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .val { font-size: 1.5rem; font-weight: 800; color: var(--navy); line-height: 1.2; }
-        .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); }
+        .val { font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1.2; }
+        .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); margin-top: 4px; }
         
-        #map { height: 160px; width: 100%; border-radius: 15px; margin-bottom: 12px; z-index: 1; }
+        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; z-index: 1; border: 2px solid var(--border); }
 
-        .rating-box { padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; margin-bottom: 12px; }
-        .good { background: #e8f8f5; color: var(--sea); border: 1px solid var(--sea); }
-        .fair { background: #fef9e7; color: #b7950b; border: 1px solid var(--gold); }
+        .rating-box { padding: 18px; border-radius: 15px; text-align: center; font-weight: 900; margin-bottom: 15px; font-size: 1.1rem; }
+        .good { background: rgba(52, 232, 158, 0.1); color: var(--sea); border: 2px solid var(--sea); }
+        .fair { background: rgba(244, 175, 27, 0.1); color: var(--gold); border: 2px solid var(--gold); }
         
-        .tide-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f2f6; font-size: 0.9rem; }
-        .loading { text-align: center; color: var(--sea); font-weight: bold; margin: 10px 0; display: none; }
+        .tide-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; letter-spacing: 2px; }
+        
+        /* Leaflet Dark Filter */
+        .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <svg class="logo-svg" viewBox="0 0 24 24"><path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" /></svg>
+        <svg class="logo-svg" viewBox="0 0 24 24">
+            <path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" />
+        </svg>
         <h1>Fishing Friend</h1>
     </div>
 
-    <button class="btn-gps" onclick="getLocation()">📍 Find Nearest Port</button>
+    <button class="btn-gps" onclick="getLocation()">📍 FIND NEAREST PORT</button>
 
     <div class="search-section">
+        <span class="label">Favorites</span>
         <div id="favBar"></div>
-        <input type="text" id="searchBox" placeholder="Search port..." oninput="filterStations()">
-        <select id="stationSelect" onchange="loadData()"><option>Loading...</option></select>
+        <span class="label">Location Search</span>
+        <input type="text" id="searchBox" placeholder="Enter port name..." oninput="filterStations()">
+        <select id="stationSelect" onchange="loadData()"><option>Ready...</option></select>
     </div>
 
-    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ Save Favorite</button>
-    <div id="loader" class="loading">📡 GATHERING INTEL...</div>
+    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ SAVE AS FAVORITE</button>
+    
+    <div id="loader" class="loading">SYNCING DATA...</div>
 
     <div id="dashboard" style="display:none;">
         <div id="map"></div>
-        
-        <div id="fishingRating" class="rating-box">Calculating conditions...</div>
+        <div id="fishingRating" class="rating-box">Analysing Spots...</div>
 
         <div class="grid-2">
             <div class="card">
-                <span class="label">Weather</span>
+                <span class="label">Environment</span>
                 <div class="val" id="temp">--°C</div>
                 <div class="sub-val" id="clouds">--</div>
             </div>
             <div class="card">
-                <span class="label">Wind & Gusts</span>
+                <span class="label">Wind Condition</span>
                 <div class="val" id="windSpd">--</div>
                 <div class="sub-val" id="windGst" style="color:var(--red)">--</div>
             </div>
@@ -80,19 +129,19 @@
 
         <div class="grid-2">
             <div class="card">
-                <span class="label">Waves</span>
+                <span class="label">Wave Height</span>
                 <div class="val" id="waveHgt">--</div>
                 <div class="sub-val" id="wavePeriod">--</div>
             </div>
             <div class="card">
-                <span class="label">Current</span>
+                <span class="label">Ocean Flow</span>
                 <div class="val" id="curSpd">--</div>
                 <div class="sub-val" id="curDir">--</div>
             </div>
         </div>
 
         <div class="card">
-            <span class="label">Tide Schedule</span>
+            <span class="label">Next 4 Tides</span>
             <div id="tideList"></div>
         </div>
     </div>
@@ -109,7 +158,7 @@
     window.onload = () => { initMap(); getStations(); drawFavs(); };
 
     function initMap() {
-        map = L.map('map', {zoomControl: false}).setView([54, -2], 5);
+        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([54, -2], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     }
 
@@ -138,9 +187,12 @@
     async function loadData(sid = null) {
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
+        
         document.getElementById('searchBox').value = "";
         fillSelect(allStations);
+        
         currentID = id;
+        document.getElementById('stationSelect').value = id;
         document.getElementById('loader').style.display = 'block';
         document.getElementById('dashboard').style.display = 'block';
         updateFavBtn();
@@ -164,11 +216,11 @@
     function render(tides, wind, marine) {
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
         document.getElementById('temp').innerText = `${Math.round(wind.temperature_2m)}°C`;
-        document.getElementById('clouds').innerText = wind.cloud_cover > 70 ? "☁️ Overcast" : wind.cloud_cover > 30 ? "⛅ Partly Cloudy" : "☀️ Clear Skies";
+        document.getElementById('clouds').innerText = wind.cloud_cover > 70 ? "Overcast" : wind.cloud_cover > 30 ? "Partly Cloudy" : "Clear Skies";
         document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
-        document.getElementById('windGst').innerText = `Gusts: ${Math.round(wind.wind_gusts_10m)} mph`;
+        document.getElementById('windGst').innerText = `🚩 Gusts: ${Math.round(wind.wind_gusts_10m)} mph`;
         document.getElementById('waveHgt').innerText = `${(marine.wave_height * 3.28).toFixed(1)} ft`;
-        document.getElementById('wavePeriod').innerText = `${marine.wave_period}s period`;
+        document.getElementById('wavePeriod').innerText = `${marine.wave_period}s interval`;
         document.getElementById('curSpd').innerText = `${(marine.ocean_current_velocity * 1.94).toFixed(1)} kts`;
         document.getElementById('curDir').innerText = dirs[Math.round(marine.ocean_current_direction / 22.5) % 16];
 
@@ -177,15 +229,15 @@
         const diffHrs = (new Date(next.DateTime) - new Date()) / 3600000;
         
         const rating = document.getElementById('fishingRating');
-        if (next.EventType.includes("High") && diffHrs < 2) {
-            rating.innerText = "🎣 PRIME TIME: High Tide Approaching!";
+        if (next.EventType.includes("High") && diffHrs < 2.5) {
+            rating.innerText = "🎣 PRIME FEEDING WINDOW";
             rating.className = "rating-box good";
         } else {
-            rating.innerText = "⌛ Steady Conditions: Fish the Gullies";
+            rating.innerText = "⏳ STEADY ACTIVITY";
             rating.className = "rating-box fair";
         }
 
-        document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:bold; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`).join('');
+        document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span style="color:var(--white)">${t.Height.toFixed(1)}m</span></div>`).join('');
     }
 
     function toggleFav() {
@@ -198,7 +250,7 @@
     function updateFavBtn() {
         const btn = document.getElementById('mainFavBtn');
         const isFav = favs.some(f => f.id === currentID);
-        btn.innerText = isFav ? "⭐ Remove Favorite" : "⭐ Save Favorite";
+        btn.innerText = isFav ? "⭐ REMOVE FROM FAVORITES" : "⭐ SAVE TO FAVORITES";
         btn.style.display = 'block';
         btn.className = isFav ? "btn-fav active" : "btn-fav";
     }
