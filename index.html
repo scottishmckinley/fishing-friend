@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v5.5</title>
+    <title>Angler OS v5.7 ULTRA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -26,7 +26,7 @@
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; font-family: inherit; }
         .tide-row.is-low { background: var(--low-tide); border-left: 4px solid var(--sea); }
         #sizeAlert { display: none; background: var(--red); color: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 0.8rem; }
-        .edit-mode { border: 2px solid var(--gold) !important; }
+        .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -40,33 +40,31 @@
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">IMPORT/EXPORT DATA</h4>
-        <p>Use "Export JSON" to download your catch history as a file. Use "Import" to restore that file if you clear your browser cache or switch devices.</p>
-        <h4 style="color:var(--gold); margin:10px 0 5px 0;">ENVIRONMENTAL KNOWLEDGE</h4>
-        <p><b>Pressure:</b> >1013hPa is High. Rising pressure is great; dropping pressure triggers feeding before storms.<br>
-        <b>Flow:</b> Predator activity peaks at 1.5-3.0 knots (Current).<br>
-        <b>Weather:</b> Wind direction dictates where the fish push. On-shore winds bring food in.</p>
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">IMPORT/EXPORT</h4>
+        <p>Export saves your diary as a JSON file. Import restores it. Essential for backups when clearing browser data.</p>
+        <h4 style="color:var(--gold); margin:10px 0 5px 0;">HUD GUIDE</h4>
+        <p><b>Pressure:</b> Target >1013hPa for stability. <b>Flow:</b> The Sinusoidal knots indicator predicts feeding activity.</p>
         <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('helpBox')">CLOSE</button>
     </div>
 
     <div id="dataBox" class="drawer">
-        <button class="btn-sub" style="width:100%; margin-bottom:5px;" onclick="exportData()">EXPORT JSON BACKUP</button>
+        <button class="btn-sub" style="width:100%; margin-bottom:5px;" onclick="exportData()">EXPORT BACKUP</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        <button class="btn-sub" style="width:100%" onclick="document.getElementById('importFile').click()">IMPORT JSON BACKUP</button>
+        <button class="btn-sub" style="width:100%" onclick="document.getElementById('importFile').click()">IMPORT BACKUP</button>
     </div>
 
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC GPS, WEATHER & ADMIRALTY</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC ALL DATA (GPS, WEATHER, TIDES)</button>
 
     <div class="card" style="padding: 10px; margin-bottom: 10px;">
-        <span class="label">Manual Port Search</span>
-        <input type="text" id="manualSearch" placeholder="Search Admiralty Stations..." oninput="filterPorts(this.value)">
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Results --</option></select>
+        <span class="label">Alphabetical Port Selection (UK Wide)</span>
+        <input type="text" id="manualSearch" placeholder="Type to filter A-Z list (e.g. Hull)..." oninput="filterPorts(this.value)">
+        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select Station --</option></select>
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide Status</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val">--</span></div>
-        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hudFlow" class="val">--</div><span id="hudKnots" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Tide Height</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Flow (Knots)</span><div id="hudFlow" class="val">--</div><span id="hudKnots" class="sub-val">--</span></div>
     </div>
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span id="pressTrend" class="sub-val">--</span></div>
@@ -75,7 +73,7 @@
 
     <div class="hud-grid">
         <div class="btn-sub" style="color:var(--sea)" onclick="toggle('tideBox')">📅 7-DAY TIDE ▾</div>
-        <div class="btn-sub" style="color:var(--white)" onclick="showSummary()">📊 SESSION SUMMARY</div>
+        <div class="btn-sub" id="summaryBtn" style="color:var(--white)" onclick="showSummary()">📊 SESSION SUMMARY</div>
     </div>
 
     <div id="tideBox" class="drawer"><div id="outlookList"></div></div>
@@ -83,9 +81,9 @@
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log New Catch</span>
-        <div id="sizeAlert">⚠️ UNDERSIZED FISH - CHECK REGULATIONS</div>
+        <div id="sizeAlert">⚠️ UNDERSIZED - CHECK REGS</div>
         <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
-        <button onclick="document.getElementById('camIn').click()" style="width:100%; background:none; border:1px dashed var(--gold); color:var(--gold); padding:8px; border-radius:8px; font-size:0.7rem; margin-bottom:8px;">📷 ATTACH PHOTO</button>
+        <button onclick="document.getElementById('camIn').click()" style="width:100%; background:none; border:1px dashed var(--gold); color:var(--gold); padding:8px; border-radius:8px; font-size:0.7rem; margin-bottom:8px;">📷 TAKE PHOTO</button>
         <img id="imgPrev" style="width:100%; height:120px; object-fit:cover; border-radius:10px; display:none; margin-bottom:8px;">
         
         <input type="text" id="sp" placeholder="Species..." oninput="checkSize()">
@@ -93,9 +91,9 @@
             <input type="number" id="ln" placeholder="Length (cm)" oninput="checkSize()">
             <input type="number" id="wt" placeholder="Weight (lb)">
         </div>
-        <textarea id="notes" placeholder="Notes (Bait, Rig, Time, etc...)"></textarea>
+        <textarea id="notes" placeholder="Notes (Bait, Rig, Depth...)"></textarea>
         <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE TO DIARY</button>
-        <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; border-color:var(--red); color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
+        <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL</button>
     </div>
 
     <div id="diary"></div>
@@ -104,12 +102,10 @@
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
     const PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_v55')) || [];
+    let catches = JSON.parse(localStorage.getItem('aos_v57')) || [];
     let allPorts = [], map, marker, activeImg = "", editingIndex = -1;
-    let curData = { pt: "Manual", td: "--", st: "--", prs: "--", tmp: "--", flw: "--", cond: "--", wind: "--" };
-    
+    let curData = { pt: "Manual", td: "--", st: "--", prs: "--", tmp: "--", flw: "--", wind: "--" };
     const REGS = { "bass": 42, "cod": 35, "whiting": 27, "plaice": 27, "sole": 24 };
-    const W_CODES = { 0: "Clear Sky", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 51: "Drizzle", 61: "Rain", 71: "Snow", 95: "Storm" };
 
     window.onload = () => {
         map = L.map('map').setView([53.6, -0.1], 10);
@@ -117,19 +113,28 @@
         loadPorts(); renderDiary();
     };
 
-    function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
+    function toggle(id) { 
+        const el = document.getElementById(id); 
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block'; 
+    }
 
     async function loadPorts() {
         const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
         const data = await res.json();
-        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] }));
+        // Sort Alphabetically immediately
+        allPorts = data.features.map(f => ({ 
+            id: f.properties.Id, 
+            name: f.properties.Name, 
+            lat: f.geometry.coordinates[1], 
+            lon: f.geometry.coordinates[0] 
+        })).sort((a, b) => a.name.localeCompare(b.name));
         filterPorts("");
     }
 
     function filterPorts(q) {
         const s = document.getElementById('portList');
-        s.innerHTML = '<option value="">-- All Stations --</option>';
-        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 100).forEach(p => {
+        s.innerHTML = '<option value="">-- Select Port --</option>';
+        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
             let o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
         });
     }
@@ -139,7 +144,7 @@
         const port = allPorts.find(p => p.id === id);
         map.setView([port.lat, port.lon], 13);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
-        document.getElementById('manualSearch').value = ""; // Clear manual field
+        document.getElementById('manualSearch').value = ""; // Clear search
         fetchTides(id);
     }
 
@@ -152,20 +157,15 @@
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure`);
             const wData = await wRes.json();
             const cw = wData.current_weather;
-            
-            // Wind Dir Logic
             const dirs = ['N','NE','E','SE','S','SW','W','NW'];
             const windDir = dirs[Math.round(cw.winddirection / 45) % 8];
             
-            curData.tmp = cw.temperature;
-            curData.cond = W_CODES[cw.weathercode] || "Fair";
+            curData.tmp = cw.temperature; curData.prs = wData.hourly.surface_pressure[0];
             curData.wind = `${cw.windspeed}mph ${windDir}`;
-            curData.prs = wData.hourly.surface_pressure[0];
-
-            document.getElementById('hudWeather').innerText = `${curData.tmp}°C / ${curData.cond}`;
+            document.getElementById('hudWeather').innerText = `${cw.temperature}°C`;
             document.getElementById('hudWind').innerText = `WIND: ${curData.wind}`;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
-            document.getElementById('pressTrend').innerText = curData.prs > 1013 ? "HIGH / STABLE" : "LOW / UNSETTLED";
+            document.getElementById('pressTrend').innerText = curData.prs > 1013 ? "STABLE" : "UNSETTLED";
 
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             document.getElementById('portList').value = near.id;
@@ -200,51 +200,32 @@
 
     function saveEntry() {
         const sp = document.getElementById('sp').value; if(!sp) return;
+        const wt = parseFloat(document.getElementById('wt').value) || 0;
+        
+        // PB Calculation logic restored
+        const historicalBest = Math.max(...catches.filter(c => c.sp.toLowerCase() === sp.toLowerCase()).map(c => parseFloat(c.wt) || 0), 0);
+        const isPB = wt > 0 && wt >= historicalBest;
+
         const entry = {
-            sp, wt: document.getElementById('wt').value, ln: document.getElementById('ln').value, nt: document.getElementById('notes').value, 
+            sp, wt, ln: document.getElementById('ln').value, nt: document.getElementById('notes').value, 
             img: activeImg, dt: new Date().toLocaleDateString(), tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: curData.pt, env: `Tide: ${curData.td} (${curData.st}) | Wind: ${curData.wind} | Press: ${curData.prs}hPa`
+            loc: curData.pt, env: `Tide: ${curData.td} (${curData.st}) | Wind: ${curData.wind} | Press: ${curData.prs}hPa`, isPB
         };
 
         if(editingIndex > -1) catches[editingIndex] = entry;
         else catches.unshift(entry);
 
-        localStorage.setItem('aos_v55', JSON.stringify(catches));
+        localStorage.setItem('aos_v57', JSON.stringify(catches));
         resetForm(); renderDiary();
-    }
-
-    function editEntry(i) {
-        editingIndex = i;
-        const c = catches[i];
-        document.getElementById('sp').value = c.sp;
-        document.getElementById('wt').value = c.wt;
-        document.getElementById('ln').value = c.ln;
-        document.getElementById('notes').value = c.nt;
-        if(c.img) { document.getElementById('imgPrev').src = c.img; document.getElementById('imgPrev').style.display = 'block'; activeImg = c.img; }
-        document.getElementById('logForm').classList.add('edit-mode');
-        document.getElementById('formTitle').innerText = "Edit Catch Record";
-        document.getElementById('saveBtn').innerText = "💾 UPDATE ENTRY";
-        document.getElementById('cancelEdit').style.display = 'block';
-        window.scrollTo(0, document.getElementById('logForm').offsetTop - 20);
-    }
-
-    function resetForm() {
-        editingIndex = -1;
-        document.getElementById('sp').value = ""; document.getElementById('wt').value = ""; document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
-        document.getElementById('imgPrev').style.display = 'none'; activeImg = "";
-        document.getElementById('logForm').classList.remove('edit-mode');
-        document.getElementById('formTitle').innerText = "Log New Catch";
-        document.getElementById('saveBtn').innerText = "💾 SAVE TO DIARY";
-        document.getElementById('cancelEdit').style.display = 'none';
     }
 
     function renderDiary() {
         const today = new Date().toLocaleDateString();
-        const filtered = catches.filter(c => c.dt === today);
-        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
+        const sessionOnly = catches.filter(c => c.dt === today);
+        document.getElementById('diary').innerHTML = sessionOnly.map((c, i) => `
             <div class="card" style="margin-top:10px;">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px;">
-                    <span>${c.sp.toUpperCase()}</span> <span>${c.wt}lb</span>
+                    <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span> <span>${c.wt}lb</span>
                 </div>
                 ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:8px;">` : ''}
                 <div style="font-size:0.75rem;">
@@ -253,15 +234,48 @@
                     <p style="margin:8px 0; color:var(--gold)">${c.nt}</p>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                    <button class="btn-sub" style="color:var(--white)" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
+                    <button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteEntry(${catches.indexOf(c)})">DELETE</button>
                 </div>
             </div>`).join('');
     }
 
-    function deleteEntry(i) { if(confirm("Delete this catch?")) { catches.splice(i, 1); localStorage.setItem('aos_v55', JSON.stringify(catches)); renderDiary(); } }
-    function exportData() { const blob = new Blob([JSON.stringify(catches)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'AnglerOS_Log.json'; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v55', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
+    function showSummary() {
+        const today = new Date().toLocaleDateString();
+        const s = catches.filter(c => c.dt === today);
+        const box = document.getElementById('summaryBox');
+        if(!s.length) {
+            box.innerHTML = "No fish logged today. <button class='btn-sub' style='width:100%; margin-top:10px' onclick='toggle(\"summaryBox\")'>CLOSE</button>";
+        } else {
+            const totalWt = s.reduce((a, b) => a + (parseFloat(b.wt) || 0), 0);
+            box.innerHTML = `<h3 style="color:var(--sea); margin:0;">Today's Catch</h3><p>Total Count: ${s.length} fish</p><p>Total Weight: ${totalWt.toFixed(2)}lb</p><button class="btn-sub" style="width:100%" onclick="toggle('summaryBox')">CLOSE</button>`;
+        }
+        box.style.display = 'block';
+    }
+
+    function editEntry(i) {
+        editingIndex = i; const c = catches[i];
+        document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt;
+        document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
+        if(c.img) { document.getElementById('imgPrev').src = c.img; document.getElementById('imgPrev').style.display = 'block'; activeImg = c.img; }
+        document.getElementById('formTitle').innerText = "Edit Catch Record";
+        document.getElementById('saveBtn').innerText = "💾 UPDATE ENTRY";
+        document.getElementById('cancelEdit').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function resetForm() {
+        editingIndex = -1; activeImg = "";
+        document.getElementById('sp').value = ""; document.getElementById('wt').value = ""; document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
+        document.getElementById('imgPrev').style.display = 'none';
+        document.getElementById('formTitle').innerText = "Log New Catch";
+        document.getElementById('saveBtn').innerText = "💾 SAVE TO DIARY";
+        document.getElementById('cancelEdit').style.display = 'none';
+    }
+
+    function deleteEntry(i) { if(confirm("Delete this catch?")) { catches.splice(i, 1); localStorage.setItem('aos_v57', JSON.stringify(catches)); renderDiary(); } }
+    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
+    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v57', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
     function checkSize() { const s = document.getElementById('sp').value.toLowerCase(); const l = parseFloat(document.getElementById('ln').value); document.getElementById('sizeAlert').style.display = (REGS[s] && l < REGS[s]) ? 'block' : 'none'; }
     function handlePhoto(e) { const r = new FileReader(); r.onload = () => { activeImg = r.result; const i = document.getElementById('imgPrev'); i.src = r.result; i.style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); }
 </script>
