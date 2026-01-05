@@ -239,4 +239,13 @@
     function updateFavBtn() {
         const btn = document.getElementById('mainFavBtn');
         btn.style.display = 'block';
-        const isFav = favs.some(f => f.
+        const isFav = favs.some(f => f.id === currentID);
+        btn.innerText = isFav ? "⭐ REMOVE FROM FAVORITES" : "⭐ SAVE TO FAVORITES";
+        btn.className = isFav ? "btn-fav active" : "btn-fav";
+    }
+    function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
+    function fillSelect(data) { const s = document.getElementById('stationSelect'); s.innerHTML = '<option value="">-- Select Port --</option>'; data.forEach(item => { const el = document.createElement('option'); el.value = item.Id; el.textContent = item.Name; s.appendChild(el); }); }
+    function filterStations() { const q = document.getElementById('searchBox').value.toLowerCase(); fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q))); }
+</script>
+</body>
+</html>
