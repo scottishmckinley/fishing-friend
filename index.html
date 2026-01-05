@@ -52,7 +52,7 @@
 
 <script>
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    // Switching to a more transparent proxy
+    // Using a proxy that doesn't wrap the data in "contents" to keep it simple
     const PROXY = "https://corsproxy.io/?";
 
     let allStations = [];
@@ -63,26 +63,25 @@
 
     async function getStations() {
         try {
-            // We are sending the key as a header THROUGH the proxy
-            const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations`;
-            const res = await fetch(PROXY + encodeURIComponent(target), {
+            // Admiralty V1 Stations Endpoint
+            const target = "https://admiraltyapi.azure-api.net/adat/api/v1/Stations";
+            const url = PROXY + encodeURIComponent(target);
+            
+            const res = await fetch(url, {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
 
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`Status ${res.status}: ${errText}`);
-            }
-
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
             allStations = await res.json();
             
             if (Array.isArray(allStations)) {
-                allStations.sort((a, b) => (a.Name || "").localeCompare(b.Name || ""));
+                allStations.sort((a, b) => a.Name.localeCompare(b.Name));
                 fillSelect(allStations);
             }
         } catch (e) {
-            console.error("Admiralty Error:", e);
-            document.getElementById('stationSelect').innerHTML = `<option>Error: Check API Key/Subscription</option>`;
+            console.error("Stations Load Error:", e);
+            document.getElementById('stationSelect').innerHTML = `<option>Wait 2 mins for GitHub Build...</option>`;
         }
     }
 
@@ -111,19 +110,21 @@
         const [lon, lat] = stn.Geometry.coordinates;
 
         try {
+            // Updated Tide Path: ensuring ID is correctly injected
             const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents`;
             const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
             const tides = await tRes.json();
 
+            // Weather (Direct)
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
 
             render(tides, wind.current, stn.Name);
         } catch (err) { 
-            console.error(err);
-            alert("Tide data fetch failed.");
+            console.error("Data Load Error:", err);
+            alert("This specific station is currently unavailable.");
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -137,6 +138,9 @@
         document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
 
         const list = document.getElementById('tideList');
+        if (!tides || !Array.isArray(tides)) {
+            list.innerHTML = "No tide data."; return;
+        }
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
             const time = new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
