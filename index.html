@@ -17,107 +17,110 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
         
-        .header { text-align: center; margin-bottom: 25px; padding-top: 15px; }
+        .header { text-align: center; margin-bottom: 20px; padding-top: 15px; position: relative; }
         .header h1 { margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: -1.5px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+        .help-btn { position: absolute; right: 0; top: 15px; background: none; border: 1px solid var(--border); color: var(--gold); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; }
 
         .btn-gps { width: 100%; background: var(--gradient); color: var(--navy); border: none; padding: 16px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px; }
         
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; font-size: 14px; }
-
-        #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; min-height: 20px; }
-        .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border); cursor: pointer; }
-        
-        .btn-fav { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: transparent; color: var(--gold); font-weight: bold; cursor: pointer; margin-bottom: 15px; display: none; }
-        .btn-fav.active { background: var(--gold); color: var(--navy); }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; font-size: 14px; }
+        textarea { height: 60px; resize: none; }
 
         .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .val { font-size: 1.4rem; font-weight: 800; color: var(--white); display: flex; align-items: center; gap: 6px; }
-        .sub-val { font-size: 0.8rem; font-weight: 600; color: var(--sea); margin-top: 4px; }
         
-        #map { height: 200px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); background: #000; }
-        .rating-box { padding: 15px; border-radius: 15px; text-align: center; font-weight: 900; margin-bottom: 12px; border: 2px solid transparent; }
-        .good { background: rgba(52, 232, 158, 0.1); color: var(--sea); border-color: var(--sea); }
-        
-        .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-        .high-tide-highlight { color: var(--sea) !important; font-weight: 900; }
-        .day-header { background: var(--navy); padding: 6px 12px; font-size: 0.75rem; font-weight: 800; color: var(--gold); margin-top: 15px; border-radius: 8px; }
-        
-        .btn-outline { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; }
-        
-        .log-item { background: var(--navy); padding: 12px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--gold); font-size: 0.85rem; position: relative; }
-        .log-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
-        .btn-small { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; }
+        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
+
+        /* Trophy & Diary */
+        .trophy-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; }
+        .trophy-card { min-width: 110px; background: #1e293b; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); text-align: center; flex-shrink: 0; }
+        .diary-entry { background: var(--navy); padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 5px solid var(--sea); position: relative; }
+        .diary-notes { margin-top: 8px; font-size: 0.8rem; color: #94a3b8; font-style: italic; border-top: 1px solid #1e293b; padding-top: 5px; }
+
+        /* Help Modal */
+        #helpModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .help-content { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gold); }
+        .help-item { margin-bottom: 15px; font-size: 0.9rem; line-height: 1.4; }
+        .help-item b { color: var(--sea); }
+
+        .backup-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-small { background: #1e293b; border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 8px; font-size: 0.7rem; cursor: pointer; }
         .btn-log { background: var(--gold); color: var(--navy); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; }
-        
-        .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; }
         .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
 <body>
 
+<div id="helpModal" onclick="this.style.display='none'">
+    <div class="help-content" onclick="event.stopPropagation()">
+        <h2 style="color:var(--gold); margin-top:0;">Help & Instructions</h2>
+        <div class="help-item"><b>🌊 Flow Strength:</b> Calculated using a sine wave between tide times. 0% is Slack Water (High/Low tide). 100% is the fastest point of the tide (mid-tide), usually the best for predatory fishing.</div>
+        <div class="help-item"><b>🌬️ Wind:</b> The arrow points in the direction the wind is blowing. Red "Gusts" are critical for safety and boat handling.</div>
+        <div class="help-item"><b>🏆 Trophies:</b> Automatically displays your heaviest/longest recorded entry for each species in your diary.</div>
+        <div class="help-item"><b>💾 Export/Import:</b> This app stores data locally on your phone. If you switch phones, use <b>Export</b> to save a file, and <b>Import</b> on the new device to restore your catches.</div>
+        <button class="btn-log" onclick="document.getElementById('helpModal').style.display='none'">GOT IT</button>
+    </div>
+</div>
+
 <div class="app-container">
     <div class="header">
         <h1>FISHING FRIEND</h1>
-        <span class="subtitle">Pro Intelligence</span>
+        <span class="subtitle">Angler's Diary Pro</span>
+        <button class="help-btn" onclick="document.getElementById('helpModal').style.display='block'">?</button>
     </div>
 
     <button class="btn-gps" onclick="getLocation()">📍 LOCATE NEAREST PORT</button>
 
     <div class="search-section">
-        <span class="label">Favorites</span>
-        <div id="favBar"></div>
-        <input type="text" id="searchBox" placeholder="Search port name..." oninput="filterStations()">
-        <select id="stationSelect" onchange="loadData()"><option>-- Select Port --</option></select>
+        <span class="label">Quick Access</span>
+        <div id="favBar" style="display:flex; gap:5px; margin-bottom:10px;"></div>
+        <select id="stationSelect" onchange="loadData()"><option value="">-- Select Port --</option></select>
     </div>
-
-    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ SAVE TO FAVORITES</button>
-    <div id="loader" class="loading">SYNCING DATA...</div>
 
     <div id="dashboard" style="display:none;">
         <div id="map"></div>
-        <div id="fishingRating" class="rating-box">Analysing...</div>
 
         <div class="card">
             <span class="label">Conditions & Flow</span>
             <div class="grid-2">
                 <div style="border-right: 1px solid var(--border); padding-right: 5px;">
-                    <div class="val" id="tideFlow">--</div>
-                    <div id="tideSpeed" class="sub-val">--</div>
-                    <div id="temp" class="val" style="margin-top:15px; font-size:1.1rem;">--°C</div>
-                    <div id="clouds" class="sub-val" style="color:var(--text); opacity:0.8;">--</div>
+                    <div class="val" id="tideFlow" style="font-size: 1.1rem;">--</div>
+                    <div id="tideSpeed" style="font-size: 0.8rem; color: var(--sea); font-weight: bold;">--</div>
+                    <div id="temp" class="val" style="margin-top:10px; font-size:1.1rem;">--°C</div>
                 </div>
-                <div style="padding-left: 5px;">
+                <div>
                     <div class="val">
                         <span id="windSpd">--</span> 
                         <span id="windArrow" style="display:inline-block">↑</span>
                     </div>
-                    <div id="windFullDesc" class="sub-val" style="color:var(--white)">--</div>
-                    <div id="windGst" class="sub-val" style="color:var(--red)">--</div>
+                    <div id="windGst" style="font-size: 0.75rem; color: var(--red);">--</div>
+                    <div id="clouds" style="font-size: 0.75rem; margin-top:5px;">--</div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <span class="label">Tidal Schedule</span>
-            <div id="tideList"></div>
-            <button class="btn-outline" onclick="toggleExtendedTides()">📅 VIEW 7-DAY OUTLOOK</button>
-            <div id="extendedTides" style="display:none;"></div>
+        <div id="trophySection" style="display:none;">
+            <span class="label">🏆 Personal Bests</span>
+            <div class="trophy-scroll" id="trophyList"></div>
         </div>
 
         <div class="card">
-            <span class="label">Session Record</span>
-            <div style="display: grid; gap: 5px; margin-bottom: 15px;">
-                <input type="hidden" id="editIndex" value="-1">
-                <input type="text" id="logFish" placeholder="Species (e.g. Bass)">
-                <input type="text" id="logSize" placeholder="Size/Weight">
-                <input type="text" id="logBait" placeholder="Bait Used">
-                <button class="btn-log" id="logSubmitBtn" onclick="addCatch()">🎣 SAVE TO LOG</button>
-            </div>
-            <span class="label">Recent Sessions</span>
-            <div id="catchList"></div>
+            <span class="label">New Entry</span>
+            <input type="hidden" id="editIndex" value="-1">
+            <input type="text" id="logFish" placeholder="Species">
+            <input type="text" id="logSize" placeholder="Weight/Length">
+            <textarea id="logNotes" placeholder="Notes (Weather, bait, etc)"></textarea>
+            <button class="btn-log" id="logBtn" onclick="addCatch()">📖 SAVE TO DIARY</button>
+        </div>
+
+        <div id="diaryContainer"></div>
+
+        <div class="backup-tray">
+            <button class="btn-small" onclick="exportData()">💾 EXPORT DIARY</button>
+            <button class="btn-small" onclick="document.getElementById('importFile').click()">📥 IMPORT DIARY</button>
+            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         </div>
     </div>
 </div>
@@ -127,11 +130,11 @@
     const PROXY = "https://corsproxy.io/?"; 
     const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
-    let allStations = [], currentID = null, map = null, marker = null, allTides = [];
+    let allStations = [], currentID = null, map = null, marker = null;
     let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
     let catches = JSON.parse(localStorage.getItem('fishingCatches')) || [];
 
-    window.onload = () => { initMap(); getStations(); drawFavs(); renderCatches(); };
+    window.onload = () => { initMap(); getStations(); drawFavs(); renderDiary(); };
 
     function initMap() {
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([54, -2], 5);
@@ -142,160 +145,114 @@
         try {
             const res = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
             const data = await res.json();
-            allStations = data.features.map(f => ({ Id: f.properties.Id, Name: f.properties.Name, Coords: f.geometry.coordinates })).sort((a,b) => a.Name.localeCompare(b.Name));
-            fillSelect(allStations);
-        } catch (e) { console.error("API Error", e); }
+            allStations = data.features.map(f => ({ Id: f.properties.Id, Name: f.properties.Name, Coords: f.geometry.coordinates }));
+            fillSelect(allStations.sort((a,b) => a.Name.localeCompare(b.Name)));
+        } catch (e) { console.error(e); }
     }
 
     function getLocation() {
-        document.getElementById('loader').style.display = 'block';
         navigator.geolocation.getCurrentPosition(pos => {
-            let nearest = null, minDist = Infinity;
-            allStations.forEach(stn => {
-                const d = Math.sqrt(Math.pow(stn.Coords[1]-pos.coords.latitude,2) + Math.pow(stn.Coords[0]-pos.coords.longitude,2));
-                if(d < minDist) { minDist = d; nearest = stn; }
+            let nearest = allStations.reduce((prev, curr) => {
+                let d1 = Math.hypot(prev.Coords[1]-pos.coords.latitude, prev.Coords[0]-pos.coords.longitude);
+                let d2 = Math.hypot(curr.Coords[1]-pos.coords.latitude, curr.Coords[0]-pos.coords.longitude);
+                return d1 < d2 ? prev : curr;
             });
-            if(nearest) loadData(nearest.Id);
-        }, () => alert("GPS Failed."));
+            loadData(nearest.Id);
+        });
     }
 
     async function loadData(sid = null) {
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
         currentID = id;
-        document.getElementById('stationSelect').value = id;
-        document.getElementById('loader').style.display = 'block';
         document.getElementById('dashboard').style.display = 'block';
-        updateFavBtn();
-
         const stn = allStations.find(x => x.Id === id);
-        const [lon, lat] = stn.Coords;
+        map.setView([stn.Coords[1], stn.Coords[0]], 12);
+        if (marker) marker.setLatLng([stn.Coords[1], stn.Coords[0]]); else marker = L.marker([stn.Coords[1], stn.Coords[0]]).addTo(map);
 
-        setTimeout(() => { 
-            map.invalidateSize(); 
-            map.setView([lat, lon], 12);
-            if (marker) marker.setLatLng([lat, lon]); else marker = L.marker([lat, lon]).addTo(map);
-        }, 300);
-
-        try {
-            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
-            const weather = await wRes.json();
-            const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=7`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
-            allTides = await tRes.json();
-            renderData(weather.current, allTides);
-        } finally { document.getElementById('loader').style.display = 'none'; }
-    }
-
-    function renderData(w, tides) {
-        const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
-        const windDirText = dirs[Math.round(w.wind_direction_10m / 22.5) % 16];
-        document.getElementById('temp').innerText = `${Math.round(w.temperature_2m)}°C`;
-        document.getElementById('windSpd').innerText = `${Math.round(w.wind_speed_10m)} mph`;
-        document.getElementById('windFullDesc').innerText = `${windDirText} (${w.wind_direction_10m}°)`;
-        document.getElementById('windArrow').style.transform = `rotate(${w.wind_direction_10m}deg)`;
-        document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(w.wind_gusts_10m)}`;
+        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stn.Coords[1]}&longitude=${stn.Coords[0]}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
+        const w = await wRes.json();
+        const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=1`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
+        const tides = await tRes.json();
         
-        const codes = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain" };
-        document.getElementById('clouds').innerText = codes[w.weather_code] || "Cloudy";
-
+        // Render Weather
+        document.getElementById('temp').innerText = `${Math.round(w.current.temperature_2m)}°C`;
+        document.getElementById('windSpd').innerText = `${Math.round(w.current.wind_speed_10m)} mph`;
+        document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(w.current.wind_gusts_10m)} mph`;
+        document.getElementById('windArrow').style.transform = `rotate(${w.current.wind_direction_10m}deg)`;
+        
+        // Render Tide Flow
         const now = new Date();
-        const future = tides.filter(t => new Date(t.DateTime) > now);
-        const past = tides.filter(t => new Date(t.DateTime) <= now).reverse();
-
-        if (past.length > 0 && future.length > 0) {
-            const isRising = future[0].EventType.includes("High");
-            document.getElementById('tideFlow').innerText = isRising ? "RISING" : "FALLING";
-            document.getElementById('tideFlow').style.color = isRising ? "var(--sea)" : "var(--gold)";
-            
-            const prevTime = new Date(past[0].DateTime);
-            const nextTime = new Date(future[0].DateTime);
-            const progress = ((now - prevTime) / (nextTime - prevTime)) * 100;
-            const speed = Math.sin((progress / 100) * Math.PI) * 100;
-            document.getElementById('tideSpeed').innerText = `${Math.round(speed)}% Flow`;
+        const next = tides.find(t => new Date(t.DateTime) > now);
+        const last = tides.filter(t => new Date(t.DateTime) <= now).pop();
+        if(next && last) {
+            const isRising = next.EventType.includes("High");
+            document.getElementById('tideFlow').innerText = isRising ? "RISING TIDE" : "FALLING TIDE";
+            const progress = (now - new Date(last.DateTime)) / (new Date(next.DateTime) - new Date(last.DateTime));
+            const strength = Math.sin(progress * Math.PI) * 100;
+            document.getElementById('tideSpeed').innerText = `${Math.round(strength)}% Flow Strength`;
         }
-
-        document.getElementById('tideList').innerHTML = future.slice(0, 3).map(t => `
-            <div class="tide-row">
-                <span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'var(--gold)'}">${t.EventType.toUpperCase()}</span>
-                <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                <span>${t.Height.toFixed(1)}m</span>
-            </div>`).join('');
-
-        let extHTML = ""; let curDay = "";
-        future.slice(3, 28).forEach(t => {
-            const d = new Date(t.DateTime).toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'short'});
-            if(d !== curDay) { curDay = d; extHTML += `<div class="day-header">${d}</div>`; }
-            const isHigh = t.EventType.includes('High');
-            extHTML += `<div class="tide-row ${isHigh ? 'high-tide-highlight' : ''}">
-                <span>${isHigh ? 'HIGH' : 'Low'}</span>
-                <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                <span>${t.Height.toFixed(1)}m</span>
-            </div>`;
-        });
-        document.getElementById('extendedTides').innerHTML = extHTML;
-
-        const rating = document.getElementById('fishingRating');
-        rating.innerText = future[0].EventType.includes("High") ? "🎣 PRIME FLOOD TIDE" : "⏳ EBB TIDE FEEDING";
-        rating.className = "rating-box good";
-    }
-
-    function toggleExtendedTides() {
-        const d = document.getElementById('extendedTides');
-        d.style.display = d.style.display === 'none' ? 'block' : 'none';
     }
 
     function addCatch() {
         const fish = document.getElementById('logFish').value;
         const size = document.getElementById('logSize').value;
-        const bait = document.getElementById('logBait').value;
-        const editIdx = parseInt(document.getElementById('editIndex').value);
+        const notes = document.getElementById('logNotes').value;
         if(!fish) return;
-        const port = allStations.find(x => x.Id === currentID).Name;
-        const entry = { fish, size, bait, port, date: new Date().toLocaleDateString() };
-        if (editIdx > -1) { catches[editIdx] = entry; document.getElementById('editIndex').value = "-1"; document.getElementById('logSubmitBtn').innerText = "🎣 SAVE TO LOG"; }
-        else { catches.unshift(entry); }
+        const entry = { fish, size, notes, timestamp: new Date().getTime(), port: allStations.find(x => x.Id === currentID)?.Name || "Unknown" };
+        catches.unshift(entry);
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
-        document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; document.getElementById('logBait').value = '';
-        renderCatches();
+        resetForm(); renderDiary();
     }
 
-    function editCatch(i) {
-        const c = catches[i];
-        document.getElementById('logFish').value = c.fish;
-        document.getElementById('logSize').value = c.size;
-        document.getElementById('logBait').value = c.bait;
-        document.getElementById('editIndex').value = i;
-        document.getElementById('logSubmitBtn').innerText = "💾 UPDATE";
-    }
-
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderCatches(); } }
-
-    function renderCatches() {
-        document.getElementById('catchList').innerHTML = catches.map((c, i) => `
-            <div class="log-item">
-                <div class="log-actions"><button onclick="editCatch(${i})">✏️</button><button onclick="deleteCatch(${i})">🗑️</button></div>
-                <b>${c.fish}</b> (${c.size})<br><small>📍 ${c.port} | 🪱 ${c.bait} | ${c.date}</small>
+    function renderDiary() {
+        const container = document.getElementById('diaryContainer');
+        const trophyList = document.getElementById('trophyList');
+        const pbs = {};
+        catches.forEach(c => {
+            const s = c.fish.toLowerCase();
+            if(!pbs[s] || (c.size && c.size.localeCompare(pbs[s].size, undefined, {numeric: true}) > 0)) pbs[s] = c;
+        });
+        document.getElementById('trophySection').style.display = catches.length ? 'block' : 'none';
+        trophyList.innerHTML = Object.values(pbs).map(pb => `<div class="trophy-card"><div class="trophy-species">${pb.fish}</div><div class="trophy-weight">${pb.size || '--'}</div></div>`).join('');
+        
+        container.innerHTML = catches.map((c, i) => `
+            <div class="diary-entry">
+                <b>${c.fish}</b> - ${c.size || ''} <br>
+                <small>${new Date(c.timestamp).toLocaleDateString()} | ${c.port}</small>
+                ${c.notes ? `<div class="diary-notes">${c.notes}</div>` : ''}
+                <div style="position:absolute; right:10px; top:10px;" onclick="deleteCatch(${i})">🗑️</div>
             </div>`).join('');
     }
 
-    function toggleFav() {
-        const idx = favs.findIndex(f => f.id === currentID);
-        if (idx > -1) favs.splice(idx, 1);
-        else { const stn = allStations.find(x => x.Id === currentID); favs.push({id: stn.Id, name: stn.Name}); }
-        localStorage.setItem('fishingFavs', JSON.stringify(favs));
-        drawFavs(); updateFavBtn();
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); } }
+    function resetForm() { document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; document.getElementById('logNotes').value = ''; }
+    function fillSelect(data) { const s = document.getElementById('stationSelect'); data.forEach(stn => s.innerHTML += `<option value="${stn.Id}">${stn.Name}</option>`); }
+    function drawFavs() { /* Placeholder for favorites draw */ }
+    function toggleFav() { /* Placeholder for toggle logic */ }
+
+    // Export / Import
+    function exportData() {
+        const data = JSON.stringify({catches, favs});
+        const blob = new Blob([data], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `fishing_diary_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
     }
 
-    function updateFavBtn() {
-        const b = document.getElementById('mainFavBtn'); b.style.display = 'block';
-        const isFav = favs.some(f => f.id === currentID);
-        b.innerText = isFav ? "⭐ REMOVE FAVORITE" : "⭐ SAVE FAVORITE";
-        b.className = isFav ? "btn-fav active" : "btn-fav";
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = JSON.parse(e.target.result);
+            if(data.catches) catches = data.catches;
+            if(data.favs) favs = data.favs;
+            localStorage.setItem('fishingCatches', JSON.stringify(catches));
+            localStorage.setItem('fishingFavs', JSON.stringify(favs));
+            renderDiary(); alert("Diary Restored!");
+        };
+        reader.readAsText(event.target.files[0]);
     }
-
-    function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
-    function fillSelect(data) { const s = document.getElementById('stationSelect'); s.innerHTML = '<option value="">-- Select Port --</option>'; data.forEach(item => { s.innerHTML += `<option value="${item.Id}">${item.Name}</option>`; }); }
-    function filterStations() { const q = document.getElementById('searchBox').value.toLowerCase(); fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q))); }
 </script>
 </body>
 </html>
