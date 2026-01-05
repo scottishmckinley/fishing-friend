@@ -34,7 +34,7 @@
         <input type="text" id="searchBox" placeholder="e.g. Whitby" oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option>Loading Stations...</option></select>
     </div>
-    <div id="loader" class="loading">📡 Updating Data...</div>
+    <div id="loader" class="loading">📡 Syncing with Coastguard...</div>
     <div id="dashboard">
         <div class="card">
             <button id="starBtn" class="star" onclick="toggleFav()">★</button>
@@ -45,15 +45,15 @@
         </div>
         <div class="card" style="border-left-color: #2ecc40;">
             <span class="label">Next 4 Tides</span>
-            <div id="tideList"><p style="color:#ccc; font-size:0.85rem;">Waiting...</p></div>
+            <div id="tideList"><p style="color:#ccc; font-size:0.85rem;">Waiting for port selection...</p></div>
         </div>
     </div>
 </div>
 
 <script>
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    // Switching to a more "Direct" proxy style
-    const PROXY = "https://corsproxy.io/?"; 
+    // We use AllOrigins JSON format which wraps the request to bypass CORS
+    const PROXY = "https://api.allorigins.win/get?url=";
 
     let allStations = [];
     let currentID = null;
@@ -63,27 +63,35 @@
 
     async function getStations() {
         try {
-            // We use the simplest possible URL structure to avoid CORS triggers
-            const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations?subscription-key=${KEY}`;
+            const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations`;
+            // We use the JSONP/GET wrapper which AllOrigins handles without preflight
+            const res = await fetch(`${PROXY}${encodeURIComponent(target)}&subscription-key=${KEY}`);
+            const data = await res.json();
             
-            // Explicitly NO headers, NO credentials
-            const res = await fetch(PROXY + target, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {} 
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            allStations = await res.json();
+            // AllOrigins wraps the result in a "contents" string or object
+            allStations = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+            
             allStations.sort((a,b) => a.Name.localeCompare(b.Name));
             fillSelect(allStations);
         } catch (e) {
-            console.error("Admiralty Fetch Failed:", e);
-            document.getElementById('stationSelect').innerHTML = '<option>Connection blocked - Refreshing...</option>';
+            console.error("Fetch failed:", e);
+            document.getElementById('stationSelect').innerHTML = '<option>Connection Error - Refresh Page</option>';
         }
     }
 
-    // ... rest of your fillSelect and filterStations functions remain the same ...
+    function fillSelect(data) {
+        const s = document.getElementById('stationSelect');
+        s.innerHTML = '<option value="">-- Choose Port --</option>';
+        data.forEach(item => {
+            const el = document.createElement('option');
+            el.value = item.Id; el.textContent = item.Name; s.appendChild(el);
+        });
+    }
+
+    function filterStations() {
+        const q = document.getElementById('searchBox').value.toLowerCase();
+        fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q)));
+    }
 
     async function loadData(sid = null) {
         const id = sid || document.getElementById('stationSelect').value;
@@ -96,9 +104,10 @@
         const [lon, lat] = stn.Geometry.coordinates;
 
         try {
-            const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents?subscription-key=${KEY}`;
-            const tRes = await fetch(PROXY + tideTarget);
-            const tides = await tRes.json();
+            const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents`;
+            const tRes = await fetch(`${PROXY}${encodeURIComponent(tideTarget)}&subscription-key=${KEY}`);
+            const tData = await tRes.json();
+            const tides = typeof tData.contents === 'string' ? JSON.parse(tData.contents) : tData.contents;
 
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
@@ -110,7 +119,46 @@
             document.getElementById('loader').style.display = 'none'; 
         }
     }
-    // ... (Keep the rest of your render, toggleFav, and drawFavs functions) ...
+
+    function render(tides, wind, name) {
+        const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+        const dir = dirs[Math.round(wind.wind_direction_10m / 22.5) % 16];
+        document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
+        document.getElementById('windGst').innerText = `Gusts: ${Math.round(wind.wind_gusts_10m)} mph`;
+        document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
+
+        const list = document.getElementById('tideList');
+        list.innerHTML = tides.slice(0, 4).map(t => {
+            const isHigh = t.EventType.includes("High");
+            const time = new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            return `<div class="tide-row">
+                <span class="${isHigh?'high':'low'}">${isHigh?'HIGH':'LOW'}</span>
+                <span>${time}</span>
+                <span>${t.Height.toFixed(2)}m</span>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleFav() {
+        if (!currentID) return;
+        const stn = allStations.find(x => x.Id === currentID);
+        const idx = favs.findIndex(f => f.id === currentID);
+        if (idx > -1) favs.splice(idx, 1);
+        else favs.push({id: stn.Id, name: stn.Name});
+        localStorage.setItem('fishingFavs', JSON.stringify(favs));
+        drawFavs(); updateStar();
+    }
+
+    function drawFavs() {
+        const b = document.getElementById('favBar');
+        b.innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join('');
+    }
+
+    function updateStar() {
+        const btn = document.getElementById('starBtn');
+        if (!btn) return;
+        btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
+    }
 </script>
 </body>
 </html>
