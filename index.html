@@ -19,70 +19,42 @@
             --border: #1e293b;
         }
         
-        body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            background: var(--navy); 
-            margin: 0; 
-            padding: 10px; 
-            color: var(--text); 
-        }
-
-        .app-container { 
-            max-width: 450px; 
-            margin: 0 auto; 
-            background: var(--navy); 
-            padding: 20px; 
-            border-radius: 30px; 
-            box-sizing: border-box; 
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
+        .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
         
-        /* Permanent Professional Logo */
-        .header { text-align: center; margin-bottom: 25px; }
-        .logo-svg { width: 55px; height: 55px; fill: var(--sea); margin-bottom: 8px; filter: drop-shadow(0 0 8px rgba(52, 232, 158, 0.3)); }
-        h1 { color: var(--white); margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
-
-        .btn-gps { 
-            width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; 
-            border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem;
-            transition: transform 0.1s;
+        /* New Pro Badge Logo */
+        .header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
+        .logo-badge {
+            width: 70px; height: 70px; background: var(--card); border: 2px solid var(--sea);
+            border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(52, 232, 158, 0.15);
         }
-        .btn-gps:active { transform: scale(0.98); }
+        .logo-svg { width: 40px; height: 40px; fill: var(--sea); }
+        h1 { color: var(--white); margin: 0; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
 
+        .btn-gps { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 1px; }
         
-        input, select { 
-            width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); 
-            border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white);
-            box-sizing: border-box; outline: none;
-        }
-        input:focus { border-color: var(--sea); }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; }
 
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--border); font-weight: 700; cursor: pointer; }
         
-        .btn-fav { 
-            width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); 
-            background: transparent; color: var(--gold); font-weight: bold; cursor: pointer; 
-            margin-bottom: 15px; display: none; 
-        }
+        .btn-fav { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: transparent; color: var(--gold); font-weight: bold; cursor: pointer; margin-bottom: 15px; display: none; }
         .btn-fav.active { background: var(--gold); color: var(--navy); }
 
-        /* Dashboard Styling */
-        .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .val { font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1.2; }
+        .val { font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1.2; display: flex; align-items: center; gap: 8px; }
         .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); margin-top: 4px; }
         
-        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; z-index: 1; border: 2px solid var(--border); }
-
+        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
         .rating-box { padding: 18px; border-radius: 15px; text-align: center; font-weight: 900; margin-bottom: 15px; font-size: 1.1rem; }
         .good { background: rgba(52, 232, 158, 0.1); color: var(--sea); border: 2px solid var(--sea); }
         .fair { background: rgba(244, 175, 27, 0.1); color: var(--gold); border: 2px solid var(--gold); }
         
         .tide-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
         .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; letter-spacing: 2px; }
-        
-        /* Leaflet Dark Filter */
         .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
@@ -90,9 +62,11 @@
 
 <div class="app-container">
     <div class="header">
-        <svg class="logo-svg" viewBox="0 0 24 24">
-            <path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" />
-        </svg>
+        <div class="logo-badge">
+            <svg class="logo-svg" viewBox="0 0 24 24">
+                <path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" />
+            </svg>
+        </div>
         <h1>Fishing Friend</h1>
     </div>
 
@@ -116,19 +90,19 @@
 
         <div class="grid-2">
             <div class="card">
-                <span class="label">Environment</span>
+                <span class="label">Weather</span>
                 <div class="val" id="temp">--°C</div>
                 <div class="sub-val" id="clouds">--</div>
             </div>
             <div class="card">
-    <span class="label">Wind & Direction</span>
-    <div class="val">
-        <span id="windSpd">--</span> 
-        <span id="windDirLabel" style="font-size: 1.2rem; color: var(--sea); margin-left: 5px;">--</span>
-        <span id="windArrow" style="display: inline-block; transition: 0.5s;">↑</span>
-    </div>
-    <div class="sub-val" id="windGst" style="color:var(--red)">--</div>
-</div>
+                <span class="label">Wind</span>
+                <div class="val">
+                    <span id="windSpd">--</span>
+                    <span id="windArrow" style="display:inline-block; font-size:1.2rem; color:var(--sea);">↑</span>
+                </div>
+                <div class="sub-val" id="windDirLabel">--</div>
+                <div class="sub-val" id="windGst" style="color:var(--red); font-size: 0.75rem;">--</div>
+            </div>
         </div>
 
         <div class="grid-2">
@@ -218,23 +192,19 @@
     function render(tides, wind, marine) {
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
         
-        // Wind Update
-        const windDirIndex = Math.round(wind.wind_direction_10m / 22.5) % 16;
+        // Wind & Direction Fix
         document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
+        const windDirIndex = Math.round(wind.wind_direction_10m / 22.5) % 16;
         document.getElementById('windDirLabel').innerText = dirs[windDirIndex];
         document.getElementById('windArrow').style.transform = `rotate(${wind.wind_direction_10m}deg)`;
         document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(wind.wind_gusts_10m)} mph`;
         
-        // Weather & Waves
         document.getElementById('temp').innerText = `${Math.round(wind.temperature_2m)}°C`;
         document.getElementById('clouds').innerText = wind.cloud_cover > 70 ? "Overcast" : wind.cloud_cover > 30 ? "Partly Cloudy" : "Clear Skies";
         document.getElementById('waveHgt').innerText = `${(marine.wave_height * 3.28).toFixed(1)} ft`;
         document.getElementById('wavePeriod').innerText = `${marine.wave_period}s interval`;
-        
-        // Current Update
         document.getElementById('curSpd').innerText = `${(marine.ocean_current_velocity * 1.94).toFixed(1)} kts`;
-        const curDirIndex = Math.round(marine.ocean_current_direction / 22.5) % 16;
-        document.getElementById('curDir').innerText = `Flowing ${dirs[curDirIndex]}`;
+        document.getElementById('curDir').innerText = `Flowing ${dirs[Math.round(marine.ocean_current_direction / 22.5) % 16]}`;
 
         const futureTides = tides.filter(t => new Date(t.DateTime) > new Date());
         const next = futureTides[0];
