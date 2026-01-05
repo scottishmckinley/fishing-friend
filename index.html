@@ -51,12 +51,10 @@
 </div>
 
 <script>
-    // YOUR ACTIVE KEY
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    
-    // We will try DIRECT first, then fallback to a different proxy if it fails
-    const BASE_URL = 'https://admiraltyapi.azure-api.net/adat/api/v1';
-    const ALT_PROXY = "https://api.allorigins.win/raw?url="; 
+    // Using a more reliable "Raw" proxy for GitHub
+    const PROXY = "https://api.allorigins.win/raw?url=";
+    const API_BASE = "https://admiraltyapi.azure-api.net/adat/api/v1";
 
     let allStations = [];
     let currentID = null;
@@ -66,21 +64,19 @@
 
     async function getStations() {
         try {
-            // Trying a more reliable proxy method for GitHub Pages
-            const targetUrl = `${BASE_URL}/Stations`;
-            const res = await fetch(ALT_PROXY + encodeURIComponent(targetUrl), {
+            const target = `${API_BASE}/Stations`;
+            const res = await fetch(PROXY + encodeURIComponent(target), {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
 
-            if (!res.ok) throw new Error(`Status ${res.status}`);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
             allStations = await res.json();
             allStations.sort((a,b) => a.Name.localeCompare(b.Name));
             fillSelect(allStations);
         } catch (e) {
-            console.error("Admiralty Load Error:", e);
-            document.getElementById('stationSelect').innerHTML = '<option>Error loading stations</option>';
-            alert("Connection Error. Please refresh in 30 seconds. If it persists, your API key may need to be 'Regenerated' in the Admiralty Portal.");
+            console.error(e);
+            alert("Error 404/Connection: The Admiralty server could not be reached via the proxy. Trying again...");
         }
     }
 
@@ -109,20 +105,22 @@
         const [lon, lat] = stn.Geometry.coordinates;
 
         try {
-            // Tides via Proxy
-            const tUrl = `${BASE_URL}/Stations/${id}/TidalEvents`;
-            const tRes = await fetch(ALT_PROXY + encodeURIComponent(tUrl), {
+            // Tides - Testing direct access first as GitHub is HTTPS
+            const tideTarget = `${API_BASE}/Stations/${id}/TidalEvents`;
+            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
+            
+            if (!tRes.ok) throw new Error("Tide 404");
             const tides = await tRes.json();
 
-            // Weather (Direct - Open-Meteo never has CORS issues)
+            // Weather
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
 
             render(tides, wind.current, stn.Name);
         } catch (err) { 
-            alert("Tide data fetch failed. This usually happens if the Admiralty server is busy."); 
+            alert("Data Error: Admiralty restricted this specific port or the proxy failed. Try a different port."); 
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -136,6 +134,10 @@
         document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
 
         const list = document.getElementById('tideList');
+        if (!tides || tides.length === 0) {
+            list.innerHTML = "<p>No tidal data for this station.</p>";
+            return;
+        }
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
             const time = new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
