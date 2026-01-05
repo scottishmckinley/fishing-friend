@@ -30,12 +30,17 @@
         .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 15px; }
         #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
 
-        /* Tide Outlook Styling */
-        .day-group { border-top: 1px solid var(--border); padding: 10px 0; margin-top: 5px; }
-        .day-title { color: var(--gold); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
-        .tide-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; }
+        /* Collapsible Outlook */
+        .outlook-trigger { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--gold); font-weight: 800; font-size: 0.85rem; padding: 10px 0; border-top: 1px solid var(--border); }
+        #tideOutlook { display: none; margin-top: 10px; }
+        .day-group { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 0; }
+        .day-title { color: var(--gold); font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+        .tide-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 3px 0; }
         .high-tide { color: var(--sea); font-weight: 800; }
-        
+
+        /* Log Grid */
+        .log-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; }
+
         /* Journal/Diary Styling */
         .diary-timeline { border-left: 2px solid var(--border); margin: 10px 0 0 10px; padding-left: 20px; }
         .diary-log-item { margin-bottom: 30px; position: relative; }
@@ -43,8 +48,7 @@
         .diary-date { font-size: 0.7rem; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 2px; }
         .diary-content { font-size: 1.1rem; color: var(--white); font-weight: 700; }
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
-        .diary-meta { font-size: 0.75rem; color: #64748b; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .diary-notes { font-style: italic; color: var(--text); font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 8px; border-left: 2px solid var(--gold); }
+        .diary-meta { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
         
         .btn-outline { width: 100%; padding: 12px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
@@ -58,7 +62,7 @@
     <button class="btn-gps" onclick="getLocation()">📍 GPS: LOCATE NEAREST PORT</button>
 
     <div class="search-section">
-        <span class="label">Favorites</span>
+        <span class="label">Quick Links</span>
         <div id="favBar"></div>
         <input type="text" id="searchInput" placeholder="Search port name..." oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option value="">-- Select Port --</option></select>
@@ -78,19 +82,30 @@
                     <div id="windGst" style="font-size: 0.7rem; color: var(--red); font-weight: 900;">--</div>
                 </div>
             </div>
-            <button id="favBtn" class="btn-outline" onclick="toggleFav()" style="border-color:var(--gold); color:var(--gold)">⭐ SAVE PORT</button>
-        </div>
 
-        <div class="card">
-            <span class="label">7-Day Tide Outlook</span>
+            <div class="outlook-trigger" onclick="toggleOutlook()">
+                <span>📅 7-DAY TIDE OUTLOOK</span>
+                <span id="outlookArrow">▼</span>
+            </div>
             <div id="tideOutlook"></div>
+
+            <button id="favBtn" class="btn-outline" onclick="toggleFav()" style="border-color:var(--gold); color:var(--gold)">⭐ SAVE PORT</button>
         </div>
 
         <div class="card">
             <span class="label">New Diary Entry</span>
             <input type="hidden" id="editIndex" value="-1">
             <input type="text" id="logFish" placeholder="Species">
-            <input type="text" id="logSize" placeholder="Weight">
+            
+            <div class="log-grid">
+                <input type="number" id="logWeight" placeholder="Weight" step="0.1">
+                <select id="logUnit">
+                    <option value="lb">lb</option>
+                    <option value="kg">kg</option>
+                </select>
+                <input type="number" id="logLength" placeholder="cm">
+            </div>
+
             <textarea id="logNotes" placeholder="Notes..."></textarea>
             <button class="btn-gps" id="saveBtn" onclick="addCatch()" style="margin-bottom:0">✍️ RECORD CATCH</button>
         </div>
@@ -143,7 +158,8 @@
                 let d2 = Math.hypot(curr.Coords[1]-pos.coords.latitude, curr.Coords[0]-pos.coords.longitude);
                 return d1 < d2 ? prev : curr;
             });
-            document.getElementById('searchInput').value = nearest.Name;
+            // FIX: Clear search box and set dropdown
+            document.getElementById('searchInput').value = "";
             document.getElementById('stationSelect').value = nearest.Id;
             loadData(nearest.Id);
         });
@@ -153,6 +169,7 @@
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
         currentID = id;
+        document.getElementById('searchInput').value = ""; // FIX: Clear search box
         document.getElementById('dashboard').style.display = 'block';
         updateFavBtn();
         const stn = allStations.find(x => x.Id === id);
@@ -171,12 +188,12 @@
     }
 
     function processConditions(w, tides, portName) {
-        const weatherCodes = { 0: "Clear Skies", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Slight Rain", 63: "Rain" };
+        const weatherCodes = { 0: "Clear Skies", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain" };
         const now = new Date();
         const next = tides.find(t => new Date(t.DateTime) > now);
         const last = tides.filter(t => new Date(t.DateTime) <= now).pop();
         
-        let flowStr = "Steady Flow";
+        let flowStr = "Steady";
         if(next && last) {
             const dir = next.EventType.includes("High") ? "Rising" : "Falling";
             const strength = Math.round(Math.sin(((now - new Date(last.DateTime)) / (new Date(next.DateTime) - new Date(last.DateTime))) * Math.PI) * 100);
@@ -194,39 +211,42 @@
     }
 
     function renderOutlook(tides) {
-        const container = document.getElementById('tideOutlook');
         const groups = {};
-        
         tides.forEach(t => {
             const dateStr = new Date(t.DateTime).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
             if (!groups[dateStr]) groups[dateStr] = [];
             groups[dateStr].push(t);
         });
 
-        container.innerHTML = Object.keys(groups).map(date => `
+        document.getElementById('tideOutlook').innerHTML = Object.keys(groups).map(date => `
             <div class="day-group">
                 <div class="day-title">${date}</div>
-                ${groups[date].map(t => {
-                    const isHigh = t.EventType.includes("High");
-                    return `
-                    <div class="tide-row ${isHigh ? 'high-tide' : ''}">
+                ${groups[date].map(t => `
+                    <div class="tide-row ${t.EventType.includes('High') ? 'high-tide' : ''}">
                         <span>${t.EventType}</span>
                         <span>${new Date(t.DateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span>${t.Height.toFixed(1)}m</span>
-                    </div>`;
-                }).join('')}
-            </div>
-        `).join('');
+                    </div>`).join('')}
+            </div>`).join('');
+    }
+
+    function toggleOutlook() {
+        const el = document.getElementById('tideOutlook');
+        const arrow = document.getElementById('outlookArrow');
+        const isOpen = el.style.display === 'block';
+        el.style.display = isOpen ? 'none' : 'block';
+        arrow.innerText = isOpen ? '▼' : '▲';
     }
 
     function addCatch() {
         const fish = document.getElementById('logFish').value.trim();
-        const size = document.getElementById('logSize').value.trim();
+        const weight = document.getElementById('logWeight').value;
+        const unit = document.getElementById('logUnit').value;
+        const length = document.getElementById('logLength').value;
         const notes = document.getElementById('logNotes').value.trim();
         const editIdx = parseInt(document.getElementById('editIndex').value);
         if(!fish) return;
 
-        const entry = { fish, size, notes, timestamp: new Date().getTime(), snap: {...currentSnap} };
+        const entry = { fish, weight, unit, length, notes, timestamp: new Date().getTime(), snap: {...currentSnap} };
         if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
         resetForm(); renderDiary();
@@ -242,11 +262,13 @@
 
         if (catches.length === 0) { container.innerHTML = ""; return; }
 
+        // PB logic: convert all to grams for fair comparison
         const pbs = {};
         catches.forEach(c => {
             const s = c.fish.toLowerCase();
-            const val = parseFloat(c.size.replace(/[^\d.]/g, '')) || 0;
-            if (!pbs[s] || val > pbs[s].val) pbs[s] = { val, id: c.timestamp };
+            const w = parseFloat(c.weight) || 0;
+            const grams = c.unit === 'lb' ? w * 453.59 : w * 1000;
+            if (!pbs[s] || grams > pbs[s].val) pbs[s] = { val: grams, id: c.timestamp };
         });
 
         const filtered = filterVal === 'all' ? catches : catches.filter(c => c.fish.toLowerCase() === filterVal);
@@ -255,7 +277,10 @@
                 <div style="float:right; cursor:pointer;" onclick="deleteCatch(${catches.indexOf(c)})">✕</div>
                 <div class="diary-date">${new Date(c.timestamp).toLocaleDateString()} @ ${new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
                 <div class="diary-content">
-                    ${c.fish.toUpperCase()} ${c.size ? `• ${c.size}` : ''} 
+                    ${c.fish.toUpperCase()} 
+                    <span style="font-size:0.8rem; font-weight:400; opacity:0.8;">
+                        (${c.weight || '?'}${c.unit} ${c.length ? `• ${c.length}cm` : ''})
+                    </span>
                     ${pbs[c.fish.toLowerCase()]?.id === c.timestamp ? '<span class="pb-badge">🏆 PB</span>' : ''}
                 </div>
                 <div class="diary-meta">📍 ${c.snap.port} | 🌊 ${c.snap.flow}</div>
@@ -264,7 +289,15 @@
     }
 
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); } }
-    function resetForm() { document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; document.getElementById('logNotes').value = ''; document.getElementById('editIndex').value = '-1'; }
+    
+    function resetForm() { 
+        document.getElementById('logFish').value = ''; 
+        document.getElementById('logWeight').value = ''; 
+        document.getElementById('logLength').value = ''; 
+        document.getElementById('logNotes').value = ''; 
+        document.getElementById('editIndex').value = '-1'; 
+    }
+
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
         if(idx > -1) favs.splice(idx, 1); else favs.push({id: currentID, name: allStations.find(x => x.Id === currentID).Name});
