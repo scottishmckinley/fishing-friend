@@ -9,33 +9,43 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { 
-            --navy: #050b14; 
-            --card: #121c2b;
-            --sea: #34e89e; 
-            --gold: #f4af1b; 
-            --white: #f1f2f6; 
-            --text: #cbd5e0; 
-            --red: #ff4757;
-            --border: #1e293b;
+            --navy: #050b14; --card: #121c2b; --sea: #34e89e; 
+            --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; 
+            --red: #ff4757; --border: #1e293b;
         }
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
         
-        /* New Pro Badge Logo */
+        /* High-Visibility Hook Logo */
         .header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
         .logo-badge {
-            width: 70px; height: 70px; background: var(--card); border: 2px solid var(--sea);
-            border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(52, 232, 158, 0.15);
+            width: 75px; height: 75px; background: var(--card); border: 3px solid var(--sea);
+            border-radius: 50%; margin: 0 auto 12px; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 25px rgba(52, 232, 158, 0.2);
         }
-        .logo-svg { width: 40px; height: 40px; fill: var(--sea); }
-        h1 { color: var(--white); margin: 0; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
+        .hook-css {
+            width: 24px; height: 35px; border: 5px solid var(--sea);
+            border-top: none; border-radius: 0 0 15px 15px; position: relative;
+            margin-top: 5px;
+        }
+        .hook-css::after {
+            content: ''; position: absolute; right: -12px; top: 0;
+            width: 0; height: 0; border-left: 8px solid transparent;
+            border-right: 8px solid transparent; border-bottom: 12px solid var(--sea);
+            transform: rotate(45deg);
+        }
+        .hook-line {
+            position: absolute; top: -15px; left: -5px; width: 5px; height: 20px; background: var(--sea);
+        }
+
+        h1 { color: var(--white); margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
 
         .btn-gps { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 1px; }
         
-        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white); box-sizing: border-box; }
 
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--border); font-weight: 700; cursor: pointer; }
@@ -45,16 +55,19 @@
 
         .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .val { font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1.2; display: flex; align-items: center; gap: 8px; }
+        .val { font-size: 1.6rem; font-weight: 800; color: var(--white); line-height: 1.2; display: flex; align-items: center; gap: 8px; }
         .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); margin-top: 4px; }
         
-        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
+        #map { height: 200px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); background: #000; }
         .rating-box { padding: 18px; border-radius: 15px; text-align: center; font-weight: 900; margin-bottom: 15px; font-size: 1.1rem; }
         .good { background: rgba(52, 232, 158, 0.1); color: var(--sea); border: 2px solid var(--sea); }
         .fair { background: rgba(244, 175, 27, 0.1); color: var(--gold); border: 2px solid var(--gold); }
         
-        .tide-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; letter-spacing: 2px; }
+        .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .day-header { background: var(--navy); padding: 5px 10px; font-size: 0.75rem; font-weight: 800; color: var(--gold); margin-top: 10px; border-radius: 5px; }
+        
+        .btn-outline { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; }
         .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
@@ -63,9 +76,7 @@
 <div class="app-container">
     <div class="header">
         <div class="logo-badge">
-            <svg class="logo-svg" viewBox="0 0 24 24">
-                <path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" />
-            </svg>
+            <div class="hook-css"><div class="hook-line"></div></div>
         </div>
         <h1>Fishing Friend</h1>
     </div>
@@ -80,13 +91,13 @@
         <select id="stationSelect" onchange="loadData()"><option>Ready...</option></select>
     </div>
 
-    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ SAVE AS FAVORITE</button>
+    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ SAVE TO FAVORITES</button>
     
     <div id="loader" class="loading">SYNCING DATA...</div>
 
     <div id="dashboard" style="display:none;">
         <div id="map"></div>
-        <div id="fishingRating" class="rating-box">Analysing Spots...</div>
+        <div id="fishingRating" class="rating-box">Analysing...</div>
 
         <div class="grid-2">
             <div class="card">
@@ -105,22 +116,11 @@
             </div>
         </div>
 
-        <div class="grid-2">
-            <div class="card">
-                <span class="label">Wave Height</span>
-                <div class="val" id="waveHgt">--</div>
-                <div class="sub-val" id="wavePeriod">--</div>
-            </div>
-            <div class="card">
-                <span class="label">Ocean Flow</span>
-                <div class="val" id="curSpd">--</div>
-                <div class="sub-val" id="curDir">--</div>
-            </div>
-        </div>
-
         <div class="card">
-            <span class="label">Next 4 Tides</span>
+            <span class="label">Tide Schedule</span>
             <div id="tideList"></div>
+            <button class="btn-outline" onclick="toggleExtendedTides()">📅 View 7-Day Outlook</button>
+            <div id="extendedTides" style="display:none;"></div>
         </div>
     </div>
 </div>
@@ -130,7 +130,7 @@
     const PROXY = "https://corsproxy.io/?"; 
     const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
-    let allStations = [], currentID = null, map = null, marker = null;
+    let allStations = [], currentID = null, map = null, marker = null, allTides = [];
     let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
 
     window.onload = () => { initMap(); getStations(); drawFavs(); };
@@ -166,6 +166,7 @@
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
         document.getElementById('searchBox').value = "";
+        document.getElementById('extendedTides').style.display = 'none';
         fillSelect(allStations);
         currentID = id;
         document.getElementById('stationSelect').value = id;
@@ -175,51 +176,57 @@
 
         const stn = allStations.find(x => x.Id === id);
         const [lon, lat] = stn.Coords;
-        map.setView([lat, lon], 12);
-        if (marker) marker.setLatLng([lat, lon]); else marker = L.marker([lat, lon]).addTo(map);
+        
+        setTimeout(() => { 
+            map.invalidateSize(); 
+            map.setView([lat, lon], 12);
+            if (marker) marker.setLatLng([lat, lon]); else marker = L.marker([lat, lon]).addTo(map);
+        }, 200);
 
         try {
-            const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
-            const tides = await tRes.json();
+            const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=7`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
+            allTides = await tRes.json();
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
-            const mRes = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,ocean_current_velocity,ocean_current_direction`);
-            const marine = await mRes.json();
-            render(tides, wind.current, marine.current);
+            render(allTides, wind.current);
         } finally { document.getElementById('loader').style.display = 'none'; }
     }
 
-    function render(tides, wind, marine) {
+    function render(tides, wind) {
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
-        
-        // Wind & Direction Fix
         document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
-        const windDirIndex = Math.round(wind.wind_direction_10m / 22.5) % 16;
-        document.getElementById('windDirLabel').innerText = dirs[windDirIndex];
+        document.getElementById('windDirLabel').innerText = dirs[Math.round(wind.wind_direction_10m / 22.5) % 16];
         document.getElementById('windArrow').style.transform = `rotate(${wind.wind_direction_10m}deg)`;
         document.getElementById('windGst').innerText = `🚩 GUSTS: ${Math.round(wind.wind_gusts_10m)} mph`;
-        
         document.getElementById('temp').innerText = `${Math.round(wind.temperature_2m)}°C`;
-        document.getElementById('clouds').innerText = wind.cloud_cover > 70 ? "Overcast" : wind.cloud_cover > 30 ? "Partly Cloudy" : "Clear Skies";
-        document.getElementById('waveHgt').innerText = `${(marine.wave_height * 3.28).toFixed(1)} ft`;
-        document.getElementById('wavePeriod').innerText = `${marine.wave_period}s interval`;
-        document.getElementById('curSpd').innerText = `${(marine.ocean_current_velocity * 1.94).toFixed(1)} kts`;
-        document.getElementById('curDir').innerText = `Flowing ${dirs[Math.round(marine.ocean_current_direction / 22.5) % 16]}`;
+        document.getElementById('clouds').innerText = wind.cloud_cover > 70 ? "Overcast" : "Clear Skies";
 
         const futureTides = tides.filter(t => new Date(t.DateTime) > new Date());
-        const next = futureTides[0];
-        const diffHrs = (new Date(next.DateTime) - new Date()) / 3600000;
+        document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`).join('');
         
+        // Setup Extended View
+        let extendedHTML = "";
+        let currentDay = "";
+        futureTides.slice(4, 28).forEach(t => {
+            const d = new Date(t.DateTime).toLocaleDateString([], {weekday: 'long', day: 'numeric', month: 'short'});
+            if(d !== currentDay) { currentDay = d; extendedHTML += `<div class="day-header">${d}</div>`; }
+            extendedHTML += `<div class="tide-row"><span>${t.EventType.includes('High')?'High':'Low'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`;
+        });
+        document.getElementById('extendedTides').innerHTML = extendedHTML;
+
         const rating = document.getElementById('fishingRating');
-        if (next.EventType.includes("High") && diffHrs < 2.5) {
+        if (futureTides[0]?.EventType.includes("High")) {
             rating.innerText = "🎣 PRIME FEEDING WINDOW";
             rating.className = "rating-box good";
         } else {
             rating.innerText = "⏳ STEADY ACTIVITY";
             rating.className = "rating-box fair";
         }
+    }
 
-        document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span style="color:var(--white)">${t.Height.toFixed(1)}m</span></div>`).join('');
+    function toggleExtendedTides() {
+        const div = document.getElementById('extendedTides');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
     }
 
     function toggleFav() {
@@ -231,14 +238,5 @@
     }
     function updateFavBtn() {
         const btn = document.getElementById('mainFavBtn');
-        const isFav = favs.some(f => f.id === currentID);
-        btn.innerText = isFav ? "⭐ REMOVE FROM FAVORITES" : "⭐ SAVE TO FAVORITES";
         btn.style.display = 'block';
-        btn.className = isFav ? "btn-fav active" : "btn-fav";
-    }
-    function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
-    function fillSelect(data) { const s = document.getElementById('stationSelect'); s.innerHTML = '<option value="">-- Select Port --</option>'; data.forEach(item => { const el = document.createElement('option'); el.value = item.Id; el.textContent = item.Name; s.appendChild(el); }); }
-    function filterStations() { const q = document.getElementById('searchBox').value.toLowerCase(); fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q))); }
-</script>
-</body>
-</html>
+        const isFav = favs.some(f => f.
