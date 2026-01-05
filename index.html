@@ -17,35 +17,18 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
         
-        /* High-Visibility Hook Logo */
+        /* The Concept Logo: Fish on Hook */
         .header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
-        .logo-badge {
-            width: 75px; height: 75px; background: var(--card); border: 3px solid var(--sea);
-            border-radius: 50%; margin: 0 auto 12px; position: relative;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 25px rgba(52, 232, 158, 0.2);
-        }
-        .hook-css {
-            width: 24px; height: 35px; border: 5px solid var(--sea);
-            border-top: none; border-radius: 0 0 15px 15px; position: relative;
-            margin-top: 5px;
-        }
-        .hook-css::after {
-            content: ''; position: absolute; right: -12px; top: 0;
-            width: 0; height: 0; border-left: 8px solid transparent;
-            border-right: 8px solid transparent; border-bottom: 12px solid var(--sea);
-            transform: rotate(45deg);
-        }
-        .hook-line {
-            position: absolute; top: -15px; left: -5px; width: 5px; height: 20px; background: var(--sea);
-        }
+        .logo-container { width: 90px; height: 90px; margin: 0 auto 10px; position: relative; }
+        .fish-hook-svg { width: 100%; height: 100%; fill: none; stroke: var(--sea); stroke-width: 1.2; }
 
-        h1 { color: var(--white); margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
+        h1 { color: var(--white); margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; }
 
         .btn-gps { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 1rem; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 1px; }
         
-        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white); box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; }
+        input::placeholder { color: #4a5568; }
 
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--border); font-weight: 700; cursor: pointer; }
@@ -75,8 +58,11 @@
 
 <div class="app-container">
     <div class="header">
-        <div class="logo-badge">
-            <div class="hook-css"><div class="hook-line"></div></div>
+        <div class="logo-container">
+            <svg class="fish-hook-svg" viewBox="0 0 100 100">
+                <path d="M30,60 Q40,30 70,45 Q85,55 70,75 Q50,85 30,60" stroke-width="2"/>
+                <path d="M70,45 L85,35 M70,75 L85,85" stroke-width="2"/> <circle cx="60" cy="52" r="2" fill="var(--sea)"/> <path d="M50,5 V45 Q50,55 40,55 Q30,55 32,45" stroke-width="2"/>
+                <path d="M32,45 L28,48 M32,45 L36,48" stroke-width="2"/> </svg>
         </div>
         <h1>Fishing Friend</h1>
     </div>
@@ -86,18 +72,17 @@
     <div class="search-section">
         <span class="label">Favorites</span>
         <div id="favBar"></div>
-        <span class="label">Location Search</span>
-        <input type="text" id="searchBox" placeholder="Enter port name..." oninput="filterStations()">
-        <select id="stationSelect" onchange="loadData()"><option>Ready...</option></select>
+        <span class="label">Manual Search</span>
+        <input type="text" id="searchBox" placeholder="Type port name..." oninput="filterStations()">
+        <select id="stationSelect" onchange="loadData()"><option>-- Select Port --</option></select>
     </div>
 
     <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ SAVE TO FAVORITES</button>
-    
-    <div id="loader" class="loading">SYNCING DATA...</div>
+    <div id="loader" class="loading">SYNCING LIVE DATA...</div>
 
     <div id="dashboard" style="display:none;">
         <div id="map"></div>
-        <div id="fishingRating" class="rating-box">Analysing...</div>
+        <div id="fishingRating" class="rating-box">Analysing Spots...</div>
 
         <div class="grid-2">
             <div class="card">
@@ -136,6 +121,7 @@
     window.onload = () => { initMap(); getStations(); drawFavs(); };
 
     function initMap() {
+        if(map) return;
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([54, -2], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     }
@@ -204,7 +190,6 @@
         const futureTides = tides.filter(t => new Date(t.DateTime) > new Date());
         document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:900; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`).join('');
         
-        // Setup Extended View
         let extendedHTML = "";
         let currentDay = "";
         futureTides.slice(4, 28).forEach(t => {
