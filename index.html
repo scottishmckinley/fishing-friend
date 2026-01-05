@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v7.1 PRO</title>
+    <title>Angler OS v7.2 PRO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -13,7 +13,7 @@
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
         .header span { color: var(--sea); }
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.85rem; }
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.8rem; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -24,10 +24,9 @@
         .btn-main { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
-        #sizeAlert { display: none; background: var(--red); color: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 0.75rem; }
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
         .catch-img { width: 100%; border-radius: 12px; margin-top: 10px; display: block; border: 1px solid var(--border); }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
@@ -36,41 +35,33 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <div class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK & DATA</div>
-        <div class="btn-sub" onclick="showSummary()">📊 SESSION TOTALS</div>
+        <div class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</div>
+        <div class="btn-sub" onclick="showSummary()">📊 TOTALS</div>
+        <div class="btn-sub" onclick="toggle('outlookBox')">📅 7-DAY OUTLOOK</div>
+        <div class="btn-sub" onclick="exportData()">💾 BACKUP</div>
     </div>
 
     <div id="helpBox" class="drawer">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; line-height:1.4;">
-            <b>Tides:</b> High (Blue) / Low (Green). Target 2hrs before/after high.<br>
-            <b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".<br>
-            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger feeding.
-        </p>
-        <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 BACKUP & RESTORE</h4>
-        <p style="font-size:0.7rem; color:#64748b; margin-bottom:10px;">
-            Export regularly to save your history to your device downloads folder.
-        </p>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-            <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
-            <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
-        </div>
-        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        <div id="favList" style="margin-top:10px;"></div>
+        <p><b>Tides:</b> Best 2hrs either side of High.<br><b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".</p>
+    </div>
+
+    <div id="outlookBox" class="drawer">
+        <h4 style="color:var(--gold); margin:0 0 10px 0;">WEEKLY FORECAST</h4>
+        <div id="forecastData">Sync GPS to load outlook...</div>
     </div>
 
     <div id="summaryBox" class="drawer"></div>
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC ALL DATA</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE, WEATHER & GPS</button>
 
     <div class="card" style="padding: 10px;">
-        <span class="label">Port Search (Full List)</span>
+        <span class="label">Port Search</span>
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search..." oninput="filterPorts(this.value)">
+            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Type port name..." oninput="filterPorts(this.value)">
             <button class="btn-sub" onclick="addFav()" style="padding:0 15px; font-size:1.2rem;">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select --</option></select>
+        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Results --</option></select>
     </div>
 
     <div class="hud-grid">
@@ -84,19 +75,16 @@
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log Catch</span>
-        <div id="sizeAlert"></div>
-        <input type="text" id="sp" placeholder="Species..." oninput="checkSize()">
+        <input type="text" id="sp" placeholder="Species...">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <input type="number" id="ln" step="0.1" placeholder="Length (cm)" oninput="checkSize()">
+            <input type="number" id="ln" step="0.1" placeholder="Length (cm)">
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
         <textarea id="notes" placeholder="Notes..."></textarea>
-        
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="processPhoto(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px; color:var(--sea);" onclick="document.getElementById('photoInput').click()">📷 ADD PHOTO</button>
         <div id="photoPreview"></div>
-
-        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
+        <button class="btn-main" onclick="saveEntry()">💾 SAVE RECORD</button>
         <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
     </div>
 
@@ -110,8 +98,7 @@
     let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
     let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null, currentPhoto = "";
     let curData = { pt: "Unknown", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
-
-    const W_CODES = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 61: "Slight Rain", 63: "Moderate Rain", 65: "Heavy Rain", 71: "Slight Snow", 75: "Heavy Snow", 95: "Thunderstorm" };
+    const W_CODES = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 61: "Rain", 63: "Mod Rain", 65: "Heavy Rain", 71: "Slight Snow", 95: "Thunder" };
 
     window.onload = () => {
         map = L.map('map').setView([54.0, -2.0], 6);
@@ -146,6 +133,7 @@
         selectedPortId = id;
         const port = allPorts.find(p => p.id === id);
         curData.pt = port.name;
+        document.getElementById('manualSearch').value = ""; // CLEAR SEARCH FIELD
         map.setView([port.lat, port.lon], 12);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
         fetchTides(id);
@@ -158,7 +146,7 @@
             favs.push({id: port.id, name: port.name});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
             updateFavList(); filterPorts("");
-            alert(`⭐ ${port.name} added to Favorites!`);
+            alert(`⭐ ${port.name} added!`);
         }
     }
 
@@ -172,13 +160,12 @@
     async function syncGPS() {
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const { latitude, longitude } = pos.coords;
-            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure,windgusts_10m`);
+            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=surface_pressure,windgusts_10m&timezone=auto`);
             const wData = await wRes.json();
             const cw = wData.current_weather;
             const gust = wData.hourly.windgusts_10m[0];
             const dirs = ['N','NE','E','SE','S','SW','W','NW'];
-            const windStr = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
-            curData.wind = `${windStr} (Gust ${gust}mph)`;
+            curData.wind = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]} (Gust ${gust}mph)`;
             curData.prs = wData.hourly.surface_pressure[0];
             curData.wDesc = `${W_CODES[cw.weathercode] || "Clear"} | ${cw.temperature}°C`;
             
@@ -186,6 +173,13 @@
             document.getElementById('hudWind').innerText = curData.wind;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
             document.getElementById('pressTrend').innerText = curData.prs >= 1013 ? "STABLE" : "LOW PRESSURE";
+
+            let fH = "";
+            for(let i=0; i<7; i++) {
+                const date = new Date(); date.setDate(date.getDate() + i);
+                fH += `<div class="summary-row"><span>${date.toLocaleDateString([], {weekday:'short'})}</span><span>${W_CODES[wData.daily.weathercode[i]] || "Clear"}</span><span>${wData.daily.temperature_2m_max[i]}°C</span></div>`;
+            }
+            document.getElementById('forecastData').innerHTML = fH;
 
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             handlePortSelect(near.id);
@@ -205,17 +199,6 @@
         document.getElementById('hudFlow').innerText = curData.knots + " kn";
     }
 
-    function checkSize() {
-        const sp = document.getElementById('sp').value.toLowerCase();
-        const ln = parseFloat(document.getElementById('ln').value);
-        const REGS = { "bass": 42, "cod": 35, "whiting": 27 };
-        const alertBox = document.getElementById('sizeAlert');
-        let min = 0;
-        for (let k in REGS) { if(sp.includes(k)) { min = REGS[k]; break; } }
-        if(min && ln < min) { alertBox.style.display='block'; alertBox.innerText=`⚠️ UNDERSIZED! Min for ${sp.toUpperCase()} is ${min}cm`; }
-        else { alertBox.style.display='none'; }
-    }
-
     function processPhoto(e) {
         const reader = new FileReader();
         reader.onload = (ev) => { currentPhoto = ev.target.result; document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:80px; margin-top:10px; border-radius:10px;">`; };
@@ -231,24 +214,21 @@
         const entry = {
             sp, wt: wtVal, ln: document.getElementById('ln').value || 0, nt: document.getElementById('notes').value, 
             dt, tm, loc: curData.pt, photo: currentPhoto,
-            env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`, isPB: false
+            env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`,
+            weather: `${curData.wDesc} | ${curData.wind}`, isPB: false
         };
 
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
         
-        // PB LOGIC: ONLY ONE HEAVIEST GETS BADGE
         const speciesMap = {};
         catches.forEach(c => {
-            const s = c.sp.toLowerCase();
-            const w = parseFloat(c.wt) || 0;
+            const s = c.sp.toLowerCase(); const w = parseFloat(c.wt) || 0;
             if (!speciesMap[s] || w > speciesMap[s]) speciesMap[s] = w;
             c.isPB = false;
         });
         catches.forEach(c => {
             const s = c.sp.toLowerCase();
-            if (parseFloat(c.wt) === speciesMap[s] && speciesMap[s] > 0) {
-                c.isPB = true; speciesMap[s] = 999999;
-            }
+            if (parseFloat(c.wt) === speciesMap[s] && speciesMap[s] > 0) { c.isPB = true; speciesMap[s] = 999999; }
         });
 
         localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
@@ -263,12 +243,13 @@
                     <span>${c.ln}cm / ${c.wt}lb</span>
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.6rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
+                <div style="font-size:0.6rem; color:#64748b; margin-bottom:4px;">${c.env}</div>
+                <div style="font-size:0.6rem; color:var(--sea); margin-bottom:8px;">☁️ ${c.weather || 'No weather recorded'}</div>
                 ${c.photo ? `<img src="${c.photo}" class="catch-img">` : ''}
                 <div style="font-size:0.85rem; border-top:1px solid #1e293b; padding-top:8px; margin-top:8px;">${c.nt}</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
                     <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">📤 SHARE</button>
+                    <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
                 </div>
             </div>`).join('');
@@ -276,8 +257,8 @@
 
     function shareCatch(i) {
         const c = catches[i];
-        const msg = `${c.isPB ? 'NEW PB! ' : ''}Caught a ${c.wt}lb ${c.sp} at ${c.loc}. Conditions: ${c.env}. Logged via AnglerOS.`;
-        if(navigator.share) navigator.share({title: 'My Catch', text: msg}); else alert("Copied: " + msg);
+        const msg = `${c.isPB ? 'NEW PB! ' : ''}${c.sp} (${c.wt}lb) at ${c.loc}. WX: ${c.weather}.`;
+        if(navigator.share) navigator.share({title: 'Catch Log', text: msg}); else alert(msg);
     }
 
     function editEntry(i) {
