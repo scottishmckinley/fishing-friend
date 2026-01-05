@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v6.9 FINAL STABLE</title>
+    <title>Angler OS v7.0 PRO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; --high-tide: rgba(52, 152, 219, 0.2); --low-tide: rgba(46, 204, 113, 0.15); }
+        :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
         .header span { color: var(--sea); }
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.85rem; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -24,9 +24,10 @@
         .btn-main { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
+        #sizeAlert { display: none; background: var(--red); color: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 0.75rem; }
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
         .catch-img { width: 100%; border-radius: 12px; margin-top: 10px; display: block; border: 1px solid var(--border); }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -42,13 +43,17 @@
     <div id="helpBox" class="drawer">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
         <p style="font-size:0.75rem; line-height:1.4;">
-            <b>Tides:</b> High (Blue) / Low (Green). Target the 2 hours before/after high.<br>
-            <b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".<br>
-            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger feeding.<br>
-            <b>Favs:</b> Search for a port, then tap ⭐ to save to your quick-list.
+            <b>Tides:</b> High (Blue) / Low (Green). Best fishing usually 2hrs either side of High Tide.<br>
+            <b>Flow:</b> Sinusoidal calculation based on tide time. 1.5 - 3.0 kn is the "Feeding Zone".<br>
+            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger predatory feeding.<br>
+            <b>PB Logic:</b> Ranked by <b>Weight (lb)</b>. Length (cm) is recorded for legal compliance.
         </p>
         <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 EXPORT/IMPORT</h4>
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 BACKUP & EXPORT</h4>
+        <p style="font-size:0.7rem; color:#64748b; margin-bottom:10px;">
+            <b>Export JSON:</b> Downloads your entire diary to your device. Do this after every big session.<br>
+            <b>Import JSON:</b> Restores your history if you clear your browser cache or change phones.
+        </p>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
             <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
             <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
@@ -59,20 +64,20 @@
 
     <div id="summaryBox" class="drawer"></div>
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC GPS & WEATHER</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC GPS, TIDE & WEATHER</button>
 
     <div class="card" style="padding: 10px;">
         <span class="label">Port Search & Favourites</span>
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Find port..." oninput="filterPorts(this.value)">
+            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search ports..." oninput="filterPorts(this.value)">
             <button class="btn-sub" onclick="addFav()" style="padding:0 15px; font-size:1.2rem;">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Results --</option></select>
+        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select Port --</option></select>
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val" style="color:var(--sea)">--</span></div>
-        <div class="hud-item"><span class="label">Flow</span><div id="hudFlow" class="val">--</div><span id="hudKnots" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Tide Height</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val" style="color:var(--sea)">--</span></div>
+        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hudFlow" class="val">--</div><span id="hudKnots" class="sub-val">--</span></div>
     </div>
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span id="pressTrend" class="sub-val">--</span></div>
@@ -81,25 +86,22 @@
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log Catch</span>
-        <input type="text" id="sp" placeholder="Species (e.g. Cod)">
+        <div id="sizeAlert"></div>
+        <input type="text" id="sp" placeholder="Species (e.g. Bass)" oninput="checkSize()">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <input type="number" id="ln" step="0.1" placeholder="Length (cm)">
+            <input type="number" id="ln" step="0.1" placeholder="Length (cm)" oninput="checkSize()">
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
-        <textarea id="notes" placeholder="Bait, rig, notes..."></textarea>
+        <textarea id="notes" placeholder="Bait, rig, and session notes..."></textarea>
         
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="processPhoto(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px; color:var(--sea);" onclick="document.getElementById('photoInput').click()">📷 ADD PHOTO</button>
         <div id="photoPreview"></div>
 
-        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE TO DIARY</button>
+        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
         <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
     </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 5px;">
-        <span class="label" style="margin:0;">DIARY HISTORY</span>
-        <input type="text" id="diarySearch" placeholder="🔍 Search logs..." style="width:60%; padding:8px; margin:0;" oninput="renderDiary()">
-    </div>
     <div id="diary"></div>
 </div>
 
@@ -111,6 +113,8 @@
     let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null, currentPhoto = "";
     let curData = { pt: "Unknown", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
 
+    const REGS = { "bass": 42, "cod": 35, "whiting": 27, "plaice": 27, "pollock": 30, "mackerel": 30 };
+
     window.onload = () => {
         map = L.map('map').setView([54.0, -2.0], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -120,12 +124,10 @@
     function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
 
     async function loadPorts() {
-        try {
-            const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const data = await res.json();
-            allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
-            filterPorts("");
-        } catch(e) { console.error("Port load failed"); }
+        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const data = await res.json();
+        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+        filterPorts("");
     }
 
     function filterPorts(q) {
@@ -148,7 +150,6 @@
         curData.pt = port.name;
         map.setView([port.lat, port.lon], 12);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
-        document.getElementById('manualSearch').value = "";
         fetchTides(id);
     }
 
@@ -159,16 +160,13 @@
             favs.push({id: port.id, name: port.name});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
             updateFavList(); filterPorts("");
+            alert(`⭐ ${port.name} saved to favourites!`);
         }
     }
 
     function updateFavList() {
         const list = document.getElementById('favList');
-        list.innerHTML = favs.map((f, i) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:5px;">
-                <span style="font-size:0.8rem;">${f.name}</span>
-                <span style="color:var(--red); cursor:pointer; font-weight:bold;" onclick="removeFav(${i})">❌</span>
-            </div>`).join('');
+        list.innerHTML = favs.map((f, i) => `<div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); margin-bottom:5px; border-radius:8px;"><span>${f.name}</span><span style="color:var(--red); cursor:pointer;" onclick="removeFav(${i})">❌</span></div>`).join('');
     }
 
     function removeFav(i) { favs.splice(i, 1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList(); filterPorts(""); }
@@ -182,7 +180,8 @@
             const dirs = ['N','NE','E','SE','S','SW','W','NW'];
             curData.wind = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
             curData.prs = wData.hourly.surface_pressure[0];
-            document.getElementById('hudWeather').innerText = `${cw.temperature}°C`;
+            curData.wDesc = cw.temperature + "°C";
+            document.getElementById('hudWeather').innerText = curData.wDesc;
             document.getElementById('hudWind').innerText = `WIND: ${curData.wind}`;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
             document.getElementById('pressTrend').innerText = curData.prs >= 1013 ? "STABLE" : "LOW PRESSURE";
@@ -204,37 +203,48 @@
         document.getElementById('hudFlow').innerText = curData.knots + " kn";
     }
 
+    function checkSize() {
+        const sp = document.getElementById('sp').value.toLowerCase();
+        const ln = parseFloat(document.getElementById('ln').value);
+        const alertBox = document.getElementById('sizeAlert');
+        let min = 0;
+        for (let k in REGS) { if(sp.includes(k)) { min = REGS[k]; break; } }
+        if(min && ln < min) { alertBox.style.display='block'; alertBox.innerText=`⚠️ UNDERSIZED! Minimum for ${sp.toUpperCase()} is ${min}cm`; }
+        else { alertBox.style.display='none'; }
+    }
+
     function processPhoto(e) {
         const reader = new FileReader();
-        reader.onload = (ev) => { currentPhoto = ev.target.result; document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:80px; margin:10px 0; border-radius:8px;">`; };
+        reader.onload = (ev) => { currentPhoto = ev.target.result; document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:80px; margin-top:10px; border-radius:10px;">`; };
         reader.readAsDataURL(e.target.files[0]);
     }
 
     function saveEntry() {
         const sp = document.getElementById('sp').value; if(!sp) return;
-        const wt = parseFloat(document.getElementById('wt').value) || 0;
+        const wtVal = parseFloat(document.getElementById('wt').value) || 0;
         const dt = editingIndex > -1 ? catches[editingIndex].dt : new Date().toLocaleDateString();
         const tm = editingIndex > -1 ? catches[editingIndex].tm : new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
         const entry = {
-            sp, wt, ln: document.getElementById('ln').value || 0, nt: document.getElementById('notes').value, 
+            sp, wt: wtVal, ln: document.getElementById('ln').value || 0, nt: document.getElementById('notes').value, 
             dt, tm, loc: curData.pt, photo: currentPhoto,
-            env: `${curData.td} Tide | ${curData.knots}kn | ${curData.prs}hPa`, isPB: false
+            env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`, isPB: false
         };
 
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
         
-        // RE-CALC PBs BASED ON WEIGHT
+        // RE-CALC PBs (STRICT SINGLE WEIGHT)
         const speciesMap = {};
         catches.forEach(c => {
-            const s = c.sp.toLowerCase();
+            const sName = c.sp.toLowerCase();
             const w = parseFloat(c.wt) || 0;
-            if(!speciesMap[s] || w > speciesMap[s]) speciesMap[s] = w;
+            if (!speciesMap[sName] || w > speciesMap[sName]) speciesMap[sName] = w;
             c.isPB = false;
         });
         catches.forEach(c => {
-            if(parseFloat(c.wt) === speciesMap[c.sp.toLowerCase()] && speciesMap[c.sp.toLowerCase()] > 0) {
-                c.isPB = true; speciesMap[c.sp.toLowerCase()] = 999999;
+            const sName = c.sp.toLowerCase();
+            if (parseFloat(c.wt) === speciesMap[sName] && speciesMap[sName] > 0) {
+                c.isPB = true; speciesMap[sName] = 999999; // Only first one found gets badge
             }
         });
 
@@ -243,39 +253,30 @@
     }
 
     function renderDiary() {
-        const q = document.getElementById('diarySearch').value.toLowerCase();
-        const filtered = catches.filter(c => (c.sp+c.nt+c.dt+c.loc).toLowerCase().includes(q));
-        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
+        document.getElementById('diary').innerHTML = catches.map((c, i) => `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--sea);">
                     <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PERSONAL BEST</span>' : ''}</span>
-                    <span>${c.wt}lb / ${c.ln}cm</span>
+                    <span>${c.ln}cm / ${c.wt}lb</span>
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
                 <div style="font-size:0.6rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
                 ${c.photo ? `<img src="${c.photo}" class="catch-img">` : ''}
                 <div style="font-size:0.85rem; border-top:1px solid #1e293b; padding-top:8px; margin-top:8px;">${c.nt}</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
-                    <button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
+                    <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DELETE</button>
                 </div>
             </div>`).join('');
-    }
-
-    function shareCatch(i) {
-        const c = catches[i];
-        const msg = `${c.isPB ? 'NEW PB! ' : ''}Caught a ${c.wt}lb ${c.sp} (${c.ln}cm) at ${c.loc}. ${c.env}.`;
-        if(navigator.share) navigator.share({title: 'My Catch', text: msg}); else alert("Copied: " + msg);
     }
 
     function editEntry(i) {
         editingIndex = i; const c = catches[i];
         document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt; document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
         currentPhoto = c.photo || "";
-        document.getElementById('photoPreview').innerHTML = currentPhoto ? `<img src="${currentPhoto}" style="width:80px; border-radius:8px;">` : "";
+        document.getElementById('photoPreview').innerHTML = currentPhoto ? `<img src="${currentPhoto}" style="width:80px; border-radius:10px;">` : "";
         document.getElementById('formTitle').innerText = "Update Record"; document.getElementById('cancelEdit').style.display = 'block';
-        window.scrollTo({ top: 450, behavior: 'smooth' });
+        window.scrollTo({ top: 400, behavior: 'smooth' });
     }
 
     function resetForm() { editingIndex = -1; currentPhoto = ""; document.getElementById('photoPreview').innerHTML = ""; document.getElementById('sp').value=""; document.getElementById('wt').value=""; document.getElementById('ln').value=""; document.getElementById('notes').value=""; document.getElementById('formTitle').innerText="Log Catch"; document.getElementById('cancelEdit').style.display='none'; }
@@ -283,19 +284,29 @@
     function showSummary() {
         const today = catches.filter(c => c.dt === new Date().toLocaleDateString());
         const box = document.getElementById('summaryBox');
-        if(!today.length) { box.innerHTML = "<p style='text-align:center'>No logs today.</p><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
+        if(!today.length) { box.innerHTML = "<p style='text-align:center'>No fish logged today.</p><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
         else {
-            const stats = today.reduce((acc, c) => { acc.w += (parseFloat(c.wt) || 0); acc.c[c.sp] = (acc.c[c.sp] || 0) + 1; return acc; }, {w: 0, c: {}});
-            let h = `<h4 style="text-align:center; color:var(--sea);">SESSION TOTALS</h4>`;
-            for(let sp in stats.c) h += `<div class="summary-row"><span>${sp}</span><span>x${stats.c[sp]}</span></div>`;
-            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold; border-top:1px solid var(--gold);"><span>TOTAL WEIGHT:</span><span>${stats.w.toFixed(2)} lb</span></div>`;
+            const stats = today.reduce((acc, c) => {
+                const s = c.sp.toLowerCase();
+                if(!acc[s]) acc[s] = { count: 0, weight: 0 };
+                acc[s].count += 1;
+                acc[s].weight += (parseFloat(c.wt) || 0);
+                return acc;
+            }, {});
+            let h = `<h4 style="text-align:center; color:var(--sea); margin-top:0;">SESSION TOTALS</h4>`;
+            let totalSessionWt = 0;
+            for(let sp in stats) {
+                h += `<div class="summary-row"><span>${sp.toUpperCase()} (x${stats[sp].count})</span><span>${stats[sp].weight.toFixed(2)} lb</span></div>`;
+                totalSessionWt += stats[sp].weight;
+            }
+            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold; border-top:1px solid var(--gold); margin-top:5px;"><span>GRAND TOTAL:</span><span>${totalSessionWt.toFixed(2)} lb</span></div>`;
             box.innerHTML = h + `<button class="btn-sub" style="width:100%; margin-top:10px" onclick="toggle('summaryBox')">CLOSE</button>`;
         }
         box.style.display = 'block';
     }
 
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
-    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Data.json'; a.click(); }
+    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
     function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
 </script>
 </body>
