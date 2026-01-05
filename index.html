@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>UK Shore Fishing Friend</title>
     <style>
         :root { --navy: #001f3f; --sea: #0074D9; --gold: #FFDC00; --bg: #f4f7f6; --red: #ff4136; }
@@ -34,7 +34,7 @@
         <input type="text" id="searchBox" placeholder="e.g. Whitby" oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option>Loading Stations...</option></select>
     </div>
-    <div id="loader" class="loading">📡 Connecting to Admiralty...</div>
+    <div id="loader" class="loading">📡 Updating Data...</div>
     <div id="dashboard">
         <div class="card">
             <button id="starBtn" class="star" onclick="toggleFav()">★</button>
@@ -51,10 +51,9 @@
 </div>
 
 <script>
-    const KEY = 'da6b8d9c5f68455dacadbf1bb900caac';
-    // Using a more reliable "Raw" proxy for GitHub
-    const PROXY = "https://api.allorigins.win/raw?url=";
-    const API_BASE = "https://admiraltyapi.azure-api.net/adat/api/v1";
+    const KEY = '05819e75195f4d5f8e73742dd5d57c39';
+    // NEW PROXY
+    const PROXY = "https://corsproxy.io/?"; 
 
     let allStations = [];
     let currentID = null;
@@ -63,18 +62,22 @@
     window.onload = () => { getStations(); drawFavs(); };
 
     async function getStations() {
-    try {
-        // THE FIX: Move ?subscription-key=... into the URL string
-        const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations?subscription-key=${KEY}`;
-        
-        // THE FIX: Remove the { headers: ... } section entirely
-        const res = await fetch(PROXY + encodeURIComponent(target)); 
+        try {
+            // Force URL parameters to avoid any "Preflight" headers
+            const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations?subscription-key=${KEY}`;
+            
+            // NO HEADERS used here to stay as a "Simple Request"
+            const res = await fetch(PROXY + encodeURIComponent(target));
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        allStations = await res.json();
-        // ... rest of the code
-    } catch (e) { ... }
-}
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            allStations = await res.json();
+            allStations.sort((a,b) => a.Name.localeCompare(b.Name));
+            fillSelect(allStations);
+        } catch (e) {
+            console.error("Fetch failed:", e);
+            document.getElementById('stationSelect').innerHTML = '<option>Try refreshing...</option>';
+        }
+    }
 
     function fillSelect(data) {
         const s = document.getElementById('stationSelect');
@@ -101,22 +104,16 @@
         const [lon, lat] = stn.Geometry.coordinates;
 
         try {
-            // Tides - Testing direct access first as GitHub is HTTPS
-            const tideTarget = `${API_BASE}/Stations/${id}/TidalEvents`;
-            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
-                headers: { 'Ocp-Apim-Subscription-Key': KEY }
-            });
-            
-            if (!tRes.ok) throw new Error("Tide 404");
+            const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents?subscription-key=${KEY}`;
+            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget));
             const tides = await tRes.json();
 
-            // Weather
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
 
             render(tides, wind.current, stn.Name);
         } catch (err) { 
-            alert("Data Error: Admiralty restricted this specific port or the proxy failed. Try a different port."); 
+            console.error(err);
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -130,10 +127,6 @@
         document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
 
         const list = document.getElementById('tideList');
-        if (!tides || tides.length === 0) {
-            list.innerHTML = "<p>No tidal data for this station.</p>";
-            return;
-        }
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
             const time = new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -161,7 +154,9 @@
     }
 
     function updateStar() {
-        document.getElementById('starBtn').className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
+        const btn = document.getElementById('starBtn');
+        if (!btn) return;
+        btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
     }
 </script>
 </body>
