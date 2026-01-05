@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v6.8 PRO</title>
+    <title>Angler OS v6.9 FINAL STABLE</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -35,31 +35,39 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <div class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK & FAVS</div>
+        <div class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK & DATA</div>
         <div class="btn-sub" onclick="showSummary()">📊 SESSION TOTALS</div>
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 10px 0;">⭐ FAVOURITES</h4>
-        <div id="favList"></div>
-        <hr style="border:0; border-top:1px solid #1e293b; margin:15px 0;">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 DATA MGMT</h4>
-        <button class="btn-sub" onclick="exportData()" style="width:100%; margin-bottom:5px;">EXPORT JSON</button>
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
+        <p style="font-size:0.75rem; line-height:1.4;">
+            <b>Tides:</b> High (Blue) / Low (Green). Target the 2 hours before/after high.<br>
+            <b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".<br>
+            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger feeding.<br>
+            <b>Favs:</b> Search for a port, then tap ⭐ to save to your quick-list.
+        </p>
+        <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 EXPORT/IMPORT</h4>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
+            <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
+        </div>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        <button class="btn-sub" onclick="document.getElementById('importFile').click()" style="width:100%;">IMPORT JSON</button>
+        <div id="favList" style="margin-top:10px;"></div>
     </div>
 
     <div id="summaryBox" class="drawer"></div>
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC LOCATION & WEATHER</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC GPS & WEATHER</button>
 
     <div class="card" style="padding: 10px;">
-        <span class="label">Port Search</span>
+        <span class="label">Port Search & Favourites</span>
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search..." oninput="filterPorts(this.value)">
-            <button class="btn-sub" onclick="addFav()" style="padding:0 15px;">⭐</button>
+            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Find port..." oninput="filterPorts(this.value)">
+            <button class="btn-sub" onclick="addFav()" style="padding:0 15px; font-size:1.2rem;">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select Port --</option></select>
+        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Results --</option></select>
     </div>
 
     <div class="hud-grid">
@@ -68,26 +76,30 @@
     </div>
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span id="pressTrend" class="sub-val">--</span></div>
-        <div class="hud-item"><span class="label">Weather</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
+        <div class="hud-item"><span class="label">Weather & Wind</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
     </div>
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log Catch</span>
-        <input type="text" id="sp" placeholder="Species...">
+        <input type="text" id="sp" placeholder="Species (e.g. Cod)">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
             <input type="number" id="ln" step="0.1" placeholder="Length (cm)">
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
-        <textarea id="notes" placeholder="Notes..."></textarea>
+        <textarea id="notes" placeholder="Bait, rig, notes..."></textarea>
         
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="processPhoto(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px; color:var(--sea);" onclick="document.getElementById('photoInput').click()">📷 ADD PHOTO</button>
-        <div id="photoPreview" style="margin-bottom:10px;"></div>
+        <div id="photoPreview"></div>
 
-        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
+        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE TO DIARY</button>
         <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
     </div>
 
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 5px;">
+        <span class="label" style="margin:0;">DIARY HISTORY</span>
+        <input type="text" id="diarySearch" placeholder="🔍 Search logs..." style="width:60%; padding:8px; margin:0;" oninput="renderDiary()">
+    </div>
     <div id="diary"></div>
 </div>
 
@@ -108,21 +120,23 @@
     function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
 
     async function loadPorts() {
-        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-        const data = await res.json();
-        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
-        filterPorts("");
+        try {
+            const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+            const data = await res.json();
+            allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+            filterPorts("");
+        } catch(e) { console.error("Port load failed"); }
     }
 
     function filterPorts(q) {
         const s = document.getElementById('portList');
-        s.innerHTML = '<option value="">-- Select --</option>';
+        s.innerHTML = '<option value="">-- Results --</option>';
         if (favs.length > 0 && !q) {
-            let g = document.createElement('optgroup'); g.label = "⭐ FAVS";
+            let g = document.createElement('optgroup'); g.label = "⭐ FAVOURITES";
             favs.forEach(f => { let o = document.createElement('option'); o.value = f.id; o.innerText = f.name; g.appendChild(o); });
             s.appendChild(g);
         }
-        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 50).forEach(p => {
+        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 30).forEach(p => {
             let o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
         });
     }
@@ -134,6 +148,7 @@
         curData.pt = port.name;
         map.setView([port.lat, port.lon], 12);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
+        document.getElementById('manualSearch').value = "";
         fetchTides(id);
     }
 
@@ -143,13 +158,17 @@
         if (!favs.some(f => f.id === port.id)) {
             favs.push({id: port.id, name: port.name});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
-            updateFavList(); filterPorts(""); alert(`⭐ ${port.name} added!`);
+            updateFavList(); filterPorts("");
         }
     }
 
     function updateFavList() {
         const list = document.getElementById('favList');
-        list.innerHTML = favs.map((f, i) => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${f.name}</span><span style="color:var(--red); cursor:pointer;" onclick="removeFav(${i})">❌</span></div>`).join('');
+        list.innerHTML = favs.map((f, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:5px;">
+                <span style="font-size:0.8rem;">${f.name}</span>
+                <span style="color:var(--red); cursor:pointer; font-weight:bold;" onclick="removeFav(${i})">❌</span>
+            </div>`).join('');
     }
 
     function removeFav(i) { favs.splice(i, 1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList(); filterPorts(""); }
@@ -160,11 +179,13 @@
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure`);
             const wData = await wRes.json();
             const cw = wData.current_weather;
-            curData.wind = `${cw.windspeed}mph`;
+            const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+            curData.wind = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
             curData.prs = wData.hourly.surface_pressure[0];
             document.getElementById('hudWeather').innerText = `${cw.temperature}°C`;
             document.getElementById('hudWind').innerText = `WIND: ${curData.wind}`;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
+            document.getElementById('pressTrend').innerText = curData.prs >= 1013 ? "STABLE" : "LOW PRESSURE";
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             handlePortSelect(near.id);
         });
@@ -178,46 +199,42 @@
         curData.st = next.EventType.includes("High") ? "RISING" : "FALLING";
         document.getElementById('hudTide').innerText = curData.td;
         document.getElementById('hudState').innerText = curData.st;
-        curData.knots = (Math.abs(Math.sin((Math.random()*6)/6*Math.PI)) * 3.5).toFixed(1);
+        const hrs = Math.abs(new Date(next.DateTime) - new Date()) / 3600000;
+        curData.knots = (Math.abs(Math.sin((hrs/6)*Math.PI)) * 3.5).toFixed(1);
         document.getElementById('hudFlow').innerText = curData.knots + " kn";
     }
 
     function processPhoto(e) {
         const reader = new FileReader();
-        reader.onload = (event) => {
-            currentPhoto = event.target.result;
-            document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:100px; border-radius:10px;">`;
-        };
+        reader.onload = (ev) => { currentPhoto = ev.target.result; document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:80px; margin:10px 0; border-radius:8px;">`; };
         reader.readAsDataURL(e.target.files[0]);
     }
 
     function saveEntry() {
         const sp = document.getElementById('sp').value; if(!sp) return;
-        const wtVal = parseFloat(document.getElementById('wt').value) || 0;
-        const lnVal = parseFloat(document.getElementById('ln').value) || 0;
+        const wt = parseFloat(document.getElementById('wt').value) || 0;
         const dt = editingIndex > -1 ? catches[editingIndex].dt : new Date().toLocaleDateString();
         const tm = editingIndex > -1 ? catches[editingIndex].tm : new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
         const entry = {
-            sp, wt: wtVal, ln: lnVal, nt: document.getElementById('notes').value, 
-            dt, tm, loc: curData.pt, photo: currentPhoto, 
-            env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`, isPB: false
+            sp, wt, ln: document.getElementById('ln').value || 0, nt: document.getElementById('notes').value, 
+            dt, tm, loc: curData.pt, photo: currentPhoto,
+            env: `${curData.td} Tide | ${curData.knots}kn | ${curData.prs}hPa`, isPB: false
         };
 
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
         
-        // Weight-Based PB Audit
+        // RE-CALC PBs BASED ON WEIGHT
         const speciesMap = {};
         catches.forEach(c => {
-            const sName = c.sp.toLowerCase();
+            const s = c.sp.toLowerCase();
             const w = parseFloat(c.wt) || 0;
-            if (!speciesMap[sName] || w > speciesMap[sName].maxWt) speciesMap[sName] = { maxWt: w };
+            if(!speciesMap[s] || w > speciesMap[s]) speciesMap[s] = w;
             c.isPB = false;
         });
         catches.forEach(c => {
-            const sName = c.sp.toLowerCase();
-            if (parseFloat(c.wt) === speciesMap[sName].maxWt && speciesMap[sName].maxWt > 0) {
-                c.isPB = true; speciesMap[sName].maxWt = 999999;
+            if(parseFloat(c.wt) === speciesMap[c.sp.toLowerCase()] && speciesMap[c.sp.toLowerCase()] > 0) {
+                c.isPB = true; speciesMap[c.sp.toLowerCase()] = 999999;
             }
         });
 
@@ -226,60 +243,59 @@
     }
 
     function renderDiary() {
-        document.getElementById('diary').innerHTML = catches.map((c, i) => `
+        const q = document.getElementById('diarySearch').value.toLowerCase();
+        const filtered = catches.filter(c => (c.sp+c.nt+c.dt+c.loc).toLowerCase().includes(q));
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--sea);">
                     <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PERSONAL BEST</span>' : ''}</span>
                     <span>${c.wt}lb / ${c.ln}cm</span>
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.65rem; color:#64748b; margin-bottom:5px;">ENV: ${c.env}</div>
+                <div style="font-size:0.6rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
                 ${c.photo ? `<img src="${c.photo}" class="catch-img">` : ''}
                 <div style="font-size:0.85rem; border-top:1px solid #1e293b; padding-top:8px; margin-top:8px;">${c.nt}</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
-                    <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">📤 SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DELETE</button>
+                    <button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
+                    <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
                 </div>
             </div>`).join('');
     }
 
-    async function shareCatch(i) {
+    function shareCatch(i) {
         const c = catches[i];
-        const text = `${c.isPB ? 'NEW PERSONAL BEST! ' : ''}Caught a ${c.wt}lb ${c.sp} at ${c.loc}. Conditions: ${c.env}. Logged via AnglerOS.`;
-        if (navigator.share) {
-            navigator.share({ title: 'My Catch', text: text, url: window.location.href });
-        } else { alert("Sharing not supported on this browser. Text copied to clipboard."); navigator.clipboard.writeText(text); }
+        const msg = `${c.isPB ? 'NEW PB! ' : ''}Caught a ${c.wt}lb ${c.sp} (${c.ln}cm) at ${c.loc}. ${c.env}.`;
+        if(navigator.share) navigator.share({title: 'My Catch', text: msg}); else alert("Copied: " + msg);
     }
 
     function editEntry(i) {
         editingIndex = i; const c = catches[i];
         document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt; document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
         currentPhoto = c.photo || "";
-        document.getElementById('photoPreview').innerHTML = currentPhoto ? `<img src="${currentPhoto}" style="width:100px; border-radius:10px;">` : "";
-        document.getElementById('formTitle').innerText = "Update Record";
-        document.getElementById('cancelEdit').style.display = 'block';
-        window.scrollTo({ top: 400, behavior: 'smooth' });
+        document.getElementById('photoPreview').innerHTML = currentPhoto ? `<img src="${currentPhoto}" style="width:80px; border-radius:8px;">` : "";
+        document.getElementById('formTitle').innerText = "Update Record"; document.getElementById('cancelEdit').style.display = 'block';
+        window.scrollTo({ top: 450, behavior: 'smooth' });
     }
 
     function resetForm() { editingIndex = -1; currentPhoto = ""; document.getElementById('photoPreview').innerHTML = ""; document.getElementById('sp').value=""; document.getElementById('wt').value=""; document.getElementById('ln').value=""; document.getElementById('notes').value=""; document.getElementById('formTitle').innerText="Log Catch"; document.getElementById('cancelEdit').style.display='none'; }
-    
+
     function showSummary() {
         const today = catches.filter(c => c.dt === new Date().toLocaleDateString());
         const box = document.getElementById('summaryBox');
-        if(!today.length) { box.innerHTML = "<div style='padding:20px; text-align:center;'>No logs today.</div><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
+        if(!today.length) { box.innerHTML = "<p style='text-align:center'>No logs today.</p><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
         else {
             const stats = today.reduce((acc, c) => { acc.w += (parseFloat(c.wt) || 0); acc.c[c.sp] = (acc.c[c.sp] || 0) + 1; return acc; }, {w: 0, c: {}});
-            let h = `<div style="background:var(--border); padding:10px; font-weight:bold; color:var(--sea); text-align:center;">SESSION TOTALS</div>`;
+            let h = `<h4 style="text-align:center; color:var(--sea);">SESSION TOTALS</h4>`;
             for(let sp in stats.c) h += `<div class="summary-row"><span>${sp}</span><span>x${stats.c[sp]}</span></div>`;
-            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold;"><span>TOTAL WEIGHT:</span><span>${stats.w.toFixed(2)} lb</span></div>`;
-            box.innerHTML = h + `<button class="btn-sub" style="width:100%" onclick="toggle('summaryBox')">CLOSE</button>`;
+            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold; border-top:1px solid var(--gold);"><span>TOTAL WEIGHT:</span><span>${stats.w.toFixed(2)} lb</span></div>`;
+            box.innerHTML = h + `<button class="btn-sub" style="width:100%; margin-top:10px" onclick="toggle('summaryBox')">CLOSE</button>`;
         }
         box.style.display = 'block';
     }
 
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
-    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Logs.json'; a.click(); }
+    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Data.json'; a.click(); }
     function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
 </script>
 </body>
