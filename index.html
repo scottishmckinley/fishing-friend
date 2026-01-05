@@ -5,73 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f41f.png">
     <title>Fishing Friend</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --navy: #0a2342; --sea: #2ca58d; --gold: #f4af1b; --bg: #eef2f3; --white: #ffffff; --text: #2d3436; --red: #d63031; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .app-container { max-width: 450px; margin: 0 auto; background: var(--white); padding: 20px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); box-sizing: border-box; }
         
-        .app-container { 
-            max-width: 450px; 
-            margin: 0 auto; 
-            background: var(--white); 
-            padding: 20px; 
-            border-radius: 30px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            box-sizing: border-box; /* Prevents overflow */
-        }
-        
+        /* Logo & Header */
         .header { text-align: center; margin-bottom: 20px; }
-        .logo-svg { width: 45px; height: 45px; fill: var(--navy); }
-        h1 { color: var(--navy); margin: 0; font-size: 1.4rem; text-transform: uppercase; }
+        .logo-box { font-size: 45px; margin-bottom: 5px; color: var(--navy); display: block; }
+        h1 { color: var(--navy); margin: 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Search inputs fixed for width */
+        .btn-gps { width: 100%; background: var(--sea); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 1rem; }
         .search-section { margin-bottom: 20px; }
         .label { font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #f1f2f6; border-radius: 12px; font-size: 16px; background: #fbfbfb; box-sizing: border-box; }
         
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border: 2px solid #f1f2f6; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            background: #fbfbfb; 
-            box-sizing: border-box; /* Crucial fix for the overflow */
-        }
-        
-        .btn-gps { 
-            width: 100%; background: var(--sea); color: white; border: none; padding: 14px; 
-            border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 15px;
-            font-size: 1rem;
-        }
-
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
         .fav-tag { background: var(--navy); color: white; padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: none; font-weight: 600; cursor: pointer; }
         
-        /* New Fav Button Style */
-        .btn-fav {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid var(--gold);
-            background: transparent;
-            color: var(--navy);
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 15px;
-            display: none; /* Hidden until a port is selected */
-        }
-        .btn-fav.active { background: var(--gold); color: var(--navy); }
+        .btn-fav { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--gold); background: transparent; color: var(--navy); font-weight: bold; cursor: pointer; margin-bottom: 15px; display: none; }
+        .btn-fav.active { background: var(--gold); }
 
-        .card { background: #fff; border: 1px solid #f1f2f6; padding: 18px; border-radius: 20px; margin-bottom: 12px; position: relative; }
-        .val { font-size: 1.6rem; font-weight: 800; color: var(--navy); }
+        /* Dashboard Cards */
+        .card { background: #fff; border: 1px solid #f1f2f6; padding: 15px; border-radius: 20px; margin-bottom: 12px; position: relative; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .val { font-size: 1.5rem; font-weight: 800; color: var(--navy); line-height: 1.2; }
         .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); }
+        .gust { font-size: 0.8rem; color: var(--red); font-weight: bold; display: block; margin-top: 4px; }
         
+        /* Map Styling */
+        #map { height: 180px; width: 100%; border-radius: 15px; margin-bottom: 12px; border: 1px solid #f1f2f6; z-index: 1; }
+
         .status-badge { display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; margin-top: 8px; }
         .flood { background: #e8f8f5; color: var(--sea); }
         .ebb { background: #fef5e7; color: #e67e22; }
         
-        .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f2f6; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tide-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f2f6; font-size: 0.9rem; }
         .loading { text-align: center; color: var(--sea); font-weight: bold; margin: 10px 0; display: none; }
     </style>
 </head>
@@ -79,40 +50,50 @@
 
 <div class="app-container">
     <div class="header">
-        <svg class="logo-svg" viewBox="0 0 24 24"><path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" /></svg>
+        <span class="logo-box">🎣</span>
         <h1>Fishing Friend</h1>
     </div>
 
     <button class="btn-gps" onclick="getLocation()">📍 Find Nearest Port</button>
 
     <div class="search-section">
-        <span class="label">My Favorites</span>
+        <span class="label">Favorites</span>
         <div id="favBar"></div>
-        
-        <span class="label">Find a Port</span>
-        <input type="text" id="searchBox" placeholder="Type name..." oninput="filterStations()">
-        <select id="stationSelect" onchange="loadData()"><option>Loading Stations...</option></select>
+        <span class="label">Manual Search</span>
+        <input type="text" id="searchBox" placeholder="Type port name..." oninput="filterStations()">
+        <select id="stationSelect" onchange="loadData()"><option>Loading...</option></select>
     </div>
 
-    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ Save to Favorites</button>
+    <button id="mainFavBtn" class="btn-fav" onclick="toggleFav()">⭐ Save Favorite</button>
     
-    <div id="loader" class="loading">📡 FETCHING DATA...</div>
+    <div id="loader" class="loading">📡 REFRESHING SEA DATA...</div>
 
-    <div id="dashboard">
+    <div id="dashboard" style="display:none;">
+        <div id="map"></div>
+
         <div class="grid-2">
-            <div class="card"><span class="label">Wind</span><div class="val" id="windSpd">--</div><div class="sub-val" id="windDir">--</div></div>
-            <div class="card"><span class="label">Waves</span><div class="val" id="waveHgt">--</div><div class="sub-val" id="wavePeriod">--</div></div>
+            <div class="card">
+                <span class="label">Wind</span>
+                <div class="val" id="windSpd">--</div>
+                <div class="sub-val" id="windDir">--</div>
+                <div class="gust" id="windGst">--</div>
+            </div>
+            <div class="card">
+                <span class="label">Waves</span>
+                <div class="val" id="waveHgt">--</div>
+                <div class="sub-val" id="wavePeriod">--</div>
+            </div>
         </div>
 
         <div class="card">
-            <span class="label">Current / Tide State</span>
+            <span class="label">Current & Tide State</span>
             <div class="val" id="curSpd">--</div>
             <div id="tideStatus">--</div>
         </div>
 
         <div class="card">
             <span class="label">Tide Schedule</span>
-            <div id="tideList"><p style="color:#b2bec3; font-size:0.8rem;">Select a port above.</p></div>
+            <div id="tideList"></div>
         </div>
     </div>
 </div>
@@ -122,11 +103,15 @@
     const PROXY = "https://corsproxy.io/?"; 
     const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
-    let allStations = [];
-    let currentID = null;
+    let allStations = [], currentID = null, map = null, marker = null;
     let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
 
-    window.onload = () => { getStations(); drawFavs(); };
+    window.onload = () => { initMap(); getStations(); drawFavs(); };
+
+    function initMap() {
+        map = L.map('map').setView([54, -2], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    }
 
     async function getStations() {
         try {
@@ -140,19 +125,16 @@
     }
 
     function getLocation() {
-        if (!navigator.geolocation) return alert("GPS not available");
+        if (!navigator.geolocation) return alert("GPS Error");
         document.getElementById('loader').style.display = 'block';
         navigator.geolocation.getCurrentPosition(pos => {
-            const userLat = pos.coords.latitude;
-            const userLon = pos.coords.longitude;
-            let nearest = null;
-            let minDist = Infinity;
+            let nearest = null, minDist = Infinity;
             allStations.forEach(stn => {
-                const dist = Math.sqrt(Math.pow(stn.Coords[1] - userLat, 2) + Math.pow(stn.Coords[0] - userLon, 2));
+                const dist = Math.sqrt(Math.pow(stn.Coords[1] - pos.coords.latitude, 2) + Math.pow(stn.Coords[0] - pos.coords.longitude, 2));
                 if (dist < minDist) { minDist = dist; nearest = stn; }
             });
             if (nearest) { document.getElementById('stationSelect').value = nearest.Id; loadData(nearest.Id); }
-        }, () => { alert("Enable GPS to use this."); document.getElementById('loader').style.display = 'none'; });
+        }, () => { alert("Location denied"); document.getElementById('loader').style.display = 'none'; });
     }
 
     async function loadData(sid = null) {
@@ -160,15 +142,21 @@
         if (!id) return;
         currentID = id;
         document.getElementById('loader').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'block';
         updateFavBtn();
 
         const stn = allStations.find(x => x.Id === id);
         const [lon, lat] = stn.Coords;
 
+        // Update Map
+        map.setView([lat, lon], 12);
+        if (marker) marker.setLatLng([lat, lon]);
+        else marker = L.marker([lat, lon]).addTo(map);
+
         try {
             const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
             const tides = await tRes.json();
-            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph`);
+            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
             const mRes = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,ocean_current_velocity,ocean_current_direction`);
             const marine = await mRes.json();
@@ -180,55 +168,33 @@
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
         document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
         document.getElementById('windDir').innerText = dirs[Math.round(wind.wind_direction_10m / 22.5) % 16];
+        document.getElementById('windGst').innerText = `🚩 Gusts: ${Math.round(wind.wind_gusts_10m)} mph`;
         document.getElementById('waveHgt').innerText = `${(marine.wave_height * 3.28).toFixed(1)} ft`;
         document.getElementById('wavePeriod').innerText = `${marine.wave_period}s interval`;
         document.getElementById('curSpd').innerText = `${(marine.ocean_current_velocity * 1.94).toFixed(1)} kts ${dirs[Math.round(marine.ocean_current_direction / 22.5) % 16]}`;
 
-        const now = new Date();
-        const futureTides = tides.filter(t => new Date(t.DateTime) > now);
-        const nextTide = futureTides[0];
-        document.getElementById('tideStatus').innerHTML = nextTide?.EventType.includes("High") ? '<div class="status-badge flood">🌊 FLOODING</div>' : '<div class="status-badge ebb">📉 EBBING</div>';
+        const futureTides = tides.filter(t => new Date(t.DateTime) > new Date());
+        document.getElementById('tideStatus').innerHTML = futureTides[0]?.EventType.includes("High") ? '<div class="status-badge flood">🌊 FLOODING</div>' : '<div class="status-badge ebb">📉 EBBING</div>';
         document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span style="font-weight:bold; color:${t.EventType.includes('High')?'var(--sea)':'#e67e22'}">${t.EventType.includes('High')?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`).join('');
     }
 
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
         if (idx > -1) favs.splice(idx, 1);
-        else {
-            const stn = allStations.find(x => x.Id === currentID);
-            favs.push({id: stn.Id, name: stn.Name});
-        }
+        else { const stn = allStations.find(x => x.Id === currentID); favs.push({id: stn.Id, name: stn.Name}); }
         localStorage.setItem('fishingFavs', JSON.stringify(favs));
         drawFavs(); updateFavBtn();
     }
-
     function updateFavBtn() {
         const btn = document.getElementById('mainFavBtn');
-        if (!currentID) { btn.style.display = 'none'; return; }
         btn.style.display = 'block';
         const isFav = favs.some(f => f.id === currentID);
-        btn.innerText = isFav ? "⭐ Remove from Favorites" : "⭐ Save to Favorites";
+        btn.innerText = isFav ? "⭐ Remove Favorite" : "⭐ Save Favorite";
         btn.className = isFav ? "btn-fav active" : "btn-fav";
     }
-
-    function drawFavs() {
-        const bar = document.getElementById('favBar');
-        bar.innerHTML = favs.length ? favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join('') : '<p style="font-size:0.7rem; color:#ccc;">No saved ports.</p>';
-    }
-
-    function fillSelect(data) {
-        const s = document.getElementById('stationSelect');
-        s.innerHTML = '<option value="">-- Select Port --</option>';
-        data.forEach(item => {
-            const el = document.createElement('option');
-            el.value = item.Id; el.textContent = item.Name; s.appendChild(el);
-        });
-    }
-
-    function filterStations() {
-        const q = document.getElementById('searchBox').value.toLowerCase();
-        fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q)));
-    }
+    function drawFavs() { document.getElementById('favBar').innerHTML = favs.length ? favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join('') : '<p style="font-size:0.7rem; color:#ccc;">None saved.</p>'; }
+    function fillSelect(data) { const s = document.getElementById('stationSelect'); s.innerHTML = '<option value="">-- Select Port --</option>'; data.forEach(item => { const el = document.createElement('option'); el.value = item.Id; el.textContent = item.Name; s.appendChild(el); }); }
+    function filterStations() { const q = document.getElementById('searchBox').value.toLowerCase(); fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q))); }
 </script>
 </body>
 </html>
