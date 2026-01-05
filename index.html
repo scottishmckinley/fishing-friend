@@ -14,108 +14,93 @@
             --gradient: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%);
         }
         
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
         .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
         
-        .header { text-align: center; margin-bottom: 20px; padding-top: 15px; position: relative; }
-        .header h1 { margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .help-btn { position: absolute; right: 0; top: 15px; background: none; border: 1px solid var(--border); color: var(--gold); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+        .header h1 { text-align: center; margin: 15px 0; font-size: 2rem; font-weight: 900; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
 
-        .btn-gps { width: 100%; background: var(--gradient); color: var(--navy); border: none; padding: 16px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-bottom: 15px; }
+        .btn-gps { width: 100%; background: var(--gradient); color: var(--navy); border: none; padding: 16px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-size: 1rem; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; font-family: inherit; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; font-family: inherit; outline: none; }
         
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .fav-tag { background: #1e293b; color: var(--sea); padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border); cursor: pointer; }
+        .fav-tag { background: #1e293b; color: var(--sea); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border); cursor: pointer; }
 
-        .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 12px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .val { font-size: 1.3rem; font-weight: 800; color: var(--white); }
-        
+        .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 15px; }
         #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
-        .tide-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
 
-        /* Diary Entries */
-        .diary-entry { background: var(--card); padding: 15px; border-radius: 18px; margin-bottom: 12px; border-left: 5px solid var(--sea); position: relative; }
-        .diary-time { font-size: 0.7rem; color: var(--gold); font-weight: bold; }
-        .diary-snap { display: flex; gap: 10px; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; }
-        .diary-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; cursor: pointer; font-size: 0.9rem; }
-
-        #helpModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; padding: 20px; }
-        .btn-outline { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 10px; font-weight: bold; cursor: pointer; }
+        /* Tide Outlook Styling */
+        .day-group { border-top: 1px solid var(--border); padding: 10px 0; margin-top: 5px; }
+        .day-title { color: var(--gold); font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+        .tide-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; }
+        .high-tide { color: var(--sea); font-weight: 800; }
+        
+        /* Journal/Diary Styling */
+        .diary-timeline { border-left: 2px solid var(--border); margin: 10px 0 0 10px; padding-left: 20px; }
+        .diary-log-item { margin-bottom: 30px; position: relative; }
+        .diary-log-item::before { content: ''; position: absolute; left: -26px; top: 6px; width: 10px; height: 10px; background: var(--sea); border-radius: 50%; border: 3px solid var(--navy); }
+        .diary-date { font-size: 0.7rem; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 2px; }
+        .diary-content { font-size: 1.1rem; color: var(--white); font-weight: 700; }
+        .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        .diary-meta { font-size: 0.75rem; color: #64748b; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .diary-notes { font-style: italic; color: var(--text); font-size: 0.85rem; margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 8px; border-left: 2px solid var(--gold); }
+        
+        .btn-outline { width: 100%; padding: 12px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
 <body>
 
-<div id="helpModal" onclick="this.style.display='none'">
-    <div style="background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--gold);">
-        <h2 style="color:var(--gold)">Diary Pro Guide</h2>
-        <p><b>📸 Auto-Snapshot:</b> When you log a catch, the app automatically records the exact weather, tide, and water flow at that moment.</p>
-        <p><b>⭐ Favorites:</b> Save your top marks for quick access.</p>
-        <button class="btn-gps" style="margin-top:20px">CLOSE</button>
-    </div>
-</div>
-
 <div class="app-container">
-    <div class="header">
-        <h1>FISHING FRIEND</h1>
-        <button class="help-btn" onclick="document.getElementById('helpModal').style.display='block'">?</button>
-    </div>
+    <div class="header"><h1>Fishing Friend</h1></div>
 
-    <button class="btn-gps" onclick="getLocation()">📍 GPS: FIND NEAREST PORT</button>
+    <button class="btn-gps" onclick="getLocation()">📍 GPS: LOCATE NEAREST PORT</button>
 
     <div class="search-section">
         <span class="label">Favorites</span>
         <div id="favBar"></div>
-        <input type="text" id="searchInput" placeholder="Search port..." oninput="filterStations()">
+        <input type="text" id="searchInput" placeholder="Search port name..." oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option value="">-- Select Port --</option></select>
     </div>
 
     <div id="dashboard" style="display:none;">
-        <button id="favBtn" class="btn-outline" onclick="toggleFav()" style="margin-bottom:15px; border-color:var(--gold); color:var(--gold)">⭐ SAVE TO FAVORITES</button>
-        
         <div id="map"></div>
         
         <div class="card">
-            <span class="label">Live Snapshot</span>
-            <div class="grid-2">
-                <div style="border-right: 1px solid var(--border);">
-                    <div class="val" id="tideFlow">--</div>
-                    <div id="tideSpeed" style="font-size:0.8rem; color:var(--sea); font-weight:bold;">--</div>
-                    <div id="temp" class="val" style="margin-top:10px;">--°C</div>
-                </div>
-                <div>
-                    <div class="val"><span id="windSpd">--</span> <span id="windArrow" style="display:inline-block">↑</span></div>
-                    <div id="weatherDesc" style="font-size:0.8rem; margin-top:5px;">--</div>
+            <div id="weatherMain" style="font-size: 1.2rem; font-weight: 800; color: var(--white);">--</div>
+            <div id="tideFlow" style="font-weight:900; color:var(--sea); font-size: 0.8rem; letter-spacing:1px; margin-top: 4px;">--</div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--white);"><span id="temp">--</span>°C</div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600;"><span id="windSpd">--</span> mph <span id="windArrow" style="display:inline-block">↑</span></div>
+                    <div id="windGst" style="font-size: 0.7rem; color: var(--red); font-weight: 900;">--</div>
                 </div>
             </div>
+            <button id="favBtn" class="btn-outline" onclick="toggleFav()" style="border-color:var(--gold); color:var(--gold)">⭐ SAVE PORT</button>
         </div>
 
         <div class="card">
-            <span class="label">Tidal Schedule</span>
-            <div id="tideList"></div>
-            <button class="btn-outline" onclick="toggleExtended()">📅 7-DAY OUTLOOK</button>
-            <div id="extendedTides" style="display:none; margin-top:10px;"></div>
+            <span class="label">7-Day Tide Outlook</span>
+            <div id="tideOutlook"></div>
         </div>
 
-        <div class="card" id="logForm">
-            <span class="label">Log New Catch</span>
+        <div class="card">
+            <span class="label">New Diary Entry</span>
             <input type="hidden" id="editIndex" value="-1">
-            <input type="text" id="logFish" placeholder="Species (e.g. Bass)">
-            <input type="text" id="logSize" placeholder="Weight/Length">
-            <textarea id="logNotes" placeholder="Notes (Bait, clarity, etc.)"></textarea>
-            <button class="btn-gps" id="saveBtn" onclick="addCatch()">📖 SAVE TO DIARY</button>
+            <input type="text" id="logFish" placeholder="Species">
+            <input type="text" id="logSize" placeholder="Weight">
+            <textarea id="logNotes" placeholder="Notes..."></textarea>
+            <button class="btn-gps" id="saveBtn" onclick="addCatch()" style="margin-bottom:0">✍️ RECORD CATCH</button>
+        </div>
+
+        <div id="filterSection" style="margin-top: 20px; display: none;">
+            <span class="label">Filter Journal</span>
+            <select id="speciesFilter" onchange="renderDiary()"></select>
         </div>
 
         <div id="diaryContainer"></div>
-        
-        <div class="grid-2" style="margin-top:20px; opacity:0.5;">
-            <button class="btn-outline" style="border-style:dashed" onclick="exportData()">💾 EXPORT</button>
-            <button class="btn-outline" style="border-style:dashed" onclick="document.getElementById('importFile').click()">📥 IMPORT</button>
-            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        </div>
     </div>
 </div>
 
@@ -128,7 +113,7 @@
     let catches = JSON.parse(localStorage.getItem('fishingCatches')) || [];
     let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
 
-    window.onload = () => { initMap(); getStations(); drawFavs(); renderDiary(); };
+    window.onload = () => { getStations(); drawFavs(); renderDiary(); initMap(); };
 
     function initMap() {
         map = L.map('map', {zoomControl: false, attributionControl: false}).setView([54, -2], 5);
@@ -142,14 +127,13 @@
         updateSelect(allStations.sort((a,b) => a.Name.localeCompare(b.Name)));
     }
 
+    function updateSelect(list) {
+        document.getElementById('stationSelect').innerHTML = '<option value="">-- Select Port --</option>' + list.map(x => `<option value="${x.Id}">${x.Name}</option>`).join('');
+    }
+
     function filterStations() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         updateSelect(allStations.filter(s => s.Name.toLowerCase().includes(query)));
-    }
-
-    function updateSelect(list) {
-        const s = document.getElementById('stationSelect');
-        s.innerHTML = '<option value="">-- Select Port --</option>' + list.map(x => `<option value="${x.Id}">${x.Name}</option>`).join('');
     }
 
     function getLocation() {
@@ -159,6 +143,8 @@
                 let d2 = Math.hypot(curr.Coords[1]-pos.coords.latitude, curr.Coords[0]-pos.coords.longitude);
                 return d1 < d2 ? prev : curr;
             });
+            document.getElementById('searchInput').value = nearest.Name;
+            document.getElementById('stationSelect').value = nearest.Id;
             loadData(nearest.Id);
         });
     }
@@ -170,149 +156,123 @@
         document.getElementById('dashboard').style.display = 'block';
         updateFavBtn();
         const stn = allStations.find(x => x.Id === id);
+        
+        map.invalidateSize();
         map.setView([stn.Coords[1], stn.Coords[0]], 12);
         if (marker) marker.setLatLng([stn.Coords[1], stn.Coords[0]]); else marker = L.marker([stn.Coords[1], stn.Coords[0]]).addTo(map);
 
-        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stn.Coords[1]}&longitude=${stn.Coords[0]}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m&wind_speed_unit=mph`);
+        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stn.Coords[1]}&longitude=${stn.Coords[0]}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
         const w = await wRes.json();
-        
         const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=7`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
         const tides = await tRes.json();
         
         processConditions(w, tides, stn.Name);
-        renderTides(tides);
+        renderOutlook(tides);
     }
 
     function processConditions(w, tides, portName) {
+        const weatherCodes = { 0: "Clear Skies", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Slight Rain", 63: "Rain" };
         const now = new Date();
         const next = tides.find(t => new Date(t.DateTime) > now);
         const last = tides.filter(t => new Date(t.DateTime) <= now).pop();
         
-        let flow = "--", strength = 0;
+        let flowStr = "Steady Flow";
         if(next && last) {
-            flow = next.EventType.includes("High") ? "Rising" : "Falling";
-            strength = Math.round(Math.sin(((now - new Date(last.DateTime)) / (new Date(next.DateTime) - new Date(last.DateTime))) * Math.PI) * 100);
+            const dir = next.EventType.includes("High") ? "Rising" : "Falling";
+            const strength = Math.round(Math.sin(((now - new Date(last.DateTime)) / (new Date(next.DateTime) - new Date(last.DateTime))) * Math.PI) * 100);
+            flowStr = `${dir} Tide (${strength}% Strength)`;
         }
 
-        currentSnap = {
-            temp: Math.round(w.current.temperature_2m),
-            wind: Math.round(w.current.wind_speed_10m),
-            flow: flow,
-            strength: strength,
-            port: portName
-        };
+        currentSnap = { temp: Math.round(w.current.temperature_2m), wind: Math.round(w.current.wind_speed_10m), gusts: Math.round(w.current.wind_gusts_10m), weather: weatherCodes[w.current.weather_code] || "Cloudy", flow: flowStr, port: portName };
 
-        document.getElementById('tideFlow').innerText = flow.toUpperCase();
-        document.getElementById('tideSpeed').innerText = `${strength}% Flow Strength`;
-        document.getElementById('temp').innerText = `${currentSnap.temp}°C`;
-        document.getElementById('windSpd').innerText = `${currentSnap.wind} mph`;
+        document.getElementById('weatherMain').innerText = currentSnap.weather.toUpperCase();
+        document.getElementById('tideFlow').innerText = flowStr.toUpperCase();
+        document.getElementById('temp').innerText = currentSnap.temp;
+        document.getElementById('windSpd').innerText = currentSnap.wind;
         document.getElementById('windArrow').style.transform = `rotate(${w.current.wind_direction_10m}deg)`;
-        document.getElementById('weatherDesc').innerText = "Updating..."; // Optional weather description map
+        document.getElementById('windGst').innerText = `GUSTS: ${currentSnap.gusts} MPH`;
     }
 
-    function renderTides(tides) {
-        const future = tides.filter(t => new Date(t.DateTime) > new Date());
-        document.getElementById('tideList').innerHTML = future.slice(0,3).map(t => `
-            <div class="tide-row">
-                <span style="color:${t.EventType.includes('High')?'var(--sea)':'var(--gold)'}">${t.EventType.toUpperCase()}</span>
-                <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                <span>${t.Height.toFixed(1)}m</span>
-            </div>`).join('');
-            
-        document.getElementById('extendedTides').innerHTML = future.slice(3, 21).map(t => `
-            <div class="tide-row" style="font-size:0.75rem; opacity:0.7;">
-                <span>${new Date(t.DateTime).toLocaleDateString([], {day:'numeric', month:'short'})} ${t.EventType}</span>
-                <span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-            </div>`).join('');
-    }
+    function renderOutlook(tides) {
+        const container = document.getElementById('tideOutlook');
+        const groups = {};
+        
+        tides.forEach(t => {
+            const dateStr = new Date(t.DateTime).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
+            if (!groups[dateStr]) groups[dateStr] = [];
+            groups[dateStr].push(t);
+        });
 
-    function toggleExtended() {
-        const el = document.getElementById('extendedTides');
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        container.innerHTML = Object.keys(groups).map(date => `
+            <div class="day-group">
+                <div class="day-title">${date}</div>
+                ${groups[date].map(t => {
+                    const isHigh = t.EventType.includes("High");
+                    return `
+                    <div class="tide-row ${isHigh ? 'high-tide' : ''}">
+                        <span>${t.EventType}</span>
+                        <span>${new Date(t.DateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>${t.Height.toFixed(1)}m</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        `).join('');
     }
 
     function addCatch() {
-        const fish = document.getElementById('logFish').value;
-        const size = document.getElementById('logSize').value;
-        const notes = document.getElementById('logNotes').value;
+        const fish = document.getElementById('logFish').value.trim();
+        const size = document.getElementById('logSize').value.trim();
+        const notes = document.getElementById('logNotes').value.trim();
         const editIdx = parseInt(document.getElementById('editIndex').value);
         if(!fish) return;
 
-        const entry = {
-            fish, size, notes,
-            timestamp: new Date().getTime(),
-            snap: {...currentSnap}
-        };
-
-        if(editIdx > -1) catches[editIdx] = entry;
-        else catches.unshift(entry);
-
+        const entry = { fish, size, notes, timestamp: new Date().getTime(), snap: {...currentSnap} };
+        if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
         resetForm(); renderDiary();
     }
 
     function renderDiary() {
         const container = document.getElementById('diaryContainer');
-        container.innerHTML = '<span class="label" style="margin-top:30px;">Catch History</span>' + catches.map((c, i) => `
-            <div class="diary-entry">
-                <div class="diary-actions">
-                    <span onclick="editCatch(${i})">✏️</span>
-                    <span onclick="deleteCatch(${i})">✕</span>
+        const filterVal = document.getElementById('speciesFilter').value || 'all';
+        const speciesList = [...new Set(catches.map(c => c.fish.toLowerCase()))];
+        document.getElementById('speciesFilter').innerHTML = '<option value="all">All Species</option>' + speciesList.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join('');
+        document.getElementById('speciesFilter').value = filterVal;
+        document.getElementById('filterSection').style.display = catches.length > 0 ? 'block' : 'none';
+
+        if (catches.length === 0) { container.innerHTML = ""; return; }
+
+        const pbs = {};
+        catches.forEach(c => {
+            const s = c.fish.toLowerCase();
+            const val = parseFloat(c.size.replace(/[^\d.]/g, '')) || 0;
+            if (!pbs[s] || val > pbs[s].val) pbs[s] = { val, id: c.timestamp };
+        });
+
+        const filtered = filterVal === 'all' ? catches : catches.filter(c => c.fish.toLowerCase() === filterVal);
+        container.innerHTML = '<div class="diary-timeline">' + filtered.map((c, i) => `
+            <div class="diary-log-item">
+                <div style="float:right; cursor:pointer;" onclick="deleteCatch(${catches.indexOf(c)})">✕</div>
+                <div class="diary-date">${new Date(c.timestamp).toLocaleDateString()} @ ${new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                <div class="diary-content">
+                    ${c.fish.toUpperCase()} ${c.size ? `• ${c.size}` : ''} 
+                    ${pbs[c.fish.toLowerCase()]?.id === c.timestamp ? '<span class="pb-badge">🏆 PB</span>' : ''}
                 </div>
-                <div class="diary-time">${new Date(c.timestamp).toLocaleDateString()} at ${new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                <b style="font-size:1.1rem; color:var(--white);">${c.fish}</b> ${c.size ? `• ${c.size}` : ''}
-                <div class="diary-snap">
-                    <span>📍 ${c.snap.port}</span>
-                    <span>🌊 ${c.snap.flow} (${c.snap.strength}%)</span>
-                    <span>🌡️ ${c.snap.temp}°C</span>
-                </div>
+                <div class="diary-meta">📍 ${c.snap.port} | 🌊 ${c.snap.flow}</div>
                 ${c.notes ? `<div class="diary-notes">${c.notes}</div>` : ''}
-            </div>`).join('');
+            </div>`).join('') + '</div>';
     }
 
-    function editCatch(i) {
-        const c = catches[i];
-        document.getElementById('logFish').value = c.fish;
-        document.getElementById('logSize').value = c.size;
-        document.getElementById('logNotes').value = c.notes;
-        document.getElementById('editIndex').value = i;
-        document.getElementById('saveBtn').innerText = "💾 UPDATE ENTRY";
-        document.getElementById('logForm').scrollIntoView({behavior: 'smooth'});
-    }
-
-    function deleteCatch(i) { if(confirm("Delete this entry?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); } }
-    function resetForm() { 
-        document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; 
-        document.getElementById('logNotes').value = ''; document.getElementById('editIndex').value = '-1';
-        document.getElementById('saveBtn').innerText = "📖 SAVE TO DIARY";
-    }
-
-    // Favorites Logic
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); } }
+    function resetForm() { document.getElementById('logFish').value = ''; document.getElementById('logSize').value = ''; document.getElementById('logNotes').value = ''; document.getElementById('editIndex').value = '-1'; }
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
-        if(idx > -1) favs.splice(idx, 1);
-        else favs.push({id: currentID, name: allStations.find(x => x.Id === currentID).Name});
+        if(idx > -1) favs.splice(idx, 1); else favs.push({id: currentID, name: allStations.find(x => x.Id === currentID).Name});
         localStorage.setItem('fishingFavs', JSON.stringify(favs));
         drawFavs(); updateFavBtn();
     }
     function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
-    function updateFavBtn() {
-        const isFav = favs.some(f => f.id === currentID);
-        const btn = document.getElementById('favBtn');
-        btn.innerText = isFav ? "⭐ REMOVE FAVORITE" : "⭐ SAVE TO FAVORITES";
-    }
-
-    // Export / Import
-    function exportData() {
-        const blob = new Blob([JSON.stringify(catches)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `diary_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    }
-    function importData(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); alert("Diary Restored!"); };
-        reader.readAsText(e.target.files[0]);
-    }
+    function updateFavBtn() { document.getElementById('favBtn').innerText = favs.some(f => f.id === currentID) ? "⭐ REMOVE PORT" : "⭐ SAVE PORT"; }
 </script>
 </body>
 </html>
