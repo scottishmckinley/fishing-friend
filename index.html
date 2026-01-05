@@ -3,68 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS</title>
+    <title>Angler OS v4.2-ULTIMATE-PRO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
-        .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
         
-        .brand h1 { text-align: center; font-size: 2.2rem; color: var(--white); margin: 10px 0; font-weight: 800; }
-        .brand span { color: var(--sea); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
+        .header h1 span { color: var(--sea); }
+        .ver-tag { font-size: 0.6rem; background: var(--border); padding: 2px 6px; border-radius: 4px; color: var(--gold); font-weight: bold; }
 
-        /* PB Trophy Room */
-        .pb-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
-        .pb-card { min-width: 100px; background: linear-gradient(145deg, #1e293b, #121c2b); border: 1px solid var(--gold); border-radius: 12px; padding: 10px; text-align: center; }
-        .pb-val { font-size: 1.1rem; font-weight: 900; color: var(--gold); display: block; }
-        .pb-label { font-size: 0.6rem; text-transform: uppercase; color: var(--text); }
+        /* Navigation Grid */
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; cursor: pointer; text-align: center; }
 
-        /* Compact Diary Accordion */
-        .diary-container { margin-top: 20px; }
-        .diary-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; overflow: hidden; }
-        .diary-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .diary-header:active { background: rgba(255,255,255,0.05); }
-        .diary-content { display: none; padding: 15px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); font-size: 0.85rem; }
-        .species-name { font-weight: bold; color: var(--white); }
-        .compact-meta { font-size: 0.75rem; color: var(--sea); }
+        /* Drawers */
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.8rem; }
+        .outlook-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        /* Form & Inputs */
+        /* HUD & Map */
+        #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .hud { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .hud-item { background: var(--card); padding: 12px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
+        .label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px; }
+        .rising { color: var(--sea); } .falling { color: var(--red); }
+
+        /* Catch Log Form */
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
-        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
-        .btn-main { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; }
+        .btn-sync { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; }
         
-        #map { height: 160px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .tag-under { background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; }
+        /* Photo Interface */
+        .photo-area { margin-bottom: 10px; text-align: center; }
+        .photo-prev { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; display: none; border: 1px solid var(--gold); margin-bottom: 5px; }
+
+        /* Accordion Diary */
+        .diary-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 5px; }
+        .diary-head { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .diary-body { display: none; padding: 15px; border-top: 1px solid var(--border); font-size: 0.8rem; background: rgba(0,0,0,0.2); }
+        .catch-img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="brand"><h1>Angler <span>OS</span></h1></div>
-
-    <span class="label">🏆 Trophy Room (PBs)</span>
-    <div class="pb-row" id="pbList"></div>
-
-    <div id="map"></div>
-    <button class="btn-main" onclick="syncAll()">📍 SYNC GPS & PORTS</button>
-
-    <div class="card" style="margin-top:15px;">
-        <span class="label" id="formHeader">New Catch Log</span>
-        <div id="lawAlert" style="margin-bottom:8px;"></div>
-        <input type="text" id="species" placeholder="Species (Bass, Pollack...)" oninput="checkLaws()">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <input type="number" id="len" placeholder="cm" oninput="checkLaws()">
-            <input type="number" id="wt" placeholder="Weight (lb)">
-        </div>
-        <textarea id="notes" placeholder="Notes (Weather, Lure, Tide phase...)"></textarea>
-        <input type="hidden" id="editIdx" value="-1">
-        <button class="btn-main" id="saveBtn" onclick="saveLog()">📖 RECORD CATCH</button>
+    <div class="header">
+        <h1>Angler <span>OS</span></h1>
+        <div class="ver-tag">v4.2-ULTIMATE-PRO</div>
     </div>
 
-    <input type="text" id="search" placeholder="🔍 Search diary..." oninput="renderDiary()">
-    <div id="diary" class="diary-container"></div>
+    <div class="nav-grid">
+        <div class="nav-btn" onclick="toggle('helpBox')">HELP/REGS</div>
+        <div class="nav-btn" onclick="toggle('tideBox')">7-DAY TIDE</div>
+        <div class="nav-btn" onclick="toggle('dataBox')">DATA MGMT</div>
+    </div>
+
+    <div id="helpBox" class="drawer">
+        <b style="color:var(--gold)">2026 UK Fishing Guide:</b><br>
+        • <b>Bass:</b> 42cm min (3 fish limit). Closed Feb-Mar.<br>
+        • <b>Pollack:</b> 30cm min (New 3 fish bag limit).<br>
+        • <b>Tides:</b> Rising (Flood) is usually best for Bass.<br>
+        • <b>Diary:</b> Tap an entry to see photos, notes, and sharing.
+    </div>
+
+    <div id="tideBox" class="drawer">
+        <span class="label">7-Day High Water (Peaks)</span>
+        <div id="outlookList">Sync GPS to load tides...</div>
+    </div>
+
+    <div id="dataBox" class="drawer">
+        <span class="label">Backup & Restore</span>
+        <button onclick="exportData()" style="width:100%; padding:8px; margin-bottom:5px;">📥 EXPORT JSON</button>
+        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        <button onclick="document.getElementById('importFile').click()" style="width:100%; padding:8px;">📤 IMPORT JSON</button>
+    </div>
+
+    <div id="map"></div>
+    <button class="btn-sync" onclick="syncGPS()">📍 SYNC GPS, WEATHER & ADMIRALTY</button>
+
+    <div class="hud">
+        <div class="hud-item">
+            <span class="label">Tide Status</span>
+            <div id="hudTide" style="font-size: 1.1rem; font-weight: bold;">--</div>
+            <span id="hudState" class="label">WAITING</span>
+        </div>
+        <div class="hud-item">
+            <span class="label">Weather</span>
+            <div id="hudTemp" style="font-size: 1.1rem; font-weight: bold;">--°C</div>
+            <span id="hudWind" style="font-size:0.6rem;">WIND: --</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <span class="label">Manual Port Search</span>
+        <input type="text" id="pSearch" placeholder="Search Admiralty Stations..." oninput="filterPorts()">
+        <select id="pList" onchange="fetchTides(this.value)"><option value="">-- Select --</option></select>
+    </div>
+
+    <div class="card">
+        <span class="label">Log New Catch</span>
+        <div class="photo-area">
+            <img id="imgPrev" class="photo-prev">
+            <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+            <button onclick="document.getElementById('camIn').click()" style="font-size:0.7rem; border:1px dashed var(--gold); background:none; color:var(--gold); padding:5px 10px; border-radius:5px; width:100%;">📷 ATTACH PHOTO</button>
+        </div>
+        <div id="lawWarn" style="margin-bottom:8px; font-size:0.7rem;"></div>
+        <input type="text" id="sp" placeholder="Species..." oninput="checkLaw()">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <input type="number" id="ln" placeholder="cm" oninput="checkLaw()">
+            <input type="number" id="wt" placeholder="Weight (lb)">
+        </div>
+        <textarea id="nt" placeholder="Notes (Weather, Lure, Method...)"></textarea>
+        <input type="hidden" id="eIdx" value="-1">
+        <button class="btn-sync" id="saveBtn" onclick="saveEntry()">💾 SAVE LOG</button>
+    </div>
+
+    <input type="text" id="diarySearch" placeholder="🔍 Search diary..." oninput="renderDiary()" style="margin-bottom:10px; width:100%; padding:10px; border-radius:10px; background:var(--card); color:white; border:1px solid var(--border);">
+    <div id="diary"></div>
 </div>
 
 <script>
@@ -72,117 +130,181 @@
     const PROXY = "https://corsproxy.io/?";
     const LAWS = { "bass": 42, "pollack": 30, "cod": 35, "thornback": 45 };
 
-    let catches = JSON.parse(localStorage.getItem('aos_elite_v2')) || [];
-    let map, marker, activePort = "Unknown", activeTide = "--", activeWeather = "--";
+    let catches = JSON.parse(localStorage.getItem('aos_v42_data')) || [];
+    let allPorts = [], map, marker, activeData = { pt: "Unknown", td: "--", st: "--", tmp: "--", wind: "--", img: "" };
 
     window.onload = () => {
         map = L.map('map').setView([54.5, -3], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        renderDiary();
-        updatePBs();
+        loadPorts(); renderDiary();
     };
 
-    async function syncAll() {
+    function toggle(id) {
+        const el = document.getElementById(id);
+        const isVisible = el.style.display === 'block';
+        document.querySelectorAll('.drawer').forEach(d => d.style.display = 'none');
+        el.style.display = isVisible ? 'none' : 'block';
+    }
+
+    async function loadPorts() {
+        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const data = await res.json();
+        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] }));
+        populatePorts(allPorts);
+    }
+
+    function populatePorts(list) {
+        const s = document.getElementById('pList');
+        s.innerHTML = '<option value="">-- Select Port --</option>' + list.sort((a,b)=>a.name.localeCompare(b.name)).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+
+    function filterPorts() {
+        const q = document.getElementById('pSearch').value.toLowerCase();
+        populatePorts(allPorts.filter(p => p.name.toLowerCase().includes(q)));
+    }
+
+    async function syncGPS() {
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const { latitude, longitude } = pos.coords;
             map.setView([latitude, longitude], 13);
             if(marker) marker.setLatLng([latitude, longitude]); else marker = L.marker([latitude, longitude]).addTo(map);
 
-            // Weather & Port Logic simplified for speed
-            activeWeather = "Captured";
-            const pRes = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const pData = await pRes.json();
-            const near = pData.features[0]; // Logic for closest station
-            activePort = near.properties.Name;
+            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&windspeed_unit=mph`);
+            const wData = await wRes.json();
+            activeData.tmp = wData.current_weather.temperature;
+            activeData.wind = wData.current_weather.windspeed;
+            document.getElementById('hudTemp').innerText = activeData.tmp + "°C";
+            document.getElementById('hudWind').innerText = "WIND: " + activeData.wind + "mph";
+
+            const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
+            document.getElementById('pList').value = near.id;
+            fetchTides(near.id);
         });
     }
 
-    function checkLaws() {
-        const s = document.getElementById('species').value.toLowerCase();
-        const l = parseFloat(document.getElementById('len').value);
-        const limit = Object.keys(LAWS).find(k => s.includes(k));
-        document.getElementById('lawAlert').innerHTML = (limit && l < LAWS[limit]) ? `<span class="tag-under">UNDERSIZE (Law: ${LAWS[limit]}cm)</span>` : "";
+    async function fetchTides(id) {
+        const port = allPorts.find(p => p.id === id);
+        activeData.pt = port.name;
+        map.setView([port.lat, port.lon], 14);
+
+        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const data = await res.json();
+        
+        const now = new Date();
+        const next = data.find(e => new Date(e.DateTime) > now);
+        const state = next.EventType.includes("High") ? "RISING" : "FALLING";
+        activeData.td = next.Height.toFixed(1) + "m";
+        activeData.st = state;
+
+        document.getElementById('hudTide').innerText = activeData.td;
+        document.getElementById('hudState').innerText = state;
+        document.getElementById('hudState').className = `label ${state.toLowerCase()}`;
+
+        document.getElementById('outlookList').innerHTML = data.filter(e => e.EventType === "HighWater").map(e => `
+            <div class="outlook-row">
+                <span>${new Date(e.DateTime).toLocaleDateString([], {weekday:'short', day:'numeric'})}</span>
+                <span style="color:var(--sea); font-weight:bold;">${new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                <span>${e.Height}m</span>
+            </div>`).join('');
     }
 
-    function saveLog() {
-        const idx = parseInt(document.getElementById('editIdx').value);
+    function handlePhoto(e) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            activeData.img = reader.result;
+            const img = document.getElementById('imgPrev');
+            img.src = reader.result; img.style.display = 'block';
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function checkLaw() {
+        const s = document.getElementById('sp').value.toLowerCase();
+        const l = parseFloat(document.getElementById('ln').value);
+        const mcrs = Object.keys(LAWS).find(k => s.includes(k));
+        document.getElementById('lawWarn').innerHTML = (mcrs && l < LAWS[mcrs]) ? `<span style="background:var(--red); color:white; padding:2px 5px; border-radius:4px; font-weight:bold;">UNDERSIZE (Law: ${LAWS[mcrs]}cm)</span>` : "";
+    }
+
+    function saveEntry() {
+        const idx = parseInt(document.getElementById('eIdx').value);
         const entry = {
-            species: document.getElementById('species').value,
-            len: document.getElementById('len').value,
-            wt: document.getElementById('wt').value || 0,
-            notes: document.getElementById('notes').value,
-            port: activePort, tide: activeTide, weather: activeWeather,
-            date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            sp: document.getElementById('sp').value, ln: document.getElementById('ln').value, wt: document.getElementById('wt').value,
+            nt: document.getElementById('nt').value, img: activeData.img, pt: activeData.pt, td: activeData.td, st: activeData.st,
+            tmp: activeData.tmp, dt: new Date().toLocaleDateString(), tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
         };
         if(idx === -1) catches.unshift(entry); else catches[idx] = entry;
-        localStorage.setItem('aos_elite_v2', JSON.stringify(catches));
-        resetForm(); renderDiary(); updatePBs();
+        localStorage.setItem('aos_v42_data', JSON.stringify(catches));
+        resetForm(); renderDiary();
     }
 
     function resetForm() {
-        document.querySelectorAll('input, textarea').forEach(i => i.value = (i.id === "editIdx" ? "-1" : ""));
-        document.getElementById('saveBtn').innerText = "📖 RECORD CATCH";
-        document.getElementById('formHeader').innerText = "New Catch Log";
-        document.getElementById('lawAlert').innerHTML = "";
-    }
-
-    function updatePBs() {
-        const pbs = {};
-        catches.forEach(c => {
-            const s = c.species.toLowerCase();
-            const w = parseFloat(c.wt);
-            if(!pbs[s] || w > pbs[s]) pbs[s] = w;
-        });
-        document.getElementById('pbList').innerHTML = Object.entries(pbs).map(([s, w]) => `
-            <div class="pb-card">
-                <span class="pb-val">${w}lb</span>
-                <span class="pb-label">${s}</span>
-            </div>`).join('');
+        ['sp','ln','wt','nt'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('eIdx').value = '-1';
+        document.getElementById('imgPrev').style.display = 'none';
+        activeData.img = "";
+        document.getElementById('saveBtn').innerText = "💾 SAVE LOG";
     }
 
     function renderDiary() {
-        const q = document.getElementById('search').value.toLowerCase();
-        document.getElementById('diary').innerHTML = catches.filter(c => 
-            c.species.toLowerCase().includes(q) || c.notes.toLowerCase().includes(q)
-        ).map((c, i) => `
+        const q = document.getElementById('diarySearch').value.toLowerCase();
+        document.getElementById('diary').innerHTML = catches.filter(c => c.sp.toLowerCase().includes(q) || c.pt.toLowerCase().includes(q)).map((c, i) => `
             <div class="diary-item">
-                <div class="diary-header" onclick="toggleAccordion(${i})">
-                    <div>
-                        <span class="species-name">${c.species.toUpperCase()}</span>
-                        <span class="compact-meta"> • ${c.len}cm | ${c.wt}lb</span>
-                    </div>
-                    <span style="font-size:0.6rem; opacity:0.6;">${c.date} ▾</span>
+                <div class="diary-head" onclick="toggleAcc(${i})">
+                    <div style="font-weight:bold;">${c.sp.toUpperCase()} <span style="color:var(--sea); font-size:0.7rem;">${c.wt}lb</span></div>
+                    <span style="font-size:0.6rem; opacity:0.6;">${c.dt} ▾</span>
                 </div>
-                <div class="diary-content" id="content-${i}">
-                    <p><b>Port:</b> ${c.port} | <b>Time:</b> ${c.time}</p>
-                    <p style="font-style:italic;">${c.notes || 'No notes added.'}</p>
-                    <div style="margin-top:10px; display:flex; gap:15px;">
-                        <span onclick="editLog(${i})" style="color:var(--gold); cursor:pointer;">Edit</span>
-                        <span onclick="deleteLog(${i})" style="color:var(--red); cursor:pointer;">Delete</span>
+                <div class="diary-body" id="acc-${i}">
+                    ${c.img ? `<img src="${c.img}" class="catch-img">` : ''}
+                    <p><b>Location:</b> ${c.pt} | <b>Time:</b> ${c.tm}</p>
+                    <p><b>Conditions:</b> ${c.td} ${c.st} | ${c.tmp}°C</p>
+                    <p style="font-style:italic;">${c.nt}</p>
+                    <div style="margin-top:10px; display:flex; gap:15px; align-items:center;">
+                        <button onclick="shareCatch(${i})" style="background:var(--sea); border:none; color:var(--navy); padding:5px; font-weight:bold; border-radius:4px; font-size:0.65rem;">SHARE</button>
+                        <span onclick="editEntry(${i})" style="color:var(--gold); cursor:pointer;">EDIT</span>
+                        <span onclick="deleteEntry(${i})" style="color:var(--red); cursor:pointer;">DEL</span>
                     </div>
                 </div>
             </div>`).join('');
     }
 
-    function toggleAccordion(i) {
-        const el = document.getElementById(`content-${i}`);
-        const isOpen = el.style.display === 'block';
-        document.querySelectorAll('.diary-content').forEach(c => c.style.display = 'none');
-        el.style.display = isOpen ? 'none' : 'block';
+    function toggleAcc(i) {
+        const el = document.getElementById(`acc-${i}`);
+        const current = el.style.display;
+        document.querySelectorAll('.diary-body').forEach(b => b.style.display = 'none');
+        el.style.display = (current === 'block') ? 'none' : 'block';
     }
 
-    function editLog(i) {
+    function exportData() {
+        const blob = new Blob([JSON.stringify(catches)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'AnglerOS_Backup.json'; a.click();
+    }
+
+    function importData(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            catches = JSON.parse(event.target.result);
+            localStorage.setItem('aos_v42_data', JSON.stringify(catches));
+            renderDiary();
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    function editEntry(i) {
         const c = catches[i];
-        document.getElementById('species').value = c.species;
-        document.getElementById('len').value = c.len;
-        document.getElementById('wt').value = c.wt;
-        document.getElementById('notes').value = c.notes;
-        document.getElementById('editIdx').value = i;
-        document.getElementById('saveBtn').innerText = "💾 UPDATE LOG";
-        window.scrollTo(0, 300);
+        document.getElementById('sp').value = c.sp; document.getElementById('ln').value = c.ln;
+        document.getElementById('wt').value = c.wt; document.getElementById('nt').value = c.nt;
+        document.getElementById('eIdx').value = i;
+        document.getElementById('saveBtn').innerText = "💾 UPDATE";
+        window.scrollTo(0, 450);
     }
 
-    function deleteLog(i) { if(confirm("Delete log?")) { catches.splice(i,1); localStorage.setItem('aos_elite_v2', JSON.stringify(catches)); renderDiary(); updatePBs(); } }
+    async function shareCatch(i) {
+        const c = catches[i];
+        try { await navigator.share({ title: 'My Catch', text: `Landed this ${c.wt}lb ${c.sp} at ${c.pt}!`, url: window.location.href }); } catch(e) {}
+    }
+
+    function deleteEntry(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v42_data', JSON.stringify(catches)); renderDiary(); } }
 </script>
 </body>
 </html>
