@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v6.1 PRO</title>
+    <title>Angler OS v6.2</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; --low-tide: rgba(52, 232, 158, 0.2); }
+        :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; --high-tide: rgba(52, 152, 219, 0.2); --low-tide: rgba(46, 204, 113, 0.2); }
         body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
         .header span { color: var(--sea); }
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.4; }
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.5; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
         #map { height: 180px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -24,6 +24,9 @@
         .btn-main { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; font-family: inherit; }
+        .tide-row { display: flex; justify-content: space-between; padding: 10px; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .is-high { background: var(--high-tide); border-left: 4px solid #3498db; font-weight: bold; }
+        .is-low { background: var(--low-tide); border-left: 4px solid #2ecc71; }
         #sizeAlert { display: none; background: var(--red); color: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 0.8rem; }
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
         .summary-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -35,31 +38,28 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <div class="btn-sub" onclick="toggle('helpBox')">📘 FISHING GUIDE</div>
-        <div class="btn-sub" onclick="toggle('dataBox')">💾 DATA MGMT</div>
+        <div class="btn-sub" onclick="toggle('helpBox')">📘 GUIDE & DATA</div>
+        <div class="btn-sub" onclick="showSummary()">📊 SUMMARY</div>
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">BAROMETRIC PRESSURE</h4>
-        <p><b>1013hPa+ (High):</b> Stable weather, clear skies. Best for consistent feeding.<br><b>Below 1000hPa:</b> Storm threat. Fish often feed aggressively just before the drop.</p>
-        <h4 style="color:var(--gold); margin:10px 0 5px 0;">TIDAL FLOW (KNOTS)</h4>
-        <p><b>1.5 - 3.0 kn:</b> The "Feeding Zone." Moving water carries bait.<br><b>< 0.5 kn:</b> Slack water. Fishing usually goes quiet.</p>
-        <h4 style="color:var(--gold); margin:10px 0 5px 0;">REGS (Min Size)</h4>
-        <p>Bass: 42cm | Cod: 35cm | Whiting: 27cm | Plaice: 27cm. The app will alert you if your entry is undersized.</p>
-        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('helpBox')">CLOSE</button>
-    </div>
-
-    <div id="dataBox" class="drawer">
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 DATA MANAGEMENT</h4>
+        <p><b>Export:</b> Downloads your diary as a .json file. Keep this safe!<br><b>Import:</b> Upload that file to restore your catches on any new device.</p>
+        <h4 style="color:var(--gold); margin:10px 0 5px 0;">🎣 WEATHER & TIDES</h4>
+        <p><b>Pressure:</b> 1013hPa+ is stable. Rapid drops trigger feeding but signal storms.<br><b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone." Slack water (<0.5) is usually slow.</p>
         <button class="btn-sub" style="width:100%; margin-bottom:5px;" onclick="exportData()">EXPORT BACKUP</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
         <button class="btn-sub" style="width:100%" onclick="document.getElementById('importFile').click()">IMPORT BACKUP</button>
+        <button class="btn-sub" style="width:100%; margin-top:10px; color:var(--red)" onclick="toggle('helpBox')">CLOSE GUIDE</button>
     </div>
 
+    <div id="summaryBox" class="drawer"></div>
+
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC ALL DATA</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC ALL DATA (GPS, WEATHER, TIDES)</button>
 
     <div class="card" style="padding: 10px; margin-bottom: 10px;">
-        <span class="label">UK & Ireland Port Search</span>
+        <span class="label">Port Search (UK, Ireland, Scotland)</span>
         <div style="display:flex; gap:5px; margin-bottom:8px;">
             <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search (Hull, Dublin...)" oninput="filterPorts(this.value)">
             <button class="btn-sub" onclick="addFav()" style="padding:0 15px; font-size:1.2rem;">⭐</button>
@@ -76,29 +76,24 @@
         <div class="hud-item"><span class="label">Weather</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
     </div>
 
-    <div class="hud-grid">
-        <div class="btn-sub" style="color:var(--sea)" onclick="toggle('tideBox')">📅 7-DAY TIDE ▾</div>
-        <div class="btn-sub" style="color:var(--white)" onclick="showSummary()">📊 SESSION SUMMARY</div>
-    </div>
-
+    <button class="btn-sub" style="width:100%; color:var(--sea); margin-bottom:15px;" onclick="toggle('tideBox')">📅 SHOW 7-DAY TIDE OUTLOOK ▾</button>
     <div id="tideBox" class="drawer"><div id="outlookList"></div></div>
-    <div id="summaryBox" class="drawer"></div>
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log New Catch</span>
-        <div id="sizeAlert">⚠️ UNDERSIZED - CHECK LOCAL REGS</div>
+        <div id="sizeAlert"></div>
         <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
         <button onclick="document.getElementById('camIn').click()" style="width:100%; background:none; border:1px dashed var(--gold); color:var(--gold); padding:8px; border-radius:8px; font-size:0.7rem; margin-bottom:8px;">📷 TAKE PHOTO</button>
         <img id="imgPrev" style="width:100%; height:120px; object-fit:cover; border-radius:10px; display:none; margin-bottom:8px;">
         
-        <input type="text" id="sp" placeholder="Species..." oninput="checkSize()">
+        <input type="text" id="sp" placeholder="Species (e.g. Bass, Flounder...)" oninput="checkSize()">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
             <input type="number" id="ln" placeholder="Length (cm)" oninput="checkSize()">
             <input type="number" id="wt" placeholder="Weight (lb)">
         </div>
         <textarea id="notes" placeholder="Notes (Bait, Rig, Depth...)"></textarea>
         <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE TO DIARY</button>
-        <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL</button>
+        <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
     </div>
 
     <div style="padding: 5px; margin-bottom: 10px;">
@@ -107,7 +102,7 @@
             <span style="font-size:0.65rem; color:var(--gold); cursor:pointer;" onclick="toggle('searchWrapper')">🔍 SEARCH HISTORY</span>
         </div>
         <div id="searchWrapper" style="display:none; margin-top:10px;">
-            <input type="text" id="diarySearch" placeholder="Search lifetime history..." oninput="renderDiary()">
+            <input type="text" id="diarySearch" placeholder="Search lifetime species or dates..." oninput="renderDiary()">
         </div>
     </div>
     <div id="diary"></div>
@@ -116,11 +111,18 @@
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
     const PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_logs')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_favs')) || [];
+    let catches = JSON.parse(localStorage.getItem('aos_v6_logs')) || [];
+    let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
     let allPorts = [], map, marker, activeImg = "", editingIndex = -1, selectedPortId = null;
     let curData = { pt: "Manual", td: "--", st: "--", prs: "--", tmp: "--", flw: "--", wind: "--" };
-    const REGS = { "bass": 42, "cod": 35, "whiting": 27, "plaice": 27, "sole": 24, "pollock": 30 };
+    
+    // FULL REGS DATABASE
+    const REGS = { 
+        "bass": 42, "cod": 35, "whiting": 27, "plaice": 27, "sole": 24, "pollock": 30,
+        "flounder": 25, "smoothhound": 51, "smooth hound": 51, "dogfish": 38, "lsd": 38,
+        "dab": 15, "haddock": 30, "coalfish": 30, "brill": 30, "turbot": 30, "mullet": 33,
+        "mackerel": 20, "herring": 20, "pout": 20
+    };
 
     window.onload = () => {
         map = L.map('map').setView([53.6, -0.1], 10);
@@ -131,13 +133,11 @@
     function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
 
     async function loadPorts() {
-        try {
-            const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const data = await res.json();
-            allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] }))
-                       .sort((a, b) => a.name.localeCompare(b.name));
-            filterPorts("");
-        } catch(e) { console.log("Port load error"); }
+        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const data = await res.json();
+        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] }))
+                   .sort((a, b) => a.name.localeCompare(b.name));
+        filterPorts("");
     }
 
     function filterPorts(q) {
@@ -155,22 +155,13 @@
         s.appendChild(g2);
     }
 
-    function addFav() {
-        if (!selectedPortId) return alert("Select a port first!");
-        const port = allPorts.find(p => p.id === selectedPortId);
-        if (!favs.some(f => f.id === port.id)) {
-            favs.push({id: port.id, name: port.name});
-            localStorage.setItem('aos_favs', JSON.stringify(favs));
-            filterPorts("");
-        }
-    }
-
     function handlePortSelect(id) {
         if(!id) return;
         selectedPortId = id;
         const port = allPorts.find(p => p.id === id);
         map.setView([port.lat, port.lon], 13);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
+        document.getElementById('manualSearch').value = ""; // AUTO CLEAR SEARCH
         fetchTides(id);
     }
 
@@ -185,14 +176,10 @@
             const dirs = ['N','NE','E','SE','S','SW','W','NW'];
             curData.wind = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
             curData.prs = wData.hourly.surface_pressure[0];
-            
             document.getElementById('hudWeather').innerText = `${cw.temperature}°C`;
             document.getElementById('hudWind').innerText = `WIND: ${curData.wind}`;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
-            // RESTORED PRESSURE LOGIC
             document.getElementById('pressTrend').innerText = curData.prs >= 1013 ? "STABLE - GOOD" : "DROP - FISH NOW";
-            document.getElementById('pressTrend').style.color = curData.prs >= 1013 ? "var(--sea)" : "var(--gold)";
-
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             handlePortSelect(near.id);
         });
@@ -207,34 +194,31 @@
         curData.td = next.Height.toFixed(1) + "m";
         document.getElementById('hudTide').innerText = curData.td;
         document.getElementById('hudState').innerText = curData.st;
-
         const hrs = Math.abs(new Date(next.DateTime) - new Date()) / 3600000;
         const knots = (Math.abs(Math.sin((hrs/6)*Math.PI)) * 3.5).toFixed(1);
         document.getElementById('hudFlow').innerText = knots + " kn";
-        // RESTORED FLOW LOGIC
         document.getElementById('hudKnots').innerText = knots >= 1.5 ? "FEEDING ACTIVE" : "LOW ACTIVITY";
-        document.getElementById('hudKnots').style.color = knots >= 1.5 ? "var(--sea)" : "#64748b";
 
         let html = ""; let lastD = "";
         data.forEach(e => {
             const d = new Date(e.DateTime).toLocaleDateString([], {weekday:'short', day:'numeric'});
             if(d !== lastD) { html += (lastD ? "</div>" : "") + `<div style="border:1px solid var(--border); border-radius:10px; margin-bottom:8px; overflow:hidden;"><div style="background:var(--border); padding:5px; font-weight:bold; color:var(--gold); font-size:0.7rem;">${d.toUpperCase()}</div>`; lastD = d; }
-            html += `<div class="tide-row ${e.EventType.includes('Low') ? 'is-low' : ''}" style="display:flex; justify-content:space-between; padding:8px 10px; font-size:0.8rem; border-bottom:1px solid rgba(255,255,255,0.05);"><span>${new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${e.EventType.includes('Low') ? 'LOW' : 'HIGH'}</span><span>${e.Height.toFixed(1)}m</span></div>`;
+            const type = e.EventType.includes('High') ? 'is-high' : 'is-low';
+            html += `<div class="tide-row ${type}"><span>${new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${e.EventType.toUpperCase()}</span><span>${e.Height.toFixed(1)}m</span></div>`;
         });
         document.getElementById('outlookList').innerHTML = html + "</div>";
     }
 
     function checkSize() {
-        const s = document.getElementById('sp').value.toLowerCase().trim();
-        const l = parseFloat(document.getElementById('ln').value);
+        const speciesInput = document.getElementById('sp').value.toLowerCase().trim();
+        const lengthInput = parseFloat(document.getElementById('ln').value);
         const alertBox = document.getElementById('sizeAlert');
-        // REGS CHECK
-        if (REGS[s] && l < REGS[s]) {
+        let matchedReg = null;
+        for (let key in REGS) { if (speciesInput.includes(key)) { matchedReg = key; break; } }
+        if (matchedReg && lengthInput < REGS[matchedReg]) {
             alertBox.style.display = 'block';
-            alertBox.innerText = `⚠️ UNDERSIZED ${s.toUpperCase()} (MIN ${REGS[s]}cm)`;
-        } else {
-            alertBox.style.display = 'none';
-        }
+            alertBox.innerText = `⚠️ UNDERSIZED ${matchedReg.toUpperCase()}! MIN ${REGS[matchedReg]}cm REQUIRED.`;
+        } else { alertBox.style.display = 'none'; }
     }
 
     function saveEntry() {
@@ -244,18 +228,35 @@
         const entry = {
             sp, wt, ln: document.getElementById('ln').value, nt: document.getElementById('notes').value, 
             img: activeImg, dt: new Date().toLocaleDateString(), tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: curData.pt, env: `Tide: ${curData.td} (${curData.st}) | Wind: ${curData.wind} | Press: ${curData.prs}hPa`, isPB: wt > 0 && wt >= historicalBest
+            loc: curData.pt, env: `Tide: ${curData.td} | Flow: ${document.getElementById('hudFlow').innerText} | Press: ${curData.prs}hPa`, 
+            isPB: wt > 0 && wt >= historicalBest
         };
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_logs', JSON.stringify(catches));
+        localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
         resetForm(); renderDiary();
+    }
+
+    function renderDiary() {
+        const q = document.getElementById('diarySearch').value.toLowerCase();
+        const today = new Date().toLocaleDateString();
+        const filtered = catches.filter(c => q ? (c.sp+c.nt+c.dt).toLowerCase().includes(q) : c.dt === today);
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
+            <div class="card" style="margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px;">
+                    <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span> 
+                    <span style="color:var(--sea)">${c.ln}cm / ${c.wt}lb</span>
+                </div>
+                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:8px;">` : ''}
+                <div style="font-size:0.7rem;"><p style="margin:2px 0;"><b>Session Data:</b> ${c.env}</p><p style="margin:8px 0; color:var(--gold)">${c.nt}</p></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;"><button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button><button class="btn-sub" style="color:var(--red)" onclick="deleteEntry(${catches.indexOf(c)})">DELETE</button></div>
+            </div>`).join('');
     }
 
     function showSummary() {
         const today = new Date().toLocaleDateString();
         const s = catches.filter(c => c.dt === today);
         const box = document.getElementById('summaryBox');
-        if(!s.length) { box.innerHTML = "No fish today. <button class='btn-sub' style='width:100%; margin-top:10px' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
+        if(!s.length) { box.innerHTML = "No catches logged today. <button class='btn-sub' style='width:100%; margin-top:10px' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
         else {
             const stats = s.reduce((acc, c) => {
                 const sp = c.sp.charAt(0).toUpperCase() + c.sp.slice(1).toLowerCase();
@@ -267,45 +268,40 @@
             for (const [species, data] of Object.entries(stats)) {
                 html += `<div class="summary-row"><span>${species} (x${data.count})</span><span style="color:var(--gold)">${data.weight.toFixed(2)} lb</span></div>`;
             }
-            html += `<button class="btn-sub" style="width:100%; margin-top:15px;" onclick="toggle('summaryBox')">CLOSE</button>`;
+            html += `<button class="btn-sub" style="width:100%; margin-top:15px;" onclick="toggle('summaryBox')">CLOSE SUMMARY</button>`;
             box.innerHTML = html;
         }
         box.style.display = 'block';
     }
 
-    function renderDiary() {
-        const q = document.getElementById('diarySearch').value.toLowerCase();
-        const today = new Date().toLocaleDateString();
-        const filtered = catches.filter(c => q ? (c.sp+c.nt+c.dt).toLowerCase().includes(q) : c.dt === today);
-        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
-            <div class="card" style="margin-top:10px;">
-                <div style="display:flex; justify-content:space-between; font-weight:bold; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px;">
-                    <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span> <span>${c.wt}lb</span>
-                </div>
-                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:8px;">` : ''}
-                <div style="font-size:0.75rem;"><p style="margin:2px 0; color:var(--sea)">${c.env}</p><p style="margin:8px 0; color:var(--gold)">${c.nt}</p></div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;"><button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button><button class="btn-sub" style="color:var(--red)" onclick="deleteEntry(${catches.indexOf(c)})">DELETE</button></div>
-            </div>`).join('');
+    function addFav() {
+        if (!selectedPortId) return;
+        const port = allPorts.find(p => p.id === selectedPortId);
+        if (!favs.some(f => f.id === port.id)) {
+            favs.push({id: port.id, name: port.name});
+            localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
+            filterPorts("");
+        }
+    }
+
+    function resetForm() {
+        editingIndex = -1; activeImg = "";
+        document.getElementById('sp').value = ""; document.getElementById('wt').value = ""; document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
+        document.getElementById('imgPrev').style.display = 'none'; document.getElementById('formTitle').innerText = "Log New Catch"; document.getElementById('cancelEdit').style.display = 'none';
+        document.getElementById('sizeAlert').style.display = 'none';
     }
 
     function editEntry(i) {
         editingIndex = i; const c = catches[i];
         document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt; document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
         if(c.img) { document.getElementById('imgPrev').src = c.img; document.getElementById('imgPrev').style.display = 'block'; activeImg = c.img; }
-        document.getElementById('formTitle').innerText = "Edit Catch Record"; document.getElementById('saveBtn').innerText = "💾 UPDATE ENTRY"; document.getElementById('cancelEdit').style.display = 'block';
+        document.getElementById('formTitle').innerText = "Edit Catch Record"; document.getElementById('cancelEdit').style.display = 'block';
         window.scrollTo(0, 0);
     }
 
-    function resetForm() {
-        editingIndex = -1; activeImg = "";
-        document.getElementById('sp').value = ""; document.getElementById('wt').value = ""; document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
-        document.getElementById('imgPrev').style.display = 'none'; document.getElementById('formTitle').innerText = "Log New Catch"; document.getElementById('saveBtn').innerText = "💾 SAVE TO DIARY"; document.getElementById('cancelEdit').style.display = 'none';
-        document.getElementById('sizeAlert').style.display = 'none';
-    }
-
-    function deleteEntry(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('aos_logs', JSON.stringify(catches)); renderDiary(); } }
+    function deleteEntry(i) { if(confirm("Delete this log?")) { catches.splice(i, 1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
     function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Log.json'; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_logs', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
+    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
     function handlePhoto(e) { const r = new FileReader(); r.onload = () => { activeImg = r.result; document.getElementById('imgPrev').src = r.result; document.getElementById('imgPrev').style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); }
 </script>
 </body>
