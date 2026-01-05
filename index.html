@@ -52,7 +52,8 @@
 
 <script>
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    const PROXY = "https://api.allorigins.win/get?url=";
+    // Switching to a more transparent proxy
+    const PROXY = "https://corsproxy.io/?";
 
     let allStations = [];
     let currentID = null;
@@ -62,25 +63,26 @@
 
     async function getStations() {
         try {
+            // We are sending the key as a header THROUGH the proxy
             const target = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations`;
-            const res = await fetch(`${PROXY}${encodeURIComponent(target)}&Ocp-Apim-Subscription-Key=${KEY}`);
-            const data = await res.json();
-            
-            // Safety Check: Parse the contents
-            let rawContents = typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+            const res = await fetch(PROXY + encodeURIComponent(target), {
+                headers: { 'Ocp-Apim-Subscription-Key': KEY }
+            });
 
-            // Handle the case where the API returns an error object instead of a list
-            if (Array.isArray(rawContents)) {
-                allStations = rawContents;
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Status ${res.status}: ${errText}`);
+            }
+
+            allStations = await res.json();
+            
+            if (Array.isArray(allStations)) {
                 allStations.sort((a, b) => (a.Name || "").localeCompare(b.Name || ""));
                 fillSelect(allStations);
-            } else {
-                console.error("Admiralty returned an error object:", rawContents);
-                document.getElementById('stationSelect').innerHTML = `<option>Key Error: ${rawContents.message || 'Check Portal'}</option>`;
             }
         } catch (e) {
-            console.error("Fetch failed:", e);
-            document.getElementById('stationSelect').innerHTML = '<option>Connection Error - Refresh Page</option>';
+            console.error("Admiralty Error:", e);
+            document.getElementById('stationSelect').innerHTML = `<option>Error: Check API Key/Subscription</option>`;
         }
     }
 
@@ -95,8 +97,7 @@
 
     function filterStations() {
         const q = document.getElementById('searchBox').value.toLowerCase();
-        const filtered = allStations.filter(x => x.Name.toLowerCase().includes(q));
-        fillSelect(filtered);
+        fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q)));
     }
 
     async function loadData(sid = null) {
@@ -111,9 +112,10 @@
 
         try {
             const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents`;
-            const tRes = await fetch(`${PROXY}${encodeURIComponent(tideTarget)}&Ocp-Apim-Subscription-Key=${KEY}`);
-            const tData = await tRes.json();
-            const tides = typeof tData.contents === 'string' ? JSON.parse(tData.contents) : tData.contents;
+            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
+                headers: { 'Ocp-Apim-Subscription-Key': KEY }
+            });
+            const tides = await tRes.json();
 
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
@@ -121,7 +123,7 @@
             render(tides, wind.current, stn.Name);
         } catch (err) { 
             console.error(err);
-            alert("Tide data not available for this station.");
+            alert("Tide data fetch failed.");
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -135,11 +137,6 @@
         document.getElementById('windDir').innerText = `${dir} (${wind.wind_direction_10m}°) at ${name}`;
 
         const list = document.getElementById('tideList');
-        if (!Array.isArray(tides)) {
-            list.innerHTML = "<p style='color:red'>Tide data unavailable.</p>";
-            return;
-        }
-        
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
             const time = new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -168,8 +165,7 @@
 
     function updateStar() {
         const btn = document.getElementById('starBtn');
-        if (!btn) return;
-        btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
+        if (btn) btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
     }
 </script>
 </body>
