@@ -6,79 +6,80 @@
     <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f41f.png">
     <title>Fishing Friend</title>
     <style>
-        :root { --navy: #001f3f; --sea: #0074D9; --gold: #FFDC00; --bg: #f4f7f6; --red: #ff4136; --green: #2ecc40; --sky: #e1f5fe; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .app-container { max-width: 480px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        :root { --navy: #0a2342; --sea: #2ca58d; --gold: #f4af1b; --bg: #eef2f3; --white: #ffffff; --text: #2d3436; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .app-container { max-width: 450px; margin: 0 auto; background: var(--white); padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo-hook { font-size: 40px; color: var(--navy); display: block; margin-bottom: 5px; }
-        h1 { color: var(--navy); margin: 0; font-size: 1.6rem; letter-spacing: -1px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo-svg { width: 50px; height: 50px; fill: var(--navy); }
+        h1 { color: var(--navy); margin: 0; font-size: 1.4rem; text-transform: uppercase; }
 
-        .label { font-size: 0.7rem; font-weight: bold; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-        input, select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .search-section { margin-bottom: 20px; }
+        .label { font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 14px; margin-bottom: 8px; border: 2px solid #f1f2f6; border-radius: 12px; font-size: 16px; background: #fbfbfb; }
+        
+        .btn-gps { 
+            width: 100%; background: var(--sea); color: white; border: none; padding: 12px; 
+            border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
         #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .fav-tag { background: var(--navy); color: white; padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; border: none; }
+        .fav-tag { background: var(--navy); color: white; padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; border: none; font-weight: 600; cursor: pointer; }
         
-        .card { background: #fff; border: 1px solid #f0f0f0; padding: 15px; border-radius: 15px; margin-bottom: 15px; position: relative; border-left: 5px solid var(--sea); }
-        .val { font-size: 1.8rem; font-weight: 800; color: var(--navy); margin: 2px 0; }
-        .sub-val { font-size: 0.9rem; font-weight: 600; color: var(--sea); }
+        .card { background: #fff; border: 1px solid #f1f2f6; padding: 18px; border-radius: 20px; margin-bottom: 12px; position: relative; }
+        .val { font-size: 1.6rem; font-weight: 800; color: var(--navy); }
+        .sub-val { font-size: 0.85rem; font-weight: 600; color: var(--sea); }
         
-        .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
-        .high { color: var(--green); font-weight: bold; }
-        .low { color: #ff851b; font-weight: bold; }
-        
-        .star { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #ddd; }
+        .star { position: absolute; top: 18px; right: 18px; background: none; border: none; font-size: 1.5rem; color: #dfe6e9; cursor: pointer; padding: 0; }
         .star.active { color: var(--gold); }
-        .loading { text-align: center; font-weight: bold; color: var(--sea); padding: 10px; display: none; }
         
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
-        .flood { background: var(--sky); color: var(--sea); border: 1px solid var(--sea); }
-        .ebb { background: #fff3e0; color: #ef6c00; border: 1px solid #ef6c00; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; margin-top: 8px; }
+        .flood { background: #e8f8f5; color: var(--sea); }
+        .ebb { background: #fef5e7; color: #e67e22; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tide-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f2f6; font-size: 0.95rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .loading { text-align: center; color: var(--sea); font-weight: bold; margin: 10px 0; display: none; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="logo-container">
-        <span class="logo-hook">🪝</span>
+    <div class="header">
+        <svg class="logo-svg" viewBox="0 0 24 24"><path d="M7,2V5H10V22A4,4 0 0,0 14,18V17H13V18A3,3 0 0,1 10,21V5H13V2H7M17,13H16V14H17A2,2 0 0,1 19,16A2,2 0 0,1 17,18H16V19H17A3,3 0 0,0 20,16A3,3 0 0,0 17,13Z" /></svg>
         <h1>Fishing Friend</h1>
     </div>
 
-    <div id="favBar"></div>
-    <div style="margin-bottom:20px;">
-        <span class="label">Select Port</span>
-        <input type="text" id="searchBox" placeholder="Search ports..." oninput="filterStations()">
+    <button class="btn-gps" onclick="getLocation()">📍 Find Nearest Port</button>
+
+    <div class="search-section">
+        <span class="label">Favorites</span>
+        <div id="favBar"></div>
+        
+        <span class="label">Manual Search</span>
+        <input type="text" id="searchBox" placeholder="Type port name..." oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option>Loading...</option></select>
     </div>
     
-    <div id="loader" class="loading">📡 Syncing Sea Conditions...</div>
+    <div id="loader" class="loading">FETCHING LIVE DATA...</div>
 
     <div id="dashboard">
         <div class="grid-2">
-            <div class="card">
-                <span class="label">Wind</span>
-                <div class="val" id="windSpd">--</div>
-                <div class="sub-val" id="windDir">--</div>
-            </div>
-            <div class="card" style="border-left-color: #0074D9;">
-                <span class="label">Waves</span>
-                <div class="val" id="waveHgt">--</div>
-                <div class="sub-val" id="wavePeriod">--</div>
-            </div>
+            <div class="card"><span class="label">Wind</span><div class="val" id="windSpd">--</div><div class="sub-val" id="windDir">--</div></div>
+            <div class="card"><span class="label">Waves</span><div class="val" id="waveHgt">--</div><div class="sub-val" id="wavePeriod">--</div></div>
         </div>
 
-        <div class="card" style="border-left-color: var(--gold);">
+        <div class="card">
             <button id="starBtn" class="star" onclick="toggleFav()">★</button>
-            <span class="label">Current / Flow</span>
+            <span class="label">Current / Tide State</span>
             <div class="val" id="curSpd">--</div>
             <div id="tideStatus">--</div>
         </div>
 
-        <div class="card" style="border-left-color: var(--green);">
-            <span class="label">Tide Schedule</span>
-            <div id="tideList"><p style="color:#ccc; font-size:0.85rem;">Select a port...</p></div>
+        <div class="card">
+            <span class="label">Schedule</span>
+            <div id="tideList"><p style="color:#b2bec3; font-size:0.8rem; margin-top:10px;">Select a port to start.</p></div>
         </div>
     </div>
 </div>
@@ -106,12 +107,28 @@
         } catch (e) { console.error(e); }
     }
 
-    function fillSelect(data) {
-        const s = document.getElementById('stationSelect');
-        s.innerHTML = '<option value="">-- Choose Port --</option>';
-        data.forEach(item => {
-            const el = document.createElement('option');
-            el.value = item.Id; el.textContent = item.Name; s.appendChild(el);
+    function getLocation() {
+        if (!navigator.geolocation) return alert("Geolocation not supported");
+        document.getElementById('loader').style.display = 'block';
+        navigator.geolocation.getCurrentPosition(pos => {
+            const userLat = pos.coords.latitude;
+            const userLon = pos.coords.longitude;
+            
+            let nearest = null;
+            let minDist = Infinity;
+
+            allStations.forEach(stn => {
+                const dist = Math.sqrt(Math.pow(stn.Coords[1] - userLat, 2) + Math.pow(stn.Coords[0] - userLon, 2));
+                if (dist < minDist) { minDist = dist; nearest = stn; }
+            });
+
+            if (nearest) {
+                document.getElementById('stationSelect').value = nearest.Id;
+                loadData(nearest.Id);
+            }
+        }, () => {
+            alert("Location access denied.");
+            document.getElementById('loader').style.display = 'none';
         });
     }
 
@@ -125,70 +142,32 @@
         const [lon, lat] = stn.Coords;
 
         try {
-            // 1. Tides
             const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
             const tides = await tRes.json();
-
-            // 2. Wind (Standard Weather API)
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
-
-            // 3. Marine Data (Waves & Currents)
             const mRes = await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_period,ocean_current_velocity,ocean_current_direction`);
             const marine = await mRes.json();
-
             render(tides, wind.current, marine.current, stn.Name);
-        } catch (err) { 
-            console.error(err);
-            alert("Coastal data unavailable for this specific location.");
-        } finally { document.getElementById('loader').style.display = 'none'; }
+        } catch (err) { console.error(err); } finally { document.getElementById('loader').style.display = 'none'; }
     }
 
     function render(tides, wind, marine, name) {
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
-        
-        // Render Wind
-        const wDir = dirs[Math.round(wind.wind_direction_10m / 22.5) % 16];
         document.getElementById('windSpd').innerText = `${Math.round(wind.wind_speed_10m)} mph`;
-        document.getElementById('windDir').innerText = `${wDir} (${wind.wind_direction_10m}°)`;
+        document.getElementById('windDir').innerText = dirs[Math.round(wind.wind_direction_10m / 22.5) % 16];
+        document.getElementById('waveHgt').innerText = `${(marine.wave_height * 3.28).toFixed(1)} ft`;
+        document.getElementById('wavePeriod').innerText = `${marine.wave_period}s interval`;
+        document.getElementById('curSpd').innerText = `${(marine.ocean_current_velocity * 1.94).toFixed(1)} kts ${dirs[Math.round(marine.ocean_current_direction / 22.5) % 16]}`;
 
-        // Render Marine (Waves convert to feet)
-        const waveFt = (marine.wave_height * 3.28084).toFixed(1);
-        document.getElementById('waveHgt').innerText = `${waveFt} ft`;
-        document.getElementById('wavePeriod').innerText = `${marine.wave_period}s period`;
-
-        // Render Current (m/s to knots: 1.94)
-        const curKts = (marine.ocean_current_velocity * 1.94384).toFixed(1);
-        const cDir = dirs[Math.round(marine.ocean_current_direction / 22.5) % 16];
-        document.getElementById('curSpd').innerText = `${curKts} kts ${cDir}`;
-
-        // Tide Logic
         const now = new Date();
         const futureTides = tides.filter(t => new Date(t.DateTime) > now);
         const nextTide = futureTides[0];
-        const statusEl = document.getElementById('tideStatus');
-        
-        if (nextTide) {
-            const isFlooding = nextTide.EventType.includes("High");
-            statusEl.innerHTML = isFlooding ? 
-                `<div class="status-badge flood">🌊 FLOODING (Pushing In)</div>` : 
-                `<div class="status-badge ebb">📉 EBBING (Going Out)</div>`;
-        }
+        document.getElementById('tideStatus').innerHTML = nextTide?.EventType.includes("High") ? '<div class="status-badge flood">🌊 FLOODING</div>' : '<div class="status-badge ebb">📉 EBBING</div>';
 
-        const list = document.getElementById('tideList');
-        list.innerHTML = futureTides.slice(0, 4).map(t => {
-            const tDate = new Date(t.DateTime);
-            const isHigh = t.EventType.includes("High");
-            const timeStr = tDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            return `<div class="tide-row">
-                <span class="${isHigh?'high':'low'}">${isHigh?'HIGH':'LOW'}</span>
-                <span>${timeStr}</span>
-                <span>${t.Height.toFixed(2)}m</span>
-            </div>`;
-        }).join('');
+        document.getElementById('tideList').innerHTML = futureTides.slice(0, 4).map(t => `<div class="tide-row"><span class="${t.EventType.includes("High")?'high':'low'}">${t.EventType.includes("High")?'HIGH':'LOW'}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span><span>${t.Height.toFixed(1)}m</span></div>`).join('');
     }
 
-    // Standard Helper Functions
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
         if (idx > -1) favs.splice(idx, 1);
@@ -199,8 +178,9 @@
         localStorage.setItem('fishingFavs', JSON.stringify(favs));
         drawFavs(); updateStar();
     }
-    function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
-    function updateStar() { const btn = document.getElementById('starBtn'); if (btn) btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star'; }
+    function drawFavs() { document.getElementById('favBar').innerHTML = favs.length ? favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join('') : '<p style="font-size:0.7rem; color:#ccc;">No favorites saved.</p>'; }
+    function updateStar() { document.getElementById('starBtn').className = favs.some(f => f.id === currentID) ? 'star active' : 'star'; }
+    function fillSelect(data) { const s = document.getElementById('stationSelect'); s.innerHTML = '<option value="">-- Select Port --</option>'; data.forEach(item => { const el = document.createElement('option'); el.value = item.Id; el.textContent = item.Name; s.appendChild(el); }); }
     function filterStations() { const q = document.getElementById('searchBox').value.toLowerCase(); fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q))); }
 </script>
 </body>
