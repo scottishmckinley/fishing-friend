@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v7.4 PRO</title>
+    <title>Angler OS v7.6 FINAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -26,6 +26,7 @@
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
         #sizeAlert { display: none; background: var(--red); color: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 0.75rem; }
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
+        .catch-img { width: 100%; border-radius: 12px; margin-top: 10px; display: block; border: 1px solid var(--border); }
         .summary-row { display: flex; justify-content: space-between; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
@@ -35,13 +36,13 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK / DATA</button>
+        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK / TOOLS</button>
         <button class="btn-sub" onclick="showSummary()">📊 SESSION TOTALS</button>
     </div>
 
     <div id="helpBox" class="drawer">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
-        <p><b>Tides:</b> Best 2hrs either side of High Tide.<br><b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".</p>
+        <p><b>Tides:</b> Best 2hrs either side of High.<br><b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".</p>
         <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 EXPORT / IMPORT</h4>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:10px;">
@@ -68,7 +69,7 @@
 
     <div id="outlookBox" class="drawer">
         <h4 style="color:var(--gold); margin:0 0 10px 0;">WEEKLY TIDE TIMES</h4>
-        <div id="forecastData">Select a port to see tide times...</div>
+        <div id="forecastData">Select a port to see tides...</div>
     </div>
 
     <div class="hud-grid">
@@ -89,8 +90,17 @@
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
         <textarea id="notes" placeholder="Notes..."></textarea>
-        <button class="btn-main" id="saveAction" onclick="saveEntry()">💾 SAVE RECORD</button>
+        
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="processPhoto(event)">
+        <button class="btn-sub" style="width:100%; margin-bottom:10px; color:var(--sea);" onclick="document.getElementById('photoInput').click()">📷 ADD PHOTO</button>
+        <div id="photoPreview" style="text-align:center; margin-bottom:10px;"></div>
+
+        <button class="btn-main" onclick="saveEntry()">💾 SAVE RECORD</button>
         <button class="btn-sub" id="cancelEdit" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
+    </div>
+
+    <div style="padding: 0 5px;">
+        <input type="text" id="diarySearch" placeholder="🔍 Search Species or Location..." oninput="renderDiary()">
     </div>
 
     <div id="diary"></div>
@@ -101,7 +111,7 @@
     const PROXY = "https://corsproxy.io/?";
     let catches = JSON.parse(localStorage.getItem('aos_v6_logs')) || [];
     let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
-    let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null;
+    let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null, currentPhoto = "";
     let curData = { pt: "Unknown", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
     const W_CODES = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain", 63: "Mod Rain", 65: "Heavy Rain" };
 
@@ -193,6 +203,15 @@
         document.getElementById('forecastData').innerHTML = outlook;
     }
 
+    function processPhoto(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { 
+            currentPhoto = ev.target.result; 
+            document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:120px; border-radius:10px; border:1px solid var(--gold);">`; 
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
     function checkSize() {
         const sp = document.getElementById('sp').value.toLowerCase();
         const ln = parseFloat(document.getElementById('ln').value);
@@ -210,13 +229,18 @@
             sp, wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value || 0,
             dt: editingIndex > -1 ? catches[editingIndex].dt : new Date().toLocaleDateString(), 
             tm: editingIndex > -1 ? catches[editingIndex].tm : new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: curData.pt, env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`,
+            loc: curData.pt, photo: currentPhoto,
+            env: `${curData.td} Tide | ${curData.knots}kn Flow | ${curData.prs}hPa`,
             weather: `${curData.wDesc} | ${curData.wind}`, nt: document.getElementById('notes').value, isPB: false
         };
 
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
-        
-        // RE-CALC PB BADGES
+        updatePBs();
+        localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
+        resetForm(); renderDiary();
+    }
+
+    function updatePBs() {
         const mapPB = {};
         catches.forEach(c => {
             const s = c.sp.toLowerCase(); const w = parseFloat(c.wt);
@@ -227,13 +251,12 @@
             const s = c.sp.toLowerCase();
             if (parseFloat(c.wt) === mapPB[s] && mapPB[s] > 0) { c.isPB = true; mapPB[s] = 999999; }
         });
-
-        localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
-        resetForm(); renderDiary();
     }
 
     function renderDiary() {
-        document.getElementById('diary').innerHTML = catches.map((c, i) => `
+        const query = document.getElementById('diarySearch').value.toLowerCase();
+        const filtered = catches.filter(c => c.sp.toLowerCase().includes(query) || c.loc.toLowerCase().includes(query));
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--sea);">
                     <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span>
@@ -241,11 +264,12 @@
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
                 <div style="font-size:0.6rem; color:#64748b; margin-bottom:5px;">${c.env} | ${c.weather}</div>
-                <div style="font-size:0.85rem; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05);">${c.nt || ''}</div>
+                ${c.photo ? `<img src="${c.photo}" class="catch-img">` : ''}
+                <div style="font-size:0.85rem; padding-top:8px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.05);">${c.nt || ''}</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
-                    <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DELETE</button>
+                    <button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
+                    <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
                 </div>
             </div>`).join('');
     }
@@ -254,6 +278,8 @@
         editingIndex = i; const c = catches[i];
         document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt; 
         document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
+        currentPhoto = c.photo || "";
+        document.getElementById('photoPreview').innerHTML = currentPhoto ? `<img src="${currentPhoto}" style="width:120px; border-radius:10px;">` : "";
         document.getElementById('formTitle').innerText = "Update Record";
         document.getElementById('cancelEdit').style.display = 'block';
         window.scrollTo({ top: 400, behavior: 'smooth' });
@@ -261,14 +287,15 @@
 
     function shareCatch(i) {
         const c = catches[i];
-        const msg = `${c.isPB ? 'NEW PB! ' : ''}${c.sp} (${c.wt}lb) caught at ${c.loc}. WX: ${c.weather}. Logged by AnglerOS.`;
+        const msg = `${c.isPB ? 'PB! ' : ''}${c.sp} (${c.wt}lb) at ${c.loc}. WX: ${c.weather}. Logged by AnglerOS.`;
         if(navigator.share) navigator.share({title: 'My Catch', text: msg}); else alert("Copied: " + msg);
     }
 
-    function deleteCatch(i) { if(confirm("Permanently delete this record?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
+    function deleteCatch(i) { if(confirm("Permanently delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
 
     function resetForm() {
-        editingIndex = -1; 
+        editingIndex = -1; currentPhoto = "";
+        document.getElementById('photoPreview').innerHTML = "";
         document.getElementById('sp').value = ""; document.getElementById('wt').value = "";
         document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
         document.getElementById('formTitle').innerText = "Log Catch";
