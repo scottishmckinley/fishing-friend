@@ -47,6 +47,8 @@
         .log-form { display: grid; gap: 5px; margin-bottom: 15px; }
         .log-item { background: var(--navy); padding: 12px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--gold); font-size: 0.85rem; position: relative; }
         .log-item b { color: var(--sea); }
+        .log-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
+        .btn-small { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 4px; }
         .btn-log { background: var(--gold); color: var(--navy); border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; }
         
         .loading { text-align: center; color: var(--sea); font-weight: 900; margin: 15px 0; display: none; }
@@ -100,12 +102,13 @@
         </div>
 
         <div class="card">
-            <span class="label">New Catch Record</span>
+            <span class="label">Session Record</span>
             <div class="log-form">
+                <input type="hidden" id="editIndex" value="-1">
                 <input type="text" id="logFish" placeholder="Species (e.g. Bass)">
                 <input type="text" id="logSize" placeholder="Size/Weight">
                 <input type="text" id="logBait" placeholder="Bait Used">
-                <button class="btn-log" onclick="addCatch()">🎣 SAVE TO LOG</button>
+                <button class="btn-log" id="logSubmitBtn" onclick="addCatch()">🎣 SAVE TO LOG</button>
             </div>
             <span class="label">Recent Sessions</span>
             <div id="catchList"></div>
@@ -171,10 +174,8 @@
         try {
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const weather = await wRes.json();
-            
             const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=2`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
             const tides = await tRes.json();
-
             renderData(weather.current, tides);
         } finally { document.getElementById('loader').style.display = 'none'; }
     }
@@ -182,7 +183,6 @@
     function renderData(w, tides) {
         const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
         const windDirText = dirs[Math.round(w.wind_direction_10m / 22.5) % 16];
-        
         document.getElementById('temp').innerText = `${Math.round(w.temperature_2m)}°C`;
         document.getElementById('windSpd').innerText = `${Math.round(w.wind_speed_10m)} mph`;
         document.getElementById('windFullDesc').innerText = `Direction: ${windDirText} (${w.wind_direction_10m}°)`;
@@ -206,30 +206,70 @@
         rating.className = "rating-box good";
     }
 
+    /* --- CATCH LOG LOGIC --- */
+
     function addCatch() {
         const fish = document.getElementById('logFish').value;
         const size = document.getElementById('logSize').value;
         const bait = document.getElementById('logBait').value;
-        if(!fish) return alert("Enter species name");
-
-        const port = allStations.find(x => x.Id === currentID).Name;
-        catches.unshift({ fish, size, bait, port, date: new Date().toLocaleDateString() });
-        localStorage.setItem('fishingCatches', JSON.stringify(catches));
+        const editIdx = parseInt(document.getElementById('editIndex').value);
         
-        document.getElementById('logFish').value = '';
-        document.getElementById('logSize').value = '';
-        document.getElementById('logBait').value = '';
+        if(!fish) return alert("Enter species name");
+        const port = allStations.find(x => x.Id === currentID).Name;
+
+        const entry = { fish, size, bait, port, date: new Date().toLocaleDateString() };
+
+        if (editIdx > -1) {
+            catches[editIdx] = entry; // Update
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('logSubmitBtn').innerText = "🎣 SAVE TO LOG";
+        } else {
+            catches.unshift(entry); // New
+        }
+
+        localStorage.setItem('fishingCatches', JSON.stringify(catches));
+        resetForm();
         renderCatches();
     }
 
+    function editCatch(index) {
+        const c = catches[index];
+        document.getElementById('logFish').value = c.fish;
+        document.getElementById('logSize').value = c.size;
+        document.getElementById('logBait').value = c.bait;
+        document.getElementById('editIndex').value = index;
+        document.getElementById('logSubmitBtn').innerText = "💾 UPDATE ENTRY";
+        document.getElementById('logFish').focus();
+    }
+
+    function deleteCatch(index) {
+        if(confirm("Delete this catch entry?")) {
+            catches.splice(index, 1);
+            localStorage.setItem('fishingCatches', JSON.stringify(catches));
+            renderCatches();
+        }
+    }
+
     function renderCatches() {
-        document.getElementById('catchList').innerHTML = catches.map(c => `
+        document.getElementById('catchList').innerHTML = catches.map((c, i) => `
             <div class="log-item">
+                <div class="log-actions">
+                    <button class="btn-small" onclick="editCatch(${i})">✏️</button>
+                    <button class="btn-small" onclick="deleteCatch(${i})">🗑️</button>
+                </div>
                 <b>${c.fish}</b> (${c.size})<br>
                 <small>📍 ${c.port} | 🪱 ${c.bait}<br>${c.date}</small>
             </div>
         `).join('');
     }
+
+    function resetForm() {
+        document.getElementById('logFish').value = '';
+        document.getElementById('logSize').value = '';
+        document.getElementById('logBait').value = '';
+    }
+
+    /* --- FAVS & SEARCH --- */
 
     function toggleFav() {
         const idx = favs.findIndex(f => f.id === currentID);
