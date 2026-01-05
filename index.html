@@ -52,8 +52,10 @@
 
 <script>
     const KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    // Using a different proxy gate
-    const PROXY = "https://cors-anywhere.herokuapp.com/"; 
+    // Using a reliable transparent proxy
+    const PROXY = "https://corsproxy.io/?"; 
+    // THE CORRECT URL from the docs
+    const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
     let allStations = [];
     let currentID = null;
@@ -62,32 +64,29 @@
     window.onload = () => { getStations(); drawFavs(); };
 
     async function getStations() {
-        const target = "https://admiraltyapi.azure-api.net/adat/api/v1/Stations";
         try {
-            // We use the proxy as a prefix. 
-            // NOTE: If this is the first time using this proxy, 
-            // you might need to visit https://cors-anywhere.herokuapp.com/corsdemo and click "Request Access"
-            const res = await fetch(PROXY + target, {
-                headers: { 
-                    'Ocp-Apim-Subscription-Key': KEY,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            // Updated to the /uktidalapi/ path
+            const target = `${API_BASE}/Stations`;
+            const res = await fetch(PROXY + encodeURIComponent(target), {
+                headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             
-            allStations = await res.json();
+            const data = await res.json();
+            // The docs say it's a GeoJSON FeatureCollection
+            // So the stations are inside 'features'
+            allStations = data.features.map(f => ({
+                Id: f.properties.Id,
+                Name: f.properties.Name,
+                Coords: f.geometry.coordinates
+            }));
+
             allStations.sort((a, b) => a.Name.localeCompare(b.Name));
             fillSelect(allStations);
         } catch (e) {
-            console.error("Master List Failed, loading emergency defaults...", e);
-            // Emergency fallback so the app isn't blank
-            allStations = [
-                {Id: "0001", Name: "Whitby", Geometry: {coordinates: [-0.61, 54.48]}},
-                {Id: "0154", Name: "Dover", Geometry: {coordinates: [1.32, 51.12]}},
-                {Id: "0495", Name: "Liverpool", Geometry: {coordinates: [-3.01, 53.40]}}
-            ];
-            fillSelect(allStations);
+            console.error("Admiralty Load Error:", e);
+            document.getElementById('stationSelect').innerHTML = '<option>Error: Path mismatch or Key inactive</option>';
         }
     }
 
@@ -100,11 +99,6 @@
         });
     }
 
-    function filterStations() {
-        const q = document.getElementById('searchBox').value.toLowerCase();
-        fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q)));
-    }
-
     async function loadData(sid = null) {
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
@@ -113,22 +107,24 @@
         updateStar();
 
         const stn = allStations.find(x => x.Id === id);
-        const [lon, lat] = stn.Geometry.coordinates;
+        const [lon, lat] = stn.Coords;
 
         try {
-            const tideTarget = `https://admiraltyapi.azure-api.net/adat/api/v1/Stations/${id}/TidalEvents`;
-            const tRes = await fetch(PROXY + tideTarget, {
+            // Correct Tide Path
+            const tideTarget = `${API_BASE}/Stations/${id}/TidalEvents`;
+            const tRes = await fetch(PROXY + encodeURIComponent(tideTarget), {
                 headers: { 'Ocp-Apim-Subscription-Key': KEY }
             });
             const tides = await tRes.json();
 
+            // Weather (Direct)
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
             const wind = await wRes.json();
 
             render(tides, wind.current, stn.Name);
         } catch (err) { 
             console.error(err);
-            alert("Data fetch failed. Try clicking the 'CORS Demo' link if this is your first time.");
+            alert("Could not load tides for this specific port.");
         } finally { 
             document.getElementById('loader').style.display = 'none'; 
         }
@@ -143,7 +139,7 @@
 
         const list = document.getElementById('tideList');
         if (!Array.isArray(tides)) {
-            list.innerHTML = "Tide data unavailable."; return;
+            list.innerHTML = "<p>Data restricted or unavailable.</p>"; return;
         }
         list.innerHTML = tides.slice(0, 4).map(t => {
             const isHigh = t.EventType.includes("High");
@@ -174,6 +170,11 @@
     function updateStar() {
         const btn = document.getElementById('starBtn');
         if (btn) btn.className = favs.some(f => f.id === currentID) ? 'star active' : 'star';
+    }
+
+    function filterStations() {
+        const q = document.getElementById('searchBox').value.toLowerCase();
+        fillSelect(allStations.filter(x => x.Name.toLowerCase().includes(q)));
     }
 </script>
 </body>
