@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v7.0 PRO</title>
+    <title>Angler OS v7.1 PRO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -43,16 +43,14 @@
     <div id="helpBox" class="drawer">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
         <p style="font-size:0.75rem; line-height:1.4;">
-            <b>Tides:</b> High (Blue) / Low (Green). Best fishing usually 2hrs either side of High Tide.<br>
-            <b>Flow:</b> Sinusoidal calculation based on tide time. 1.5 - 3.0 kn is the "Feeding Zone".<br>
-            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger predatory feeding.<br>
-            <b>PB Logic:</b> Ranked by <b>Weight (lb)</b>. Length (cm) is recorded for legal compliance.
+            <b>Tides:</b> High (Blue) / Low (Green). Target 2hrs before/after high.<br>
+            <b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".<br>
+            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops often trigger feeding.
         </p>
         <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 BACKUP & EXPORT</h4>
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 BACKUP & RESTORE</h4>
         <p style="font-size:0.7rem; color:#64748b; margin-bottom:10px;">
-            <b>Export JSON:</b> Downloads your entire diary to your device. Do this after every big session.<br>
-            <b>Import JSON:</b> Restores your history if you clear your browser cache or change phones.
+            Export regularly to save your history to your device downloads folder.
         </p>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
             <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
@@ -64,15 +62,15 @@
 
     <div id="summaryBox" class="drawer"></div>
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC GPS, TIDE & WEATHER</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC ALL DATA</button>
 
     <div class="card" style="padding: 10px;">
-        <span class="label">Port Search & Favourites</span>
+        <span class="label">Port Search (Full List)</span>
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search ports..." oninput="filterPorts(this.value)">
+            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search..." oninput="filterPorts(this.value)">
             <button class="btn-sub" onclick="addFav()" style="padding:0 15px; font-size:1.2rem;">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select Port --</option></select>
+        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select --</option></select>
     </div>
 
     <div class="hud-grid">
@@ -81,18 +79,18 @@
     </div>
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span id="pressTrend" class="sub-val">--</span></div>
-        <div class="hud-item"><span class="label">Weather & Wind</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
+        <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
     </div>
 
     <div class="card" id="logForm">
         <span class="label" id="formTitle">Log Catch</span>
         <div id="sizeAlert"></div>
-        <input type="text" id="sp" placeholder="Species (e.g. Bass)" oninput="checkSize()">
+        <input type="text" id="sp" placeholder="Species..." oninput="checkSize()">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
             <input type="number" id="ln" step="0.1" placeholder="Length (cm)" oninput="checkSize()">
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
-        <textarea id="notes" placeholder="Bait, rig, and session notes..."></textarea>
+        <textarea id="notes" placeholder="Notes..."></textarea>
         
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="processPhoto(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px; color:var(--sea);" onclick="document.getElementById('photoInput').click()">📷 ADD PHOTO</button>
@@ -113,7 +111,7 @@
     let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null, currentPhoto = "";
     let curData = { pt: "Unknown", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
 
-    const REGS = { "bass": 42, "cod": 35, "whiting": 27, "plaice": 27, "pollock": 30, "mackerel": 30 };
+    const W_CODES = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 61: "Slight Rain", 63: "Moderate Rain", 65: "Heavy Rain", 71: "Slight Snow", 75: "Heavy Snow", 95: "Thunderstorm" };
 
     window.onload = () => {
         map = L.map('map').setView([54.0, -2.0], 6);
@@ -138,7 +136,7 @@
             favs.forEach(f => { let o = document.createElement('option'); o.value = f.id; o.innerText = f.name; g.appendChild(o); });
             s.appendChild(g);
         }
-        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 30).forEach(p => {
+        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
             let o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
         });
     }
@@ -160,13 +158,13 @@
             favs.push({id: port.id, name: port.name});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
             updateFavList(); filterPorts("");
-            alert(`⭐ ${port.name} saved to favourites!`);
+            alert(`⭐ ${port.name} added to Favorites!`);
         }
     }
 
     function updateFavList() {
         const list = document.getElementById('favList');
-        list.innerHTML = favs.map((f, i) => `<div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); margin-bottom:5px; border-radius:8px;"><span>${f.name}</span><span style="color:var(--red); cursor:pointer;" onclick="removeFav(${i})">❌</span></div>`).join('');
+        list.innerHTML = favs.map((f, i) => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${f.name}</span><span style="color:var(--red); cursor:pointer;" onclick="removeFav(${i})">❌</span></div>`).join('');
     }
 
     function removeFav(i) { favs.splice(i, 1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList(); filterPorts(""); }
@@ -174,17 +172,21 @@
     async function syncGPS() {
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const { latitude, longitude } = pos.coords;
-            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure`);
+            const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure,windgusts_10m`);
             const wData = await wRes.json();
             const cw = wData.current_weather;
+            const gust = wData.hourly.windgusts_10m[0];
             const dirs = ['N','NE','E','SE','S','SW','W','NW'];
-            curData.wind = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
+            const windStr = `${cw.windspeed}mph ${dirs[Math.round(cw.winddirection / 45) % 8]}`;
+            curData.wind = `${windStr} (Gust ${gust}mph)`;
             curData.prs = wData.hourly.surface_pressure[0];
-            curData.wDesc = cw.temperature + "°C";
+            curData.wDesc = `${W_CODES[cw.weathercode] || "Clear"} | ${cw.temperature}°C`;
+            
             document.getElementById('hudWeather').innerText = curData.wDesc;
-            document.getElementById('hudWind').innerText = `WIND: ${curData.wind}`;
+            document.getElementById('hudWind').innerText = curData.wind;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
             document.getElementById('pressTrend').innerText = curData.prs >= 1013 ? "STABLE" : "LOW PRESSURE";
+
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             handlePortSelect(near.id);
         });
@@ -206,10 +208,11 @@
     function checkSize() {
         const sp = document.getElementById('sp').value.toLowerCase();
         const ln = parseFloat(document.getElementById('ln').value);
+        const REGS = { "bass": 42, "cod": 35, "whiting": 27 };
         const alertBox = document.getElementById('sizeAlert');
         let min = 0;
         for (let k in REGS) { if(sp.includes(k)) { min = REGS[k]; break; } }
-        if(min && ln < min) { alertBox.style.display='block'; alertBox.innerText=`⚠️ UNDERSIZED! Minimum for ${sp.toUpperCase()} is ${min}cm`; }
+        if(min && ln < min) { alertBox.style.display='block'; alertBox.innerText=`⚠️ UNDERSIZED! Min for ${sp.toUpperCase()} is ${min}cm`; }
         else { alertBox.style.display='none'; }
     }
 
@@ -233,18 +236,18 @@
 
         if(editingIndex > -1) catches[editingIndex] = entry; else catches.unshift(entry);
         
-        // RE-CALC PBs (STRICT SINGLE WEIGHT)
+        // PB LOGIC: ONLY ONE HEAVIEST GETS BADGE
         const speciesMap = {};
         catches.forEach(c => {
-            const sName = c.sp.toLowerCase();
+            const s = c.sp.toLowerCase();
             const w = parseFloat(c.wt) || 0;
-            if (!speciesMap[sName] || w > speciesMap[sName]) speciesMap[sName] = w;
+            if (!speciesMap[s] || w > speciesMap[s]) speciesMap[s] = w;
             c.isPB = false;
         });
         catches.forEach(c => {
-            const sName = c.sp.toLowerCase();
-            if (parseFloat(c.wt) === speciesMap[sName] && speciesMap[sName] > 0) {
-                c.isPB = true; speciesMap[sName] = 999999; // Only first one found gets badge
+            const s = c.sp.toLowerCase();
+            if (parseFloat(c.wt) === speciesMap[s] && speciesMap[s] > 0) {
+                c.isPB = true; speciesMap[s] = 999999;
             }
         });
 
@@ -256,18 +259,25 @@
         document.getElementById('diary').innerHTML = catches.map((c, i) => `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--sea);">
-                    <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PERSONAL BEST</span>' : ''}</span>
+                    <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span>
                     <span>${c.ln}cm / ${c.wt}lb</span>
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
                 <div style="font-size:0.6rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
                 ${c.photo ? `<img src="${c.photo}" class="catch-img">` : ''}
                 <div style="font-size:0.85rem; border-top:1px solid #1e293b; padding-top:8px; margin-top:8px;">${c.nt}</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
                     <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DELETE</button>
+                    <button class="btn-sub" onclick="shareCatch(${i})">📤 SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
                 </div>
             </div>`).join('');
+    }
+
+    function shareCatch(i) {
+        const c = catches[i];
+        const msg = `${c.isPB ? 'NEW PB! ' : ''}Caught a ${c.wt}lb ${c.sp} at ${c.loc}. Conditions: ${c.env}. Logged via AnglerOS.`;
+        if(navigator.share) navigator.share({title: 'My Catch', text: msg}); else alert("Copied: " + msg);
     }
 
     function editEntry(i) {
@@ -284,29 +294,28 @@
     function showSummary() {
         const today = catches.filter(c => c.dt === new Date().toLocaleDateString());
         const box = document.getElementById('summaryBox');
-        if(!today.length) { box.innerHTML = "<p style='text-align:center'>No fish logged today.</p><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
+        if(!today.length) { box.innerHTML = "<p style='text-align:center'>No logs today.</p><button class='btn-sub' style='width:100%' onclick='toggle(\"summaryBox\")'>CLOSE</button>"; }
         else {
             const stats = today.reduce((acc, c) => {
                 const s = c.sp.toLowerCase();
                 if(!acc[s]) acc[s] = { count: 0, weight: 0 };
-                acc[s].count += 1;
-                acc[s].weight += (parseFloat(c.wt) || 0);
+                acc[s].count++; acc[s].weight += (parseFloat(c.wt) || 0);
                 return acc;
             }, {});
             let h = `<h4 style="text-align:center; color:var(--sea); margin-top:0;">SESSION TOTALS</h4>`;
-            let totalSessionWt = 0;
+            let gW = 0;
             for(let sp in stats) {
                 h += `<div class="summary-row"><span>${sp.toUpperCase()} (x${stats[sp].count})</span><span>${stats[sp].weight.toFixed(2)} lb</span></div>`;
-                totalSessionWt += stats[sp].weight;
+                gW += stats[sp].weight;
             }
-            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold; border-top:1px solid var(--gold); margin-top:5px;"><span>GRAND TOTAL:</span><span>${totalSessionWt.toFixed(2)} lb</span></div>`;
+            h += `<div class="summary-row" style="color:var(--gold); font-weight:bold; border-top:1px solid var(--gold); margin-top:5px;"><span>GRAND TOTAL:</span><span>${gW.toFixed(2)} lb</span></div>`;
             box.innerHTML = h + `<button class="btn-sub" style="width:100%; margin-top:10px" onclick="toggle('summaryBox')">CLOSE</button>`;
         }
         box.style.display = 'block';
     }
 
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
-    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
+    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_History.json'; a.click(); }
     function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); }; r.readAsText(e.target.files[0]); }
 </script>
 </body>
