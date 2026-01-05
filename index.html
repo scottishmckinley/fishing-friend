@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fishing Friend Pro</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { 
             --navy: #050b14; --card: #121c2b; --sea: #34e89e; 
@@ -14,44 +13,48 @@
             --gradient: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%);
         }
         
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
-        .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); padding: 15px; border-radius: 30px; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
+        .app-container { max-width: 450px; margin: 0 auto; background: var(--navy); box-sizing: border-box; }
         
-        .header h1 { text-align: center; margin: 15px 0; font-size: 2rem; font-weight: 900; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        .header h1 { text-align: center; margin: 15px 0; font-size: 1.8rem; font-weight: 900; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
 
-        .btn-gps { width: 100%; background: var(--gradient); color: var(--navy); border: none; padding: 16px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-size: 1rem; }
+        .btn-gps { width: 100%; background: var(--gradient); color: var(--navy); border: none; padding: 16px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-bottom: 15px; }
         .label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; font-family: inherit; outline: none; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: var(--card); color: var(--white); box-sizing: border-box; outline: none; font-family: inherit; }
         
-        #favBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .fav-tag { background: #1e293b; color: var(--sea); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border); cursor: pointer; }
-
         .card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 20px; margin-bottom: 15px; }
-        #map { height: 180px; width: 100%; border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); }
+        
+        /* Tides Today Grid */
+        .today-tide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tide-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+        .high-label { color: var(--sea); font-weight: bold; font-size: 0.7rem; }
+        .low-label { color: var(--gold); font-weight: bold; font-size: 0.7rem; }
+        #tideOutlook { display: none; background: #0a111a; border-radius: 15px; padding: 10px; margin-top: 10px; }
 
-        /* Collapsible Outlook */
-        .outlook-trigger { display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--gold); font-weight: 800; font-size: 0.85rem; padding: 10px 0; border-top: 1px solid var(--border); }
-        #tideOutlook { display: none; margin-top: 10px; }
-        .day-group { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 0; }
-        .day-title { color: var(--gold); font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
-        .tide-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 3px 0; }
-        .high-tide { color: var(--sea); font-weight: 800; }
+        /* Photo Upload UI */
+        .photo-input-container { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        #photoPreview { width: 60px; height: 60px; border-radius: 10px; border: 2px dashed var(--border); object-fit: cover; display: none; }
+        .btn-photo { background: var(--border); color: var(--white); padding: 12px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; flex: 1; text-align: center; border: 1px solid #2d3748; }
 
-        /* Log Grid */
-        .log-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; }
-
-        /* Journal/Diary Styling */
-        .diary-timeline { border-left: 2px solid var(--border); margin: 10px 0 0 10px; padding-left: 20px; }
+        /* Diary List */
+        .diary-timeline { border-left: 2px solid var(--border); margin: 20px 0 0 10px; padding-left: 20px; }
         .diary-log-item { margin-bottom: 30px; position: relative; }
         .diary-log-item::before { content: ''; position: absolute; left: -26px; top: 6px; width: 10px; height: 10px; background: var(--sea); border-radius: 50%; border: 3px solid var(--navy); }
-        .diary-date { font-size: 0.7rem; font-weight: 800; color: var(--gold); text-transform: uppercase; margin-bottom: 2px; }
-        .diary-content { font-size: 1.1rem; color: var(--white); font-weight: 700; }
-        .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
-        .diary-meta { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
-        
-        .btn-outline { width: 100%; padding: 12px; border: 1px solid var(--sea); background: transparent; color: var(--sea); border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .leaflet-tile { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+        .catch-card-inner { display: flex; gap: 12px; align-items: flex-start; }
+        .catch-thumb { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; cursor: pointer; background: #0a111a; }
+        .diary-date { font-size: 0.7rem; font-weight: 900; color: var(--gold); }
+        .diary-content { font-size: 1rem; color: var(--white); font-weight: 700; margin: 2px 0; }
+        .btn-share-mini { background: #1e293b; color: var(--sea); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.6rem; font-weight: bold; cursor: pointer; margin-top: 5px; display: inline-block; }
+
+        /* Share Canvas Hidden */
+        #shareCanvasWrapper { position: absolute; left: -9999px; top: 0; }
+        .share-card-template { width: 400px; background: var(--navy); color: white; padding: 25px; border-radius: 0; position: relative; border: 4px solid var(--sea); }
+        .share-img { width: 100%; height: 300px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+
+        /* Help & Stats Modal */
+        #helpModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--navy); z-index: 1001; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        #helpBtn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--gradient); border-radius: 50%; border: none; font-size: 1.5rem; cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
     </style>
 </head>
 <body>
@@ -59,63 +62,71 @@
 <div class="app-container">
     <div class="header"><h1>Fishing Friend</h1></div>
 
-    <button class="btn-gps" onclick="getLocation()">📍 GPS: LOCATE NEAREST PORT</button>
+    <button class="btn-gps" onclick="getLocation()">📍 GPS: FIND NEAREST PORT</button>
 
-    <div class="search-section">
-        <span class="label">Quick Links</span>
-        <div id="favBar"></div>
-        <input type="text" id="searchInput" placeholder="Search port name..." oninput="filterStations()">
+    <div class="card">
+        <span class="label">Location</span>
+        <input type="text" id="searchInput" placeholder="Search ports..." oninput="filterStations()">
         <select id="stationSelect" onchange="loadData()"><option value="">-- Select Port --</option></select>
     </div>
 
     <div id="dashboard" style="display:none;">
-        <div id="map"></div>
-        
         <div class="card">
-            <div id="weatherMain" style="font-size: 1.2rem; font-weight: 800; color: var(--white);">--</div>
-            <div id="tideFlow" style="font-weight:900; color:var(--sea); font-size: 0.8rem; letter-spacing:1px; margin-top: 4px;">--</div>
-            
-            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: var(--white);"><span id="temp">--</span>°C</div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 600;"><span id="windSpd">--</span> mph <span id="windArrow" style="display:inline-block">↑</span></div>
-                    <div id="windGst" style="font-size: 0.7rem; color: var(--red); font-weight: 900;">--</div>
-                </div>
-            </div>
-
-            <div class="outlook-trigger" onclick="toggleOutlook()">
-                <span>📅 7-DAY TIDE OUTLOOK</span>
-                <span id="outlookArrow">▼</span>
-            </div>
+            <span class="label">Tides Today</span>
+            <div id="todayTideList" class="today-tide-grid"></div>
+            <div class="outlook-trigger" onclick="toggleOutlook()" style="text-align:center; font-size:0.7rem; margin-top:10px; cursor:pointer; text-decoration:underline;">View 7-Day Outlook ▼</div>
             <div id="tideOutlook"></div>
-
-            <button id="favBtn" class="btn-outline" onclick="toggleFav()" style="border-color:var(--gold); color:var(--gold)">⭐ SAVE PORT</button>
         </div>
 
         <div class="card">
-            <span class="label">New Diary Entry</span>
-            <input type="hidden" id="editIndex" value="-1">
+            <span class="label">Record a Catch</span>
+            <div class="photo-input-container">
+                <img id="photoPreview">
+                <label class="btn-photo">
+                    📷 ADD PHOTO
+                    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+                </label>
+            </div>
             <input type="text" id="logFish" placeholder="Species">
-            
-            <div class="log-grid">
-                <input type="number" id="logWeight" placeholder="Weight" step="0.1">
-                <select id="logUnit">
-                    <option value="lb">lb</option>
-                    <option value="kg">kg</option>
-                </select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="number" id="logWeight" placeholder="Wgt">
+                <select id="logUnit"><option value="lb">lb</option><option value="kg">kg</option></select>
                 <input type="number" id="logLength" placeholder="cm">
             </div>
-
             <textarea id="logNotes" placeholder="Notes..."></textarea>
-            <button class="btn-gps" id="saveBtn" onclick="addCatch()" style="margin-bottom:0">✍️ RECORD CATCH</button>
+            <button class="btn-gps" onclick="addCatch()">📖 SAVE TO DIARY</button>
         </div>
 
-        <div id="filterSection" style="margin-top: 20px; display: none;">
-            <span class="label">Filter Journal</span>
-            <select id="speciesFilter" onchange="renderDiary()"></select>
+        <div class="card">
+            <span class="label">Search Diary</span>
+            <input type="text" id="textFilter" placeholder="Search by month, year, note..." oninput="renderDiary()">
         </div>
 
         <div id="diaryContainer"></div>
+    </div>
+</div>
+
+<button id="helpBtn" onclick="toggleHelp()">📊</button>
+
+<div id="shareCanvasWrapper">
+    <div id="shareTemplate" class="share-card-template">
+        <img id="shareImg" class="share-img" src="">
+        <h1 id="shareFish" style="margin:0; font-size:2.5rem; color:var(--sea); text-transform:uppercase;"></h1>
+        <div id="shareMeta" style="font-size:1.2rem; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;"></div>
+        <p id="shareLoc" style="margin:0; font-size:1rem; opacity:0.7;"></p>
+        <div style="margin-top:20px; font-weight:900; color:var(--gold); font-size:0.8rem;">GENERATED BY FISHING FRIEND</div>
+    </div>
+</div>
+
+<div id="helpModal">
+    <div style="max-width:400px; margin:0 auto;">
+        <h2 style="color:var(--white)">My Stats</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+            <div class="card" style="text-align:center;"><span id="statCount" style="font-size:1.5rem; font-weight:900; color:var(--sea)">0</span><br><span class="label">Catches</span></div>
+            <div class="card" style="text-align:center;"><span id="statWeight" style="font-size:1.5rem; font-weight:900; color:var(--sea)">0</span><br><span class="label">Total Lbs</span></div>
+        </div>
+        <div class="card"><span class="label">Personal Bests</span><div id="pbList" style="font-size:0.85rem; margin-top:10px;"></div></div>
+        <div style="display:flex; gap:10px;"><button class="btn-gps" onclick="exportData()" style="flex:1; font-size:0.8rem;">📤 EXPORT</button><button class="btn-gps" onclick="toggleHelp()" style="flex:1; background:var(--red); color:white;">CLOSE</button></div>
     </div>
 </div>
 
@@ -124,16 +135,10 @@
     const PROXY = "https://corsproxy.io/?"; 
     const API_BASE = "https://admiraltyapi.azure-api.net/uktidalapi/api/V1";
 
-    let allStations = [], currentID = null, map = null, marker = null, currentSnap = {};
     let catches = JSON.parse(localStorage.getItem('fishingCatches')) || [];
-    let favs = JSON.parse(localStorage.getItem('fishingFavs')) || [];
+    let allStations = [], currentSnap = {}, currentPhoto = null;
 
-    window.onload = () => { getStations(); drawFavs(); renderDiary(); initMap(); };
-
-    function initMap() {
-        map = L.map('map', {zoomControl: false, attributionControl: false}).setView([54, -2], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    }
+    window.onload = () => { getStations(); renderDiary(); };
 
     async function getStations() {
         const res = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
@@ -158,154 +163,124 @@
                 let d2 = Math.hypot(curr.Coords[1]-pos.coords.latitude, curr.Coords[0]-pos.coords.longitude);
                 return d1 < d2 ? prev : curr;
             });
-            // FIX: Clear search box and set dropdown
-            document.getElementById('searchInput').value = "";
             document.getElementById('stationSelect').value = nearest.Id;
             loadData(nearest.Id);
         });
     }
 
-    async function loadData(sid = null) {
+    async function loadData(sid) {
         const id = sid || document.getElementById('stationSelect').value;
         if (!id) return;
-        currentID = id;
-        document.getElementById('searchInput').value = ""; // FIX: Clear search box
         document.getElementById('dashboard').style.display = 'block';
-        updateFavBtn();
+        document.getElementById('searchInput').value = "";
         const stn = allStations.find(x => x.Id === id);
-        
-        map.invalidateSize();
-        map.setView([stn.Coords[1], stn.Coords[0]], 12);
-        if (marker) marker.setLatLng([stn.Coords[1], stn.Coords[0]]); else marker = L.marker([stn.Coords[1], stn.Coords[0]]).addTo(map);
-
-        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stn.Coords[1]}&longitude=${stn.Coords[0]}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph`);
-        const w = await wRes.json();
+        currentSnap = { port: stn.Name };
         const tRes = await fetch(PROXY + encodeURIComponent(`${API_BASE}/Stations/${id}/TidalEvents?duration=7`), { headers: { 'Ocp-Apim-Subscription-Key': KEY } });
         const tides = await tRes.json();
-        
-        processConditions(w, tides, stn.Name);
+        renderTodayTides(tides);
         renderOutlook(tides);
     }
 
-    function processConditions(w, tides, portName) {
-        const weatherCodes = { 0: "Clear Skies", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain" };
-        const now = new Date();
-        const next = tides.find(t => new Date(t.DateTime) > now);
-        const last = tides.filter(t => new Date(t.DateTime) <= now).pop();
-        
-        let flowStr = "Steady";
-        if(next && last) {
-            const dir = next.EventType.includes("High") ? "Rising" : "Falling";
-            const strength = Math.round(Math.sin(((now - new Date(last.DateTime)) / (new Date(next.DateTime) - new Date(last.DateTime))) * Math.PI) * 100);
-            flowStr = `${dir} Tide (${strength}% Strength)`;
-        }
-
-        currentSnap = { temp: Math.round(w.current.temperature_2m), wind: Math.round(w.current.wind_speed_10m), gusts: Math.round(w.current.wind_gusts_10m), weather: weatherCodes[w.current.weather_code] || "Cloudy", flow: flowStr, port: portName };
-
-        document.getElementById('weatherMain').innerText = currentSnap.weather.toUpperCase();
-        document.getElementById('tideFlow').innerText = flowStr.toUpperCase();
-        document.getElementById('temp').innerText = currentSnap.temp;
-        document.getElementById('windSpd').innerText = currentSnap.wind;
-        document.getElementById('windArrow').style.transform = `rotate(${w.current.wind_direction_10m}deg)`;
-        document.getElementById('windGst').innerText = `GUSTS: ${currentSnap.gusts} MPH`;
+    function renderTodayTides(tides) {
+        const today = tides.filter(t => new Date(t.DateTime).toDateString() === new Date().toDateString());
+        document.getElementById('todayTideList').innerHTML = today.map(t => `<div class="tide-box"><div class="${t.EventType.includes('High')?'high-label':'low-label'}">${t.EventType.toUpperCase()}</div><div style="font-weight:bold; font-size:1rem;">${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></div>`).join('');
     }
 
     function renderOutlook(tides) {
         const groups = {};
         tides.forEach(t => {
-            const dateStr = new Date(t.DateTime).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
+            const dateStr = new Date(t.DateTime).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
             if (!groups[dateStr]) groups[dateStr] = [];
             groups[dateStr].push(t);
         });
-
-        document.getElementById('tideOutlook').innerHTML = Object.keys(groups).map(date => `
-            <div class="day-group">
-                <div class="day-title">${date}</div>
-                ${groups[date].map(t => `
-                    <div class="tide-row ${t.EventType.includes('High') ? 'high-tide' : ''}">
-                        <span>${t.EventType}</span>
-                        <span>${new Date(t.DateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>`).join('')}
-            </div>`).join('');
+        document.getElementById('tideOutlook').innerHTML = Object.keys(groups).map(date => `<div style="border-bottom:1px solid #1e293b; padding:8px 0;"><div style="font-size:0.7rem; color:var(--gold); font-weight:bold;">${date}</div>${groups[date].map(t => `<div style="display:flex; justify-content:space-between; font-size:0.8rem;"><span>${t.EventType}</span><span>${new Date(t.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`).join('')}</div>`).join('');
     }
 
-    function toggleOutlook() {
-        const el = document.getElementById('tideOutlook');
-        const arrow = document.getElementById('outlookArrow');
-        const isOpen = el.style.display === 'block';
-        el.style.display = isOpen ? 'none' : 'block';
-        arrow.innerText = isOpen ? '▼' : '▲';
+    function previewPhoto(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentPhoto = event.target.result;
+            document.getElementById('photoPreview').src = currentPhoto;
+            document.getElementById('photoPreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
     }
 
     function addCatch() {
-        const fish = document.getElementById('logFish').value.trim();
-        const weight = document.getElementById('logWeight').value;
-        const unit = document.getElementById('logUnit').value;
-        const length = document.getElementById('logLength').value;
-        const notes = document.getElementById('logNotes').value.trim();
-        const editIdx = parseInt(document.getElementById('editIndex').value);
+        const fish = document.getElementById('logFish').value;
         if(!fish) return;
-
-        const entry = { fish, weight, unit, length, notes, timestamp: new Date().getTime(), snap: {...currentSnap} };
-        if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
+        const entry = {
+            fish: fish, weight: document.getElementById('logWeight').value, unit: document.getElementById('logUnit').value,
+            length: document.getElementById('logLength').value, notes: document.getElementById('logNotes').value,
+            photo: currentPhoto, timestamp: new Date().getTime(), snap: {...currentSnap}
+        };
+        catches.unshift(entry);
         localStorage.setItem('fishingCatches', JSON.stringify(catches));
-        resetForm(); renderDiary();
+        currentPhoto = null;
+        document.getElementById('photoPreview').style.display = 'none';
+        ['logFish','logWeight','logLength','logNotes'].forEach(id => document.getElementById(id).value = '');
+        renderDiary();
     }
 
     function renderDiary() {
-        const container = document.getElementById('diaryContainer');
-        const filterVal = document.getElementById('speciesFilter').value || 'all';
-        const speciesList = [...new Set(catches.map(c => c.fish.toLowerCase()))];
-        document.getElementById('speciesFilter').innerHTML = '<option value="all">All Species</option>' + speciesList.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join('');
-        document.getElementById('speciesFilter').value = filterVal;
-        document.getElementById('filterSection').style.display = catches.length > 0 ? 'block' : 'none';
-
-        if (catches.length === 0) { container.innerHTML = ""; return; }
-
-        // PB logic: convert all to grams for fair comparison
-        const pbs = {};
-        catches.forEach(c => {
-            const s = c.fish.toLowerCase();
-            const w = parseFloat(c.weight) || 0;
-            const grams = c.unit === 'lb' ? w * 453.59 : w * 1000;
-            if (!pbs[s] || grams > pbs[s].val) pbs[s] = { val: grams, id: c.timestamp };
+        const textF = document.getElementById('textFilter').value.toLowerCase();
+        const filtered = catches.filter(c => {
+            const dateStr = new Date(c.timestamp).toLocaleDateString([], {month:'long', year:'numeric'}).toLowerCase();
+            return !textF || c.fish.toLowerCase().includes(textF) || c.notes.toLowerCase().includes(textF) || dateStr.includes(textF);
         });
 
-        const filtered = filterVal === 'all' ? catches : catches.filter(c => c.fish.toLowerCase() === filterVal);
-        container.innerHTML = '<div class="diary-timeline">' + filtered.map((c, i) => `
+        document.getElementById('diaryContainer').innerHTML = '<div class="diary-timeline">' + filtered.map((c, i) => `
             <div class="diary-log-item">
-                <div style="float:right; cursor:pointer;" onclick="deleteCatch(${catches.indexOf(c)})">✕</div>
-                <div class="diary-date">${new Date(c.timestamp).toLocaleDateString()} @ ${new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                <div class="diary-content">
-                    ${c.fish.toUpperCase()} 
-                    <span style="font-size:0.8rem; font-weight:400; opacity:0.8;">
-                        (${c.weight || '?'}${c.unit} ${c.length ? `• ${c.length}cm` : ''})
-                    </span>
-                    ${pbs[c.fish.toLowerCase()]?.id === c.timestamp ? '<span class="pb-badge">🏆 PB</span>' : ''}
+                <div class="catch-card-inner">
+                    ${c.photo ? `<img src="${c.photo}" class="catch-thumb">` : `<div class="catch-thumb" style="display:flex; align-items:center; justify-content:center; opacity:0.2;">🐟</div>`}
+                    <div style="flex:1">
+                        <div class="diary-date">${new Date(c.timestamp).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'})}</div>
+                        <div class="diary-content">${c.fish.toUpperCase()} ${c.weight?`• ${c.weight}${c.unit}`:''}</div>
+                        <div style="font-size:0.7rem; opacity:0.6;">📍 ${c.snap.port || 'Record'}</div>
+                        <div class="btn-share-mini" onclick="generateShareCard(${catches.indexOf(c)})">📤 SHARE CARD</div>
+                    </div>
                 </div>
-                <div class="diary-meta">📍 ${c.snap.port} | 🌊 ${c.snap.flow}</div>
-                ${c.notes ? `<div class="diary-notes">${c.notes}</div>` : ''}
             </div>`).join('') + '</div>';
     }
 
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i, 1); localStorage.setItem('fishingCatches', JSON.stringify(catches)); renderDiary(); } }
-    
-    function resetForm() { 
-        document.getElementById('logFish').value = ''; 
-        document.getElementById('logWeight').value = ''; 
-        document.getElementById('logLength').value = ''; 
-        document.getElementById('logNotes').value = ''; 
-        document.getElementById('editIndex').value = '-1'; 
+    async function generateShareCard(index) {
+        const c = catches[index];
+        const btn = event.target;
+        btn.innerText = "GENERATING...";
+        
+        document.getElementById('shareImg').src = c.photo || '';
+        document.getElementById('shareFish').innerText = c.fish;
+        document.getElementById('shareMeta').innerText = `${c.weight}${c.unit} ${c.length ? `| ${c.length}cm` : ''}`;
+        document.getElementById('shareLoc').innerText = `Caught at ${c.snap.port} on ${new Date(c.timestamp).toLocaleDateString()}`;
+
+        const canvas = await html2canvas(document.getElementById('shareTemplate'), { useCORS: true });
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], 'catch.png', { type: 'image/png' });
+            if (navigator.share) {
+                await navigator.share({ files: [file], title: 'My Catch', text: `Check out this ${c.fish}!` });
+            } else {
+                const link = document.createElement('a');
+                link.download = 'catch-card.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+            btn.innerText = "📤 SHARE CARD";
+        });
     }
 
-    function toggleFav() {
-        const idx = favs.findIndex(f => f.id === currentID);
-        if(idx > -1) favs.splice(idx, 1); else favs.push({id: currentID, name: allStations.find(x => x.Id === currentID).Name});
-        localStorage.setItem('fishingFavs', JSON.stringify(favs));
-        drawFavs(); updateFavBtn();
+    function toggleHelp() {
+        const el = document.getElementById('helpModal');
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        if(el.style.display === 'block') {
+            document.getElementById('statCount').innerText = catches.length;
+            let total = 0; catches.forEach(c => total += (parseFloat(c.weight)||0) * (c.unit === 'lb' ? 1 : 2.2));
+            document.getElementById('statWeight').innerText = Math.round(total);
+        }
     }
-    function drawFavs() { document.getElementById('favBar').innerHTML = favs.map(f => `<button class="fav-tag" onclick="loadData('${f.id}')">${f.name}</button>`).join(''); }
-    function updateFavBtn() { document.getElementById('favBtn').innerText = favs.some(f => f.id === currentID) ? "⭐ REMOVE PORT" : "⭐ SAVE PORT"; }
+
+    function toggleOutlook() { const el = document.getElementById('tideOutlook'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+    function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(catches)], {type:'application/json'})); a.download = `fishing_diary.json`; a.click(); }
 </script>
 </body>
 </html>
