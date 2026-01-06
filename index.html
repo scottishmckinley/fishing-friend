@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnglerOS v9.9.0</title>
+    <title>AnglerOS v9.9.2</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -12,24 +12,33 @@
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
         .header-title { text-align: center; font-size: 2rem; font-weight: 800; margin: 10px 0; color: var(--white); }
         .header-title span { color: var(--sea); }
-        .nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .intel-box { border: 1px solid var(--gold); border-radius: 20px; padding: 15px; margin-bottom: 15px; background: var(--navy); }
-        .intel-title { color: var(--gold); font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: var(--card); border: 1px solid var(--gold); margin: 10% auto; padding: 20px; width: 88%; border-radius: 20px; max-height: 80vh; overflow-y: auto; }
+        .intel-title { color: var(--gold); font-weight: 800; margin-bottom: 10px; }
+        
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        
         .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px; }
         .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
         .sub-val { font-size: 0.65rem; color: var(--sea); font-weight: bold; display: block; margin-top: 2px; }
-        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 900; margin-left: 8px; }
+        
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; text-transform: uppercase; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
-        #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 900; margin-left: 8px; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: var(--card); border: 1px solid var(--gold); margin: 10% auto; padding: 20px; width: 88%; border-radius: 20px; max-height: 80vh; overflow-y: auto; }
+
+        #map { height: 180px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
         #toast { visibility: hidden; min-width: 200px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 3000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
         #toast.show { visibility: visible; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { color: var(--gold); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
@@ -40,15 +49,7 @@
     <div class="modal-content">
         <h3 style="color:var(--gold); margin-top:0;">🌊 7-DAY TIDE OUTLOOK</h3>
         <div id="tideTableBody"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="closeModal('tideModal')">CLOSE</button>
-    </div>
-</div>
-
-<div id="totalsModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color:var(--gold); margin-top:0;">📊 SESSION TOTALS</h3>
-        <div id="sessionBody"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="closeModal('totalsModal')">CLOSE</button>
+        <button class="btn-main" style="margin-top:15px;" onclick="closeModal()">CLOSE</button>
     </div>
 </div>
 
@@ -56,49 +57,49 @@
     <div class="header-title">Angler<span>OS</span></div>
 
     <div class="nav-grid">
-        <button class="btn-sub" onclick="openTideModal()">🌊 TIDES</button>
-        <button class="btn-sub" onclick="showSessionPopUp()">📊 TOTALS</button>
-        <button class="btn-sub" onclick="syncGPS()">📍 SYNC</button>
+        <button class="btn-sub" onclick="toggle('intelBox')">📘 HANDBOOK</button>
+        <button class="btn-sub" onclick="showTotals()">📊 TOTALS</button>
     </div>
 
-    <div class="intel-box">
+    <div id="intelBox" class="intel-box" style="display:none;">
         <div class="intel-title">🌊 FISHING INTEL</div>
-        <div style="font-size:0.85rem; line-height:1.5;">
-            • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
-            • <b>Pressure:</b> 1013hPa+ is stable.<br>
-            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
-        </div>
+        <ul style="list-style:none; padding:0; font-size:0.85rem;">
+            <li>• <b>Tides:</b> Best +/- 2hrs from High Tide.</li>
+            <li>• <b>Pressure:</b> 1013hPa+ is stable.</li>
+            <li>• <b>Flow:</b> 1.5 - 3.0 kn feeding zone.</li>
+        </ul>
+        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
     </div>
+
+    <div id="favBox" class="intel-box" style="display:none;"><div id="favList"></div></div>
 
     <div id="map"></div>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
+    <button class="btn-sub" style="width:100%; margin-bottom:15px; border-color:var(--gold);" onclick="openTideModal()">🌊 7-DAY TIDE OUTLOOK</button>
 
     <div class="card">
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin:0;">
+            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="width:100%; padding:10px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);">
             <button class="btn-sub" onclick="addFav()">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.options[this.selectedIndex].text, this.value)"></select>
-        <div id="favList" style="margin-top:10px; font-size:0.75rem;"></div>
+        <select id="portList" onchange="handlePortSelect(this.options[this.selectedIndex].text, this.value)" style="width:100%; padding:10px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);"></select>
     </div>
 
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Tide Height</span><div id="hTide" class="val">--</div><div id="hTideSub" class="sub-val">--</div></div>
         <div class="hud-item"><span class="label">Current (Flow)</span><div id="hFlow" class="val">--</div><div class="sub-val">1.5-3.0kn Zone</div></div>
         <div class="hud-item"><span class="label">Barometer</span><div id="hBaro" class="val">--</div><div id="hBaroSub" class="sub-val">--</div></div>
-        <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hCond" class="val">--</div><div id="hWindSub" class="sub-val">--</div></div>
+        <div class="hud-item"><span class="label">Weather & Temp</span><div id="hCond" class="val">--</div><div id="hWindSub" class="sub-val">--</div></div>
     </div>
 
     <div class="card">
-        <input type="file" id="cam" accept="image/*" multiple style="display:none" onchange="handleFiles(event)">
-        <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('cam').click()">📸 ADD PHOTOS</button>
-        <div id="previews" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px;"></div>
-        <input type="text" id="sp" placeholder="Species">
+        <input type="text" id="sp" placeholder="Species (e.g. COD)" style="width:100%; padding:12px; margin-bottom:8px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <input type="number" id="len" placeholder="Length (cm)">
-            <input type="number" id="wt" placeholder="Weight (lb)">
+            <input type="number" id="len" placeholder="Length (cm)" style="width:100%; padding:12px; margin-bottom:8px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);">
+            <input type="number" id="wt" placeholder="Weight (lb)" style="width:100%; padding:12px; margin-bottom:8px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);">
         </div>
-        <textarea id="notes" placeholder="Notes..."></textarea>
-        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
+        <textarea id="notes" placeholder="Notes & Rig..." style="width:100%; padding:12px; height:60px; border-radius:10px; background:var(--navy); color:white; border:1px solid var(--border);"></textarea>
+        <button class="btn-main" style="margin-top:10px;" onclick="saveEntry()">💾 SAVE TO DIARY</button>
     </div>
 
     <div id="diary"></div>
@@ -106,24 +107,21 @@
 
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39', PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_logs_v990')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_favs_v990')) || [];
-    let allPorts = [], map, marker, currentPhotos = [], editIdx = -1, tideData = [];
-    let env = { tide: "--", flow: "--", baro: "--", cond: "--", port: "Unknown" };
+    let catches = JSON.parse(localStorage.getItem('aos_logs_v9.8')) || [];
+    let favs = JSON.parse(localStorage.getItem('aos_favs_v9.8')) || [];
+    let allPorts = [], map, marker, tideData = [], env = { tide: "--", flow: "--", baro: "--", cond: "--", port: "Unknown" };
 
     window.onload = () => {
         map = L.map('map').setView([54, -2], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        loadPorts(); renderDiary(); updateFavDisplay();
+        loadPorts(); renderDiary(); updateFavs();
     };
 
     async function loadPorts() {
-        try {
-            const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const d = await r.json();
-            allPorts = d.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
-            filterPorts("");
-        } catch(e) { notify("Port Load Error"); }
+        const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const d = await r.json();
+        allPorts = d.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+        filterPorts("");
     }
 
     function filterPorts(q) {
@@ -140,55 +138,75 @@
         env.port = name;
         map.setView([p.lat, p.lon], 13);
         if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
-        await fetchTides(id);
-        await fetchWeather(p.lat, p.lon);
+        await getTides(id);
+        await getWeather(p.lat, p.lon);
     }
 
-    async function fetchTides(id) {
+    async function getTides(id) {
         const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
         tideData = await r.json();
         const now = new Date(), next = tideData.find(e => new Date(e.DateTime) > now);
         if(next) {
             env.tide = next.Height.toFixed(1) + "m";
             document.getElementById('hTide').innerText = env.tide;
-            document.getElementById('hTideSub').innerText = next.EventType.includes("Low") ? "FALLING" : "RISING";
+            document.getElementById('hTideSub').innerText = next.EventType.includes("High") ? "RISING" : "FALLING";
         }
     }
 
-    async function fetchWeather(lat, lon) {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m`);
+    async function getWeather(lat, lon) {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure`);
         const d = await r.json();
         env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
+        env.cond = d.current.temperature_2m + "°C";
         document.getElementById('hBaro').innerText = env.baro;
-        document.getElementById('hCond').innerText = d.current.temperature_2m + "°C";
+        document.getElementById('hCond').innerText = env.cond;
+    }
+
+    function openTideModal() {
+        if(!tideData.length) return notify("Select a port first");
+        let html = `<table><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
+        const days = {};
+        tideData.forEach(e => {
+            const d = new Date(e.DateTime).toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
+            if(!days[d]) days[d] = {h:[], l:[]};
+            const time = new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            if(e.EventType.includes("High")) days[d].h.push(time); else days[d].l.push(time);
+        });
+        for(let d in days) {
+            html += `<tr><td>${d}</td><td>${days[d].h.join('<br>')}</td><td>${days[d].l.join('<br>')}</td></tr>`;
+        }
+        document.getElementById('tideTableBody').innerHTML = html + `</table>`;
+        document.getElementById('tideModal').style.display = 'block';
     }
 
     function saveEntry() {
-        const species = document.getElementById('sp').value.toUpperCase();
-        if(!species) return notify("Enter Species");
+        const sp = document.getElementById('sp').value.toUpperCase();
+        if(!sp) return notify("Enter Species");
         const entry = {
-            sp: species, wt: parseFloat(document.getElementById('wt').value) || 0,
+            sp, wt: parseFloat(document.getElementById('wt').value) || 0,
             len: document.getElementById('len').value || "--",
             dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
-            loc: env.port, env: `${env.tide} | ${env.baro}`, photos: currentPhotos, nt: document.getElementById('notes').value
+            loc: env.port, env: `${env.tide} | ${env.baro}`, nt: document.getElementById('notes').value
         };
-        if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_logs_v990', JSON.stringify(catches));
-        resetForm(); renderDiary(); notify("Saved");
+        catches.unshift(entry);
+        localStorage.setItem('aos_logs_v9.8', JSON.stringify(catches));
+        renderDiary(); notify("Saved to Diary");
     }
 
     function renderDiary() {
         document.getElementById('diary').innerHTML = catches.map((c, i) => {
             const isPB = !catches.some(oc => oc.sp === c.sp && oc.wt > c.wt);
-            return `<div class="card">
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="color:var(--sea); font-weight:800;">${c.sp}${isPB?'<span class="pb-badge">PB</span>':''}</span>
-                    <span>${c.len}cm / ${c.wt}lb</span>
+            return `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:var(--sea); font-weight:800; font-size:1.1rem;">${c.sp}${isPB?'<span class="pb-badge">PB</span>':''}</span>
+                    <span style="font-weight:bold;">${c.len}cm / ${c.wt}lb</span>
                 </div>
-                <div style="font-size:0.7rem; color:var(--gold); margin:5px 0;">📍 ${c.loc} | ${c.dt} @ ${c.tm}</div>
-                <p style="font-size:0.8rem; margin:10px 0;">${c.nt || 'No notes.'}</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                    <button class="btn-sub" onclick="editCatch(${i})">EDIT</button>
+                <div style="font-size:0.75rem; color:var(--gold); font-weight:bold; margin-top:4px;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
+                <div style="font-size:0.65rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
+                <p style="font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">${c.nt || 'No notes.'}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
+                    <button class="btn-sub" onclick="notify('Link Copied')">SHARE</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
                 </div>
             </div>`;
@@ -199,13 +217,13 @@
         if(env.port === "Unknown") return;
         if(!favs.find(f => f.name === env.port)) {
             favs.push({name: env.port, id: document.getElementById('portList').value});
-            localStorage.setItem('aos_favs_v990', JSON.stringify(favs));
-            updateFavDisplay();
+            localStorage.setItem('aos_favs_v9.8', JSON.stringify(favs));
+            updateFavs();
         }
     }
 
-    function updateFavDisplay() {
-        document.getElementById('favList').innerHTML = "Favs: " + favs.map(f => `<span onclick="handlePortSelect('${f.name}','${f.id}')" style="color:var(--sea); margin-right:10px; cursor:pointer;">${f.name}</span>`).join('');
+    function updateFavs() {
+        document.getElementById('favList').innerHTML = favs.map(f => `<div onclick="handlePortSelect('${f.name}','${f.id}')" style="padding:8px; border-bottom:1px solid #1e293b; cursor:pointer;">⭐ ${f.name}</div>`).join('') || "No favourites saved.";
     }
 
     function syncGPS() {
@@ -216,28 +234,10 @@
         });
     }
 
-    function openTideModal() {
-        let h = `<table style="width:100%; font-size:0.8rem;"><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
-        tideData.slice(0,10).forEach(e => h += `<tr><td>${new Date(e.DateTime).toLocaleDateString()}</td><td>${e.EventType.includes("High")?e.Height.toFixed(1)+'m':'-'}</td><td>${e.EventType.includes("Low")?e.Height.toFixed(1)+'m':'-'}</td></tr>`);
-        document.getElementById('tideTableBody').innerHTML = h + `</table>`;
-        document.getElementById('tideModal').style.display = 'block';
-    }
-
-    function showSessionPopUp() {
-        const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
-        let h = `<b>Session: ${today}</b><br>`;
-        session.forEach(c => h += `${c.sp}: ${c.wt}lb<br>`);
-        document.getElementById('sessionBody').innerHTML = session.length ? h : "No catches today.";
-        document.getElementById('totalsModal').style.display = 'block';
-    }
-
-    function handleFiles(e) { Array.from(e.target.files).forEach(f => { const r = new FileReader(); r.onload = (re) => { currentPhotos.push(re.target.result); updatePreviews(); }; r.readAsDataURL(f); }); }
-    function updatePreviews() { document.getElementById('previews').innerHTML = currentPhotos.map(p => `<img src="${p}" style="height:50px; border-radius:5px;">`).join(''); }
-    function editCatch(i) { const c = catches[i]; document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt; editIdx = i; window.scrollTo(0,0); }
-    function resetForm() { editIdx = -1; currentPhotos = []; document.getElementById('previews').innerHTML = ""; ["sp","wt","len","notes"].forEach(id => document.getElementById(id).value = ""); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function toggle(id) { const e = document.getElementById(id); e.style.display = (e.style.display==='none')?'block':'none'; }
+    function closeModal() { document.getElementById('tideModal').style.display = 'none'; }
     function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
-    function deleteCatch(i) { catches.splice(i,1); localStorage.setItem('aos_logs_v990', JSON.stringify(catches)); renderDiary(); }
+    function deleteCatch(i) { catches.splice(i,1); localStorage.setItem('aos_logs_v9.8', JSON.stringify(catches)); renderDiary(); }
 </script>
 </body>
 </html>
