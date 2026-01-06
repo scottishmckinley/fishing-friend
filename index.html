@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.8</title>
+    <title>Angler OS v13.1</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
-        .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+        .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 100px; }
         
         /* UI Components */
         .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
@@ -47,6 +47,10 @@
         .tide-table tr.day-head { background: var(--border); color: var(--sea); font-weight: bold; }
         .tide-table td { padding: 6px; border-bottom: 1px solid #1e293b; }
         .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 5px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-left: 5px; }
+
+        /* About Footer */
+        .footer-about { text-align: center; margin-top: 20px; }
+        .btn-about { background: transparent; border: none; color: #64748b; font-size: 0.7rem; text-decoration: underline; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,8 +63,27 @@
     </div>
 </div>
 
+<div id="aboutModal" class="modal-overlay" onclick="closeAbout()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="text-align: center;">
+            <h2 style="color:var(--white); margin-top: 0;">ANGLER<span style="color:var(--sea)">OS</span></h2>
+            <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text);">
+                <p>Designed for the Serious Angler.</p>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+                <p style="font-size: 0.8rem; margin-bottom: 5px;">© 2026 <strong>Scott McKinley</strong></p>
+                <p style="font-size: 0.75rem; margin-top: 0;">All Rights Reserved.</p>
+                <p style="font-size: 0.65rem; opacity: 0.7; margin-top: 20px;">
+                    Version 13.1<br>
+                    Build: Stable 0131
+                </p>
+            </div>
+            <button class="btn-main" style="margin-top: 15px;" onclick="closeAbout()">CLOSE</button>
+        </div>
+    </div>
+</div>
+
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.8</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v13.1</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -118,6 +141,10 @@
 
     <div class="cal-grid" id="calGrid"></div>
     <div id="diary"></div>
+
+    <div class="footer-about">
+        <button class="btn-about" onclick="showAbout()">ABOUT ANGLEROS</button>
+    </div>
 </div>
 
 <script>
@@ -137,6 +164,8 @@
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
     
     function closeModal() { document.getElementById('totalsModal').style.display = 'none'; }
+    function showAbout() { document.getElementById('aboutModal').style.display = 'flex'; }
+    function closeAbout() { document.getElementById('aboutModal').style.display = 'none'; }
 
     async function loadPorts() {
         try {
@@ -308,7 +337,6 @@
 
         try {
             if (c.img) {
-                // If there is a photo, we "watermark" it using canvas
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
@@ -316,11 +344,8 @@
                 img.onload = async () => {
                     canvas.width = img.width;
                     canvas.height = img.height;
-                    
-                    // Draw original image
                     ctx.drawImage(img, 0, 0);
                     
-                    // Add semi-transparent footer
                     const fontSize = Math.floor(canvas.width * 0.04);
                     const padding = fontSize;
                     const lines = infoText.split('\n');
@@ -329,27 +354,24 @@
                     ctx.fillStyle = "rgba(5, 11, 20, 0.85)";
                     ctx.fillRect(0, canvas.height - footerHeight, canvas.width, footerHeight);
                     
-                    // Draw text details
-                    ctx.fillStyle = "#34e89e"; // Sea Green
+                    ctx.fillStyle = "#34e89e"; 
                     ctx.font = `bold ${fontSize}px sans-serif`;
                     
                     lines.forEach((line, index) => {
                         ctx.fillText(line, padding, canvas.height - footerHeight + padding + (index + 1) * fontSize * 1.2);
                     });
 
-                    // Convert to file and share
                     canvas.toBlob(async (blob) => {
                         const file = new File([blob], `${c.sp}_shared.jpg`, { type: 'image/jpeg' });
                         await navigator.share({
                             files: [file],
                             title: `AnglerOS: ${c.sp}`,
-                            text: infoText // Text is still sent as fallback
+                            text: infoText
                         });
                     }, 'image/jpeg', 0.8);
                 };
                 img.src = c.img;
             } else {
-                // Text only share for records without photos
                 await navigator.share({
                     title: `AnglerOS: ${c.sp}`,
                     text: infoText
