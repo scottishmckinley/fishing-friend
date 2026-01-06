@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v9.7</title>
+    <title>Angler OS v9.8 - Final Stable</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
-        .header { text-align: center; margin-bottom: 15px; }
-        .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; letter-spacing: -1px; }
-        .header span { color: var(--sea); }
         
-        .drawer { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        /* UI Components */
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
-        
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px; }
-        .val { font-size: 1.1rem; font-weight: 800; color: var(--white); }
-        .sub-val { font-size: 0.7rem; font-weight: bold; display: block; color: var(--sea); margin-top: 2px; }
+        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
+        .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
+        .sub-val { font-size: 0.7rem; font-weight: bold; display: block; color: var(--sea); }
 
+        /* Buttons */
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-sub:active { transform: scale(0.98); background: var(--navy); }
+        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; font-size: 1rem; }
-        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 900; margin-left: 6px; vertical-align: middle; }
+        /* Calendar */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 15px; border: 1px solid var(--border); }
+        .cal-day { font-size: 0.8rem; padding: 8px 0; border-radius: 8px; cursor: pointer; position: relative; }
+        .cal-day.has-catch::after { content: ''; width: 4px; height: 4px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
+        .cal-day.selected { background: var(--sea); color: var(--navy); font-weight: 800; }
+
+        /* Forms */
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
+        .img-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; display: none; }
         
-        #toast { visibility: hidden; min-width: 200px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #toast.show { visibility: visible; animation: fadeInUp 0.3s; }
-
-        /* Tide Table Styling */
-        .tide-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; border-radius: 10px; overflow: hidden; }
-        .tide-table th { background: var(--navy); color: var(--gold); padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
-        .tide-table td { padding: 10px; border-bottom: 1px solid var(--border); }
-        .tide-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-        .day-row { background: var(--border) !important; font-weight: 800; color: var(--sea); }
-
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; z-index: 1; }
-
-        @keyframes fadeInUp { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        #toast { visibility: hidden; min-width: 250px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
+        #toast.show { visibility: visible; }
+        
+        /* Tide Table */
+        .tide-table { width: 100%; font-size: 0.75rem; border-collapse: collapse; }
+        .tide-table tr.day-head { background: var(--border); color: var(--sea); font-weight: bold; }
+        .tide-table td { padding: 6px; border-bottom: 1px solid #1e293b; }
+        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 5px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -50,7 +50,7 @@
 <div id="toast">Message</div>
 
 <div class="app-container">
-    <div class="header"><h1>ANGLER<span>OS</span></h1></div>
+    <div style="text-align:center;"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -58,17 +58,17 @@
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 DATABASE BACKUP</h4>
-        <p style="font-size:0.75rem; color:#64748b; margin-bottom:12px;">Export your history as a JSON file or import a previous backup.</p>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-            <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
-            <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
-        </div>
+        <h4 style="color:var(--gold); margin:0;">🌊 FISHING INTEL</h4>
+        <p style="font-size:0.75rem; color:var(--text);">
+            • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
+            • <b>Pressure:</b> 1013hPa+ is stable.<br>
+            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
+        </p>
+        <hr border="0" style="border-top:1px solid var(--border); margin:10px 0;">
+        <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
+        <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        
-        <h4 style="color:var(--gold); margin:10px 0 5px 0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; color:#64748b; margin-bottom:12px;">Manage your saved locations or check feeding zones.</p>
-        <button class="btn-sub" style="width:100%;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
+        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
     </div>
 
     <div id="favBox" class="drawer"><div id="favList"></div></div>
@@ -85,87 +85,73 @@
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item">
-            <span class="label">Tide Height</span>
-            <div id="hudTide" class="val">--</div>
-            <span id="hudTideDesc" class="sub-val">--</span>
-        </div>
-        <div class="hud-item">
-            <span class="label">Current (Flow)</span>
-            <div id="hudFlow" class="val">--</div>
-            <span id="hudFlowDesc" class="sub-val">--</span>
-        </div>
-        <div class="hud-item">
-            <span class="label">Barometer</span>
-            <div id="hudBaro" class="val">--</div>
-            <span id="hudBaroDesc" class="sub-val">--</span>
-        </div>
-        <div class="hud-item">
-            <span class="label">Weather & Gusts</span>
-            <div id="hudWeather" class="val">--</div>
-            <span id="hudWind" class="sub-val">--</span>
-        </div>
+        <div class="hud-item"><span class="label">Tide</span><div id="hTide" class="val">--</div><span id="hTideD" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Flow</span><div id="hFlow" class="val">--</div><span class="sub-val">1.5-3.0kn Zone</span></div>
+        <div class="hud-item"><span class="label">Baro</span><div id="hBaro" class="val">--</div><span id="hBaroD" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Weather</span><div id="hCond" class="val">--</div><span id="hWind" class="sub-val">--</span></div>
     </div>
 
-    <button class="btn-sub" style="width:100%; margin-bottom:15px; border-color: var(--gold);" onclick="toggle('tideDrawer')">📅 7-DAY TIDE OUTLOOK</button>
-
-    <div id="tideDrawer" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 10px 0; text-align:center;">WEEKLY TIDE FORECAST</h4>
-        <div id="tideOutlook">Select a port to view table...</div>
-    </div>
+    <button class="btn-sub" style="width:100%; margin-bottom:15px; border-color:var(--gold);" onclick="toggle('tideDrawer')">📅 7-DAY TIDE OUTLOOK</button>
+    <div id="tideDrawer" class="drawer"><div id="tideOutlook">Select port...</div></div>
 
     <div class="card" id="logForm">
-        <input type="text" id="sp" placeholder="Species (e.g. Cod)">
+        <img id="imgPrev" class="img-preview">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <input type="number" id="ln" step="0.1" placeholder="Length (cm)">
-            <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
+            <button class="btn-sub" onclick="document.getElementById('cam').click()">📸 PHOTO</button>
+            <input type="file" id="cam" accept="image/*" style="display:none" onchange="previewImg(event)">
+            <input type="text" id="sp" placeholder="Species" style="margin:0;">
         </div>
-        <textarea id="notes" placeholder="Notes & Rig setup..."></textarea>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
+            <input type="number" id="ln" placeholder="cm">
+            <input type="number" id="wt" placeholder="lb">
+        </div>
+        <textarea id="notes" placeholder="Notes..."></textarea>
         <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
     </div>
 
+    <div class="cal-grid" id="calGrid"></div>
     <div id="diary"></div>
 </div>
 
 <script>
-    const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
-    const PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_v9_logs')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_v9_favs')) || [];
-    let allPorts = [], map, marker, editIndex = -1;
-    let curEnv = { tide: "--", state: "--", flow: "--", baro: "--", wind: "--", gusts: "--", cond: "--", port: "Unknown" };
+    const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39', PROXY = "https://corsproxy.io/?";
+    let catches = JSON.parse(localStorage.getItem('aos_logs_v98')) || [];
+    let favs = JSON.parse(localStorage.getItem('aos_favs_v98')) || [];
+    let allPorts = [], map, marker, editIdx = -1, curImg = "", selectedDate = "";
+    let env = { tide: "--", flow: "--", baro: "--", cond: "Clear", wind: "--", port: "Unknown" };
 
     window.onload = () => {
-        map = L.map('map').setView([54.0, -2.0], 6);
+        map = L.map('map').setView([54, -2], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        loadPorts(); updateFavList(); renderDiary();
+        loadPorts(); updateFavs(); renderCalendar(); renderDiary();
     };
 
-    function notify(msg) { const x = document.getElementById("toast"); x.innerText = msg; x.className = "show"; setTimeout(() => x.className = "", 3000); }
-    function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
+    function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
+    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
 
     async function loadPorts() {
         try {
-            const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const data = await res.json();
-            allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+            const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+            const d = await r.json();
+            allPorts = d.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
             filterPorts("");
-        } catch(e) { notify("API Connection Error"); }
+        } catch(e) { notify("API Error"); }
     }
 
     function filterPorts(q) {
         const s = document.getElementById('portList');
-        s.innerHTML = '<option value="">-- Choose Location --</option>';
+        s.innerHTML = '<option value="">-- Select Port --</option>';
         allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
-            let o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
+            const o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
         });
     }
 
     async function handlePortSelect(id) {
         if(!id) return;
         const p = allPorts.find(x => x.id === id);
-        curEnv.port = p.name;
+        env.port = p.name;
         document.getElementById('pSearch').value = "";
+        document.getElementById('portList').selectedIndex = 0;
         map.setView([p.lat, p.lon], 13);
         if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
         await fetchTides(id);
@@ -173,160 +159,138 @@
     }
 
     async function fetchTides(id) {
-        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-        const data = await res.json();
-        const now = new Date();
-        const next = data.find(e => new Date(e.DateTime) > now);
-        
+        const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const d = await r.json();
+        const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
         if(next) {
-            const diff = Math.floor((new Date(next.DateTime) - now) / 60000);
-            const hrs = Math.floor(diff/60), mins = diff%60;
-            curEnv.tide = next.Height.toFixed(1) + "m";
-            curEnv.state = next.EventType.includes("High") ? "RISING" : "FALLING";
-            const target = next.EventType.includes("High") ? "High Water" : "Low Water";
-            document.getElementById('hudTide').innerText = curEnv.tide;
-            document.getElementById('hudTideDesc').innerText = `${curEnv.state} (${hrs}h ${mins}m to ${target})`;
+            env.tide = next.Height.toFixed(1) + "m";
+            const diff = Math.floor((new Date(next.DateTime)-now)/60000);
+            document.getElementById('hTide').innerText = env.tide;
+            document.getElementById('hTideD').innerText = `${next.EventType.replace('Water','')} in ${Math.floor(diff/60)}h ${diff%60}m`;
         }
-
-        let html = `<table class="tide-table"><tr><th>Event</th><th>Time</th><th>Height</th></tr>`;
-        let lastDay = "";
-        data.slice(0,28).forEach(e => {
+        let html = '<table class="tide-table">', lastD = "";
+        d.slice(0,24).forEach(e => {
             const dt = new Date(e.DateTime);
-            const dayStr = dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
-            if(dayStr !== lastDay) {
-                html += `<tr><td colspan="3" class="day-row">${dayStr}</td></tr>`;
-                lastDay = dayStr;
-            }
-            html += `<tr><td>${e.EventType.replace('Water','')}</td><td>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td><td>${e.Height.toFixed(1)}m</td></tr>`;
+            const dStr = dt.toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
+            if(dStr !== lastD) { html += `<tr class="day-head"><td colspan="3">${dStr}</td></tr>`; lastD = dStr; }
+            html += `<tr><td>${dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td><td>${e.EventType.replace('Water','')}</td><td>${e.Height.toFixed(1)}m</td></tr>`;
         });
-        document.getElementById('tideOutlook').innerHTML = html + `</table>`;
+        document.getElementById('tideOutlook').innerHTML = html + '</table>';
     }
 
     async function fetchWeather(lat, lon) {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code`);
-        const data = await res.json();
-        const codes = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 61: "Rain", 71: "Snow", 95: "Storm" };
-        const deg = data.current.wind_direction_10m;
-        const dir = deg > 337 || deg <= 22 ? 'N' : deg <= 67 ? 'NE' : deg <= 112 ? 'E' : deg <= 157 ? 'SE' : deg <= 202 ? 'S' : deg <= 247 ? 'SW' : deg <= 292 ? 'W' : 'NW';
-        
-        curEnv.cond = codes[data.current.weather_code] || "Cloudy";
-        curEnv.baro = data.current.surface_pressure.toFixed(1) + "hPa";
-        curEnv.wind = `${data.current.wind_speed_10m.toFixed(0)}mph ${dir}`;
-        curEnv.gusts = data.current.wind_gusts_10m.toFixed(0) + "mph";
-        curEnv.flow = (1.2 + Math.random() * 2).toFixed(1) + "kn";
-
-        document.getElementById('hudBaro').innerText = curEnv.baro;
-        document.getElementById('hudBaroDesc').innerText = parseFloat(curEnv.baro) > 1013 ? "1013hPa+ Stable" : "Low Pressure";
-        document.getElementById('hudWeather').innerText = `${data.current.temperature_2m.toFixed(1)}°C ${curEnv.cond}`;
-        document.getElementById('hudWind').innerText = `${curEnv.wind} (Gust ${curEnv.gusts})`;
-        document.getElementById('hudFlow').innerText = curEnv.flow;
-        document.getElementById('hudFlowDesc').innerText = "1.5 - 3.0 kn Zone";
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code`);
+        const d = await r.json();
+        const codes = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain", 71: "Snow", 95: "Storm" };
+        env.cond = codes[d.current.weather_code] || "Cloudy";
+        env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
+        env.wind = `${d.current.wind_speed_10m.toFixed(0)}mph (Gust ${d.current.wind_gusts_10m.toFixed(0)}mph)`;
+        env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
+        document.getElementById('hBaro').innerText = env.baro;
+        document.getElementById('hBaroD').innerText = parseFloat(env.baro) > 1013 ? "Stable High" : "Low Pressure";
+        document.getElementById('hCond').innerText = `${d.current.temperature_2m.toFixed(1)}°C ${env.cond}`;
+        document.getElementById('hWind').innerText = env.wind;
+        document.getElementById('hFlow').innerText = env.flow;
     }
 
     function syncGPS() {
         navigator.geolocation.getCurrentPosition(pos => {
-            const near = allPorts.reduce((p, c) => Math.hypot(p.lat - pos.coords.latitude, p.lon - pos.coords.longitude) < Math.hypot(c.lat - pos.coords.latitude, c.lon - pos.coords.longitude) ? p : c);
-            handlePortSelect(near.id);
-            notify("GPS Localized");
+            const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
+            handlePortSelect(p.id);
+            notify("GPS Synced to " + p.name);
         });
+    }
+
+    function previewImg(e) {
+        const reader = new FileReader();
+        reader.onload = () => { curImg = reader.result; const i = document.getElementById('imgPrev'); i.src = curImg; i.style.display = 'block'; };
+        reader.readAsDataURL(e.target.files[0]);
     }
 
     function saveEntry() {
-        const sp = document.getElementById('sp').value.trim();
-        if(!sp) return notify("Enter Species");
+        const s = document.getElementById('sp').value.trim();
+        if(!s) return notify("Enter Species");
         const entry = {
-            sp: sp.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
-            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: curEnv.port, env: `${curEnv.tide} Tide | ${curEnv.flow} Flow | ${curEnv.baro} | ${curEnv.cond}`,
-            wind: `${curEnv.wind} (Gust ${curEnv.gusts})`, nt: document.getElementById('notes').value
+            sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
+            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro} | ${env.cond}`, img: curImg, nt: document.getElementById('notes').value
         };
-        if(editIndex > -1) catches[editIndex] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_v9_logs', JSON.stringify(catches));
-        editIndex = -1; document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
+        if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
+        localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
+        editIdx = -1; curImg = ""; 
+        document.getElementById('imgPrev').style.display = 'none';
         ["sp","wt","ln","notes"].forEach(id => document.getElementById(id).value = "");
-        renderDiary(); notify("Entry Saved");
+        renderDiary(); renderCalendar(); notify("Record Saved");
     }
 
     function renderDiary() {
-        const pbs = {};
-        catches.forEach(c => { 
-            const s = c.sp.toUpperCase();
-            if(!pbs[s] || c.wt > pbs[s]) pbs[s] = c.wt; 
-        });
-        
-        document.getElementById('diary').innerHTML = catches.map((c, i) => {
-            const isPB = (c.wt === pbs[c.sp.toUpperCase()] && c.wt > 0);
+        const pbs = {}; catches.forEach(c => { const s = c.sp.toUpperCase(); if(!pbs[s] || c.wt > pbs[s]) pbs[s] = c.wt; });
+        const filtered = selectedDate ? catches.filter(c => c.dt === selectedDate) : catches;
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => {
+            const realIdx = catches.indexOf(c);
             return `
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--sea); font-weight:800; font-size:1.1rem;">${c.sp}${isPB ? '<span class="pb-badge">PB</span>' : ''}</span>
-                    <span style="font-weight:bold; color:var(--white);">${c.ln}cm / ${c.wt}lb</span>
+                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--sea); font-weight:800;">${c.sp}${c.wt === pbs[c.sp.toUpperCase()] && c.wt > 0 ? '<span class="pb-badge">PB</span>' : ''}</span>
+                    <span>${c.ln}cm / ${c.wt}lb</span>
                 </div>
-                <div style="font-size:0.75rem; color:var(--gold); margin:6px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.7rem; color:#64748b; margin-bottom:10px; border-bottom:1px solid #1e293b; padding-bottom:8px;">${c.env}<br>${c.wind}</div>
-                ${c.nt ? `<p style="font-size:0.85rem; margin:10px 0; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px;">${c.nt}</p>` : ''}
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-                    <button class="btn-sub" onclick="editEntry(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
+                <div style="font-size:0.7rem; color:var(--gold); margin:5px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
+                <div style="font-size:0.7rem; color:#64748b; border-bottom:1px solid var(--border); padding-bottom:5px;">${c.env}</div>
+                <p style="font-size:0.8rem; margin:10px 0;">${c.nt}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
+                    <button class="btn-sub" onclick="editEntry(${realIdx})">EDIT</button>
+                    <button class="btn-sub" onclick="shareCatch(${realIdx})">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${realIdx})">DEL</button>
                 </div>
             </div>`;
         }).join('');
     }
 
     function editEntry(i) {
-        const c = catches[i];
-        document.getElementById('sp').value = c.sp;
-        document.getElementById('wt').value = c.wt;
-        document.getElementById('ln').value = c.ln;
-        document.getElementById('notes').value = c.nt;
-        editIndex = i;
+        const c = catches[i]; editIdx = i;
+        document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt;
+        document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
+        if(c.img) { curImg = c.img; const pr = document.getElementById('imgPrev'); pr.src = c.img; pr.style.display = 'block'; }
         document.getElementById('saveBtn').innerText = "UPDATE RECORD";
         window.scrollTo(0,0);
     }
 
-    function addCurrentToFav() {
-        if(curEnv.port === "Unknown") return notify("Pick a port first");
-        if(!favs.find(f => f.name === curEnv.port)) {
-            favs.push({name: curEnv.port, id: curEnv.port });
-            localStorage.setItem('aos_v9_favs', JSON.stringify(favs));
-            updateFavList(); notify("⭐ Added to Favourites");
+    function renderCalendar() {
+        const g = document.getElementById('calGrid');
+        g.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<div style="font-size:0.6rem; color:#64748b; font-weight:bold;">${d}</div>`).join('');
+        const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        for(let d=1; d<=days; d++) {
+            const dStr = `${d.toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
+            const has = catches.some(c => c.dt === dStr);
+            g.innerHTML += `<div class="cal-day ${has?'has-catch':''} ${selectedDate===dStr?'selected':''}" onclick="filterDate('${dStr}')">${d}</div>`;
         }
     }
+    function filterDate(d) { selectedDate = (selectedDate === d) ? "" : d; renderCalendar(); renderDiary(); }
 
-    function updateFavList() {
-        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span onclick="handlePortSelect('${f.id}')">📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites saved.";
+    function addCurrentToFav() {
+        if(env.port === "Unknown") return notify("Select port first");
+        if(!favs.find(f => f.name === env.port)) {
+            favs.push({name: env.port, id: env.port });
+            localStorage.setItem('aos_favs_v98', JSON.stringify(favs));
+            updateFavs(); notify("⭐ " + env.port + " saved");
+        }
     }
-
-    function exportData() {
-        const blob = new Blob([JSON.stringify(catches)], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `AnglerOS_Logs.json`; a.click();
+    function updateFavs() {
+        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span>📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites.";
     }
-    
-    function importData(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v9_logs', JSON.stringify(catches)); renderDiary(); notify("Import Success"); };
-        reader.readAsText(e.target.files[0]);
-    }
-
-    function deleteCatch(i) { if(confirm("Delete this record?")) { catches.splice(i,1); localStorage.setItem('aos_v9_logs', JSON.stringify(catches)); renderDiary(); } }
-
-    async function shareCatch(i) {
-        const c = catches[i];
-        const text = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\n🌊 ${c.env}\nLogged via AnglerOS`;
-        if (navigator.share) await navigator.share({ text }); else notify("Sharing not supported");
-    }
-
-    function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_v9_favs', JSON.stringify(favs)); updateFavList(); }
-    
+    function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
+    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
+    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); notify("Imported!"); }; r.readAsText(e.target.files[0]); }
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
+    function shareCatch(i) { const c = catches[i]; const t = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\nLogged via AnglerOS`; if(navigator.share) navigator.share({text:t}); else notify("Not supported"); }
     function showSessionTotals() {
-        const today = new Date().toLocaleDateString('en-GB');
-        const session = catches.filter(c => c.dt === today);
-        const totalWt = session.reduce((sum, c) => sum + (parseFloat(c.wt) || 0), 0);
-        let html = `<div class="card"><h3 style="margin:0; color:var(--gold);">Session: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
-        session.forEach(c => html += `<div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:4px 0;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-        html += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; font-weight:800; color:var(--sea);"><span>Total</span><span>${totalWt.toFixed(2)}lb</span></div><button class="btn-sub" style="width:100%; margin-top:15px;" onclick="renderDiary()">CLOSE</button></div>`;
-        document.getElementById('diary').innerHTML = html;
+        const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
+        const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
+        let h = `<div class="card"><h3 style="margin:0; color:var(--gold);">Today: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
+        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.8rem;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
+        h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea);"><b>TOTAL</b><b>${total.toFixed(2)}lb</b></div><button class="btn-sub" style="width:100%; margin-top:10px;" onclick="renderDiary()">BACK</button></div>`;
+        document.getElementById('diary').innerHTML = h;
     }
 </script>
 </body>
