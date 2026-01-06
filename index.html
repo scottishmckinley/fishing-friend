@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.7</title>
+    <title>Angler OS v12.8</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.7</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.8</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -302,39 +302,60 @@
     
     async function shareCatch(i) {
         const c = catches[i];
-        const shareText = `🎣 ${c.sp}\n⚖️ ${c.wt}lb | ${c.ln}cm\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}\n\nLogged via AnglerOS`;
+        const infoText = `${c.sp} | ${c.wt}lb | ${c.ln}cm\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}`;
         
         if (!navigator.share) return notify("Sharing not supported");
 
         try {
             if (c.img) {
-                // STEP 1: Share the Image
-                const blob = await (await fetch(c.img)).blob();
-                const file = new File([blob], `${c.sp}_catch.jpg`, { type: 'image/jpeg' });
+                // If there is a photo, we "watermark" it using canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
                 
-                await navigator.share({
-                    files: [file],
-                    title: `AnglerOS: ${c.sp}`
-                });
+                img.onload = async () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Draw original image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Add semi-transparent footer
+                    const fontSize = Math.floor(canvas.width * 0.04);
+                    const padding = fontSize;
+                    const lines = infoText.split('\n');
+                    const footerHeight = (lines.length * fontSize * 1.5) + (padding * 2);
+                    
+                    ctx.fillStyle = "rgba(5, 11, 20, 0.85)";
+                    ctx.fillRect(0, canvas.height - footerHeight, canvas.width, footerHeight);
+                    
+                    // Draw text details
+                    ctx.fillStyle = "#34e89e"; // Sea Green
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    
+                    lines.forEach((line, index) => {
+                        ctx.fillText(line, padding, canvas.height - footerHeight + padding + (index + 1) * fontSize * 1.2);
+                    });
 
-                // STEP 2: Once image share is closed, trigger text share
-                // Short delay to allow OS to transition back
-                setTimeout(async () => {
-                    await navigator.share({
-                        title: `Catch Data: ${c.sp}`,
-                        text: shareText
-                    }).catch(() => {}); // Catch cancelation
-                }, 500);
-
+                    // Convert to file and share
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], `${c.sp}_shared.jpg`, { type: 'image/jpeg' });
+                        await navigator.share({
+                            files: [file],
+                            title: `AnglerOS: ${c.sp}`,
+                            text: infoText // Text is still sent as fallback
+                        });
+                    }, 'image/jpeg', 0.8);
+                };
+                img.src = c.img;
             } else {
-                // Standard text-only share
+                // Text only share for records without photos
                 await navigator.share({
                     title: `AnglerOS: ${c.sp}`,
-                    text: shareText
+                    text: infoText
                 });
             }
         } catch (e) { 
-            console.error("Share failed", e);
             notify("Share Canceled");
         }
     }
@@ -342,7 +363,7 @@
     function showSessionTotals() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">`;
+        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
         if(session.length === 0) {
             h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
         } else {
