@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.6</title>
+    <title>Angler OS v12.7</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.6</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.7</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -302,34 +302,47 @@
     
     async function shareCatch(i) {
         const c = catches[i];
-        const info = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}\nLogged via AnglerOS`;
+        const shareText = `🎣 ${c.sp}\n⚖️ ${c.wt}lb | ${c.ln}cm\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}\n\nLogged via AnglerOS`;
         
         if (!navigator.share) return notify("Sharing not supported");
 
-        const shareData = { 
-            title: `AnglerOS: ${c.sp}`,
-            text: info
-        };
-
-        if (c.img) {
-            try {
+        try {
+            if (c.img) {
+                // STEP 1: Share the Image
                 const blob = await (await fetch(c.img)).blob();
                 const file = new File([blob], `${c.sp}_catch.jpg`, { type: 'image/jpeg' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    shareData.files = [file];
-                    // On some devices, adding the text to 'title' helps when files are present
-                    shareData.title = info; 
-                }
-            } catch (e) { console.error("Photo processing failed"); }
-        }
+                
+                await navigator.share({
+                    files: [file],
+                    title: `AnglerOS: ${c.sp}`
+                });
 
-        navigator.share(shareData).catch(() => notify("Sharing failed"));
+                // STEP 2: Once image share is closed, trigger text share
+                // Short delay to allow OS to transition back
+                setTimeout(async () => {
+                    await navigator.share({
+                        title: `Catch Data: ${c.sp}`,
+                        text: shareText
+                    }).catch(() => {}); // Catch cancelation
+                }, 500);
+
+            } else {
+                // Standard text-only share
+                await navigator.share({
+                    title: `AnglerOS: ${c.sp}`,
+                    text: shareText
+                });
+            }
+        } catch (e) { 
+            console.error("Share failed", e);
+            notify("Share Canceled");
+        }
     }
     
     function showSessionTotals() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
+        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">`;
         if(session.length === 0) {
             h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
         } else {
