@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v9.1</title>
+    <title>Angler OS v9.3</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -14,32 +14,35 @@
         .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
         .header span { color: var(--sea); }
         
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; z-index: 100; position: relative; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; z-index: 1; }
         
+        /* Calendar Styling */
+        .cal-container { background: var(--card); border-radius: 15px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--gold); font-weight: 800; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-day-label { font-size: 0.6rem; color: #64748b; font-weight: 800; }
+        .cal-day { font-size: 0.8rem; padding: 8px 0; border-radius: 8px; cursor: pointer; position: relative; color: var(--text); }
+        .cal-day.has-catch::after { content: ''; width: 4px; height: 4px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .cal-day.selected { background: var(--sea); color: var(--navy); font-weight: 800; }
+
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; min-height: 70px; }
-        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px;}
+        .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
         .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
-        .sub-val { font-size: 0.75rem; font-weight: bold; display: block; margin-top: 2px; }
+        .sub-val { font-size: 0.7rem; font-weight: bold; display: block; color: var(--sea); }
 
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
 
-        .photo-preview { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 8px; display: none; border: 1px solid var(--sea); }
-        .diary-img { width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid var(--border); }
+        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 900; }
+        .photo-preview { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; display: none; margin-bottom: 10px; border: 1px solid var(--sea); }
+        .diary-img { width: 100%; border-radius: 10px; margin: 10px 0; }
 
-        #toast { 
-            visibility: hidden; min-width: 250px; background-color: var(--gold); color: var(--navy); 
-            text-align: center; border-radius: 12px; padding: 16px; position: fixed; 
-            z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%);
-            font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        #toast { visibility: hidden; min-width: 200px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: bold; }
+        #toast.show { visibility: visible; }
     </style>
 </head>
 <body>
@@ -50,39 +53,43 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <button class="btn-sub" onclick="toggle('helpBox')">📘 DATA TOOLS</button>
-        <button class="btn-sub" onclick="showSummary()">📊 SESSION TOTALS</button>
+        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
+        <button class="btn-sub" onclick="toggle('favBox')">⭐ FAVOURITES</button>
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 10px 0;">💾 DATABASE BACKUP</h4>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
-            <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
-        </div>
-        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        <h4 style="color:var(--gold); margin:0 0 10px 0;">🌊 FISHING INTEL</h4>
+        <p style="font-size:0.8rem;">Tides: +/- 2hrs from High Tide.<br>Pressure: 1013hPa+ stable.<br>Flow: 1.5-3.0kn feeding zone.</p>
+        <button class="btn-sub" style="width:100%" onclick="exportData()">EXPORT JSON</button>
     </div>
 
-    <div id="summaryBox" class="drawer"></div>
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <div id="map"></div>
     <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
 
-    <div class="card" style="padding: 10px;">
+    <div class="card" style="padding:10px;">
         <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="manualSearch" style="margin-bottom:0" placeholder="Search ports..." oninput="filterPorts(this.value)">
-            <button class="btn-sub" onclick="toggle('favBox')">⭐</button>
-            <button class="btn-sub" onclick="addCurrentToFav()" style="font-size:1.2rem;">+</button>
+            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin-bottom:0">
+            <button class="btn-sub" onclick="addCurrentToFav()">+</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"><option value="">-- Select Port --</option></select>
+        <select id="portList" onchange="handlePortSelect(this.value)"></select>
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide Height</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val" style="color:var(--sea)">--</span></div>
-        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hudFlow" class="val">--</div><span class="sub-val">1.5 - 3.0 kn</span></div>
-        <div class="hud-item"><span class="label">Barometer</span><div id="hudBaro" class="val">--</div><span class="sub-val">1013hPa Stable</span></div>
-        <div class="hud-item"><span class="label">Weather</span><div id="hudTemp" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
+        <div class="hud-item"><span class="label">Tide Height</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val">--</span></div>
+        <div class="hud-item"><span class="label">Flow</span><div id="hudFlow" class="val">--</div><span class="sub-val">knots</span></div>
+        <div class="hud-item"><span class="label">Barometer</span><div id="hudBaro" class="val">--</div><span class="sub-val">1013 Stable</span></div>
+        <div class="hud-item"><span class="label">Weather</span><div id="hudTemp" class="val">--</div><span id="hudWind" class="sub-val">--</span></div>
+    </div>
+
+    <div class="cal-container">
+        <div class="cal-header">
+            <span onclick="changeMonth(-1)" style="cursor:pointer">◀</span>
+            <span id="calMonth">Month Year</span>
+            <span onclick="changeMonth(1)" style="cursor:pointer">▶</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
     </div>
 
     <div class="card" id="logForm">
@@ -93,11 +100,9 @@
             <input type="number" id="ln" step="0.1" placeholder="Length (cm)">
             <input type="number" id="wt" step="0.1" placeholder="Weight (lb)">
         </div>
-        <textarea id="notes" placeholder="Notes..."></textarea>
-        
+        <textarea id="notes" placeholder="Bait / Notes..."></textarea>
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('photoInput').click()">📸 ADD PHOTO</button>
-        
         <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
         <button class="btn-sub" id="cancelBtn" style="display:none; width:100%; color:var(--red);" onclick="resetForm()">CANCEL EDIT</button>
     </div>
@@ -108,116 +113,134 @@
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
     const PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_v6_logs')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
+    let catches = JSON.parse(localStorage.getItem('aos_v9_logs')) || [];
+    let favs = JSON.parse(localStorage.getItem('aos_v9_favs')) || [];
     let allPorts = [], map, marker, editIndex = -1, currentBase64 = "";
+    let curEnv = { tide: "--", flow: "--", baro: "--", wind: "--", port: "No Port" };
+    let calDate = new Date();
+    let selectedDateStr = "";
 
     window.onload = () => {
         map = L.map('map').setView([54.0, -2.0], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        loadPorts(); updateFavList(); renderDiary();
+        loadPorts(); updateFavList(); renderCalendar(); renderDiary();
     };
 
-    function notify(msg) {
-        const x = document.getElementById("toast");
-        x.innerText = msg; x.className = "show";
-        setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
-    }
-
+    function notify(msg) { const x = document.getElementById("toast"); x.innerText = msg; x.className = "show"; setTimeout(() => x.className = "", 3000); }
     function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
 
-    function previewPhoto(event) {
-        const reader = new FileReader();
-        reader.onload = () => {
-            currentBase64 = reader.result;
-            const prev = document.getElementById('imgPrev');
-            prev.src = currentBase64;
-            prev.style.display = "block";
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
-
     async function loadPorts() {
-        try {
-            const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const data = await res.json();
-            allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
-            filterPorts("");
-        } catch(e) { console.error("Port load failed"); }
+        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const data = await res.json();
+        allPorts = data.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+        filterPorts("");
     }
 
     function filterPorts(q) {
         const s = document.getElementById('portList');
-        s.innerHTML = '<option value="">-- Results --</option>';
+        s.innerHTML = '<option value="">-- Select Port --</option>';
         allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
             let o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
         });
     }
 
-    function handlePortSelect(id) {
+    async function handlePortSelect(id) {
         if(!id) return;
-        const port = allPorts.find(p => p.id === id);
-        curData = { pt: port.name, ptId: port.id };
-        map.setView([port.lat, port.lon], 12);
-        if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
-        fetchTides(id); fetchWeather(port.lat, port.lon);
+        const p = allPorts.find(x => x.id === id);
+        curEnv.port = p.name;
+        map.setView([p.lat, p.lon], 13);
+        if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
+        
+        // Fetch Tides
+        const tRes = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const tData = await tRes.json();
+        const next = tData.find(e => new Date(e.DateTime) > new Date());
+        if(next) {
+            curEnv.tide = next.Height.toFixed(1) + "m";
+            document.getElementById('hudTide').innerText = curEnv.tide;
+            document.getElementById('hudState').innerText = next.EventType.includes("High") ? "RISING" : "FALLING";
+            curEnv.flow = "2.2kn"; document.getElementById('hudFlow').innerText = curEnv.flow;
+        }
+
+        // Fetch Weather
+        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_direction_10m`);
+        const wData = await wRes.json();
+        const deg = wData.current.wind_direction_10m;
+        const dir = deg > 337 || deg <= 22 ? 'N' : deg <= 67 ? 'NE' : deg <= 112 ? 'E' : deg <= 157 ? 'SE' : deg <= 202 ? 'S' : deg <= 247 ? 'SW' : deg <= 292 ? 'W' : 'NW';
+        curEnv.baro = wData.current.surface_pressure.toFixed(1) + "hPa";
+        curEnv.wind = `${wData.current.wind_speed_10m.toFixed(0)}mph ${dir}`;
+        document.getElementById('hudBaro').innerText = curEnv.baro;
+        document.getElementById('hudTemp').innerText = wData.current.temperature_2m.toFixed(1) + "°C";
+        document.getElementById('hudWind').innerText = curEnv.wind;
     }
 
-    async function fetchTides(id) {
-        const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-        const data = await res.json();
-        const next = data.find(e => new Date(e.DateTime) > new Date());
-        if(next) {
-            document.getElementById('hudTide').innerText = next.Height.toFixed(1) + "m";
-            document.getElementById('hudState').innerText = next.EventType.includes("High") ? "RISING" : "FALLING";
+    function syncGPS() {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const near = allPorts.reduce((p, c) => Math.hypot(p.lat - pos.coords.latitude, p.lon - pos.coords.longitude) < Math.hypot(c.lat - pos.coords.latitude, c.lon - pos.coords.longitude) ? p : c);
+            handlePortSelect(near.id);
+            notify("Synced to " + near.name);
+        });
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calGrid');
+        grid.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<div class="cal-day-label">${d}</div>`).join('');
+        
+        const m = calDate.getMonth(), y = calDate.getFullYear();
+        document.getElementById('calMonth').innerText = new Intl.DateTimeFormat('en-GB', {month:'long', year:'numeric'}).format(calDate);
+        
+        const first = new Date(y, m, 1).getDay();
+        const daysInM = new Date(y, m + 1, 0).getDate();
+        
+        for(let i=1; i < (first === 0 ? 7 : first); i++) grid.innerHTML += `<div></div>`;
+        for(let d=1; d <= daysInM; d++) {
+            const dateStr = `${d.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
+            const hasCatch = catches.some(c => c.dt === dateStr);
+            const isSel = selectedDateStr === dateStr ? 'selected' : '';
+            grid.innerHTML += `<div class="cal-day ${hasCatch ? 'has-catch' : ''} ${isSel}" onclick="selectDate('${dateStr}')">${d}</div>`;
         }
     }
 
-    async function fetchWeather(lat, lon) {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m`);
-        const data = await res.json();
-        document.getElementById('hudBaro').innerText = data.current.surface_pressure.toFixed(1) + "hPa";
-        document.getElementById('hudTemp').innerText = data.current.temperature_2m.toFixed(1) + "°C";
-        document.getElementById('hudWind').innerText = `${data.current.wind_speed_10m.toFixed(0)}mph (G ${data.current.wind_gusts_10m.toFixed(0)})`;
+    function selectDate(ds) {
+        selectedDateStr = (selectedDateStr === ds) ? "" : ds;
+        renderCalendar(); renderDiary();
     }
+
+    function changeMonth(dir) { calDate.setMonth(calDate.getMonth() + dir); renderCalendar(); }
 
     function saveEntry() {
-        const sp = document.getElementById('sp').value;
+        const sp = document.getElementById('sp').value.toUpperCase();
         if(!sp) return notify("Enter Species");
-
-        let entryDate = new Date().toISOString().split('T')[0];
-        let entryTime = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-        
-        if(editIndex > -1) {
-            entryDate = catches[editIndex].dt;
-            entryTime = catches[editIndex].tm;
-        }
-
         const entry = {
-            sp, wt: document.getElementById('wt').value, ln: document.getElementById('ln').value,
-            dt: entryDate, tm: entryTime, img: currentBase64,
-            loc: document.getElementById('hudTide').innerText !== "--" ? "Current Station" : "Unknown", 
-            nt: document.getElementById('notes').value
+            sp, wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
+            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+            loc: curEnv.port, env: `${curEnv.tide} | ${curEnv.flow} | ${curEnv.baro} | ${curEnv.wind}`,
+            nt: document.getElementById('notes').value, img: currentBase64
         };
-
         if(editIndex > -1) catches[editIndex] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
-        resetForm(); renderDiary(); notify("Log Saved!");
+        localStorage.setItem('aos_v9_logs', JSON.stringify(catches));
+        resetForm(); renderCalendar(); renderDiary(); notify("Saved!");
     }
 
     function renderDiary() {
-        document.getElementById('diary').innerHTML = catches.map((c, i) => `
+        const pbs = {};
+        catches.forEach(c => { if(!pbs[c.sp] || c.wt > pbs[c.sp]) pbs[c.sp] = c.wt; });
+        
+        const filtered = selectedDateStr ? catches.filter(c => c.dt === selectedDateStr) : catches;
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
             <div class="card">
-                <div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;">
-                    <span>${c.sp.toUpperCase()}</span><span>${c.wt}lb</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:var(--sea); font-weight:800;">${c.sp} ${c.wt == pbs[c.sp] && c.wt > 0 ? '<span class="pb-badge">PB</span>' : ''}</span>
+                    <span style="font-weight:bold;">${c.wt}lb</span>
                 </div>
+                <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | ${c.dt} @ ${c.tm}</div>
+                <div style="font-size:0.65rem; color:#64748b; border-bottom:1px solid #1e293b; padding-bottom:5px;">${c.env}</div>
                 ${c.img ? `<img src="${c.img}" class="diary-img">` : ''}
-                <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📅 ${c.dt} @ ${c.tm}</div>
-                <p style="font-size:0.85rem; margin:8px 0;">${c.nt || ''}</p>
+                <p style="font-size:0.85rem; margin:10px 0;">${c.nt}</p>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
-                    <button class="btn-sub" onclick="editCatch(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
+                    <button class="btn-sub" onclick="editCatch(${catches.indexOf(c)})">EDIT</button>
+                    <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DEL</button>
                 </div>
             </div>`).join('');
     }
@@ -227,37 +250,50 @@
         document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt;
         document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
         if(c.img) { currentBase64 = c.img; document.getElementById('imgPrev').src = c.img; document.getElementById('imgPrev').style.display = "block"; }
-        document.getElementById('formHeader').innerText = "Editing Record...";
-        document.getElementById('saveBtn').innerText = "UPDATE RECORD";
-        document.getElementById('cancelBtn').style.display = "block";
-        window.scrollTo(0, 0);
+        document.getElementById('saveBtn').innerText = "UPDATE"; document.getElementById('cancelBtn').style.display = "block";
+        window.scrollTo(0,0);
     }
 
     function resetForm() {
-        editIndex = -1; currentBase64 = "";
+        editIndex = -1; currentBase64 = ""; document.getElementById('imgPrev').style.display = "none";
         document.getElementById('sp').value = ""; document.getElementById('wt').value = "";
         document.getElementById('ln').value = ""; document.getElementById('notes').value = "";
-        document.getElementById('imgPrev').style.display = "none";
-        document.getElementById('formHeader').innerText = "Log Catch";
-        document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
-        document.getElementById('cancelBtn').style.display = "none";
+        document.getElementById('saveBtn').innerText = "💾 SAVE RECORD"; document.getElementById('cancelBtn').style.display = "none";
     }
 
-    async function shareCatch(i) {
-        const c = catches[i];
-        const text = `🎣 Check out my ${c.sp}! Caught at ${c.dt}. Weight: ${c.wt}lb. Logged via AnglerOS.`;
-        if (navigator.share) {
-            navigator.share({ title: 'AnglerOS Catch', text: text });
-        } else {
-            navigator.clipboard.writeText(text); notify("Copied to Clipboard!");
+    function addCurrentToFav() {
+        if(curEnv.port === "No Port") return notify("Select port first");
+        if(!favs.find(f => f.name === curEnv.port)) {
+            favs.push({name: curEnv.port, id: document.getElementById('portList').value });
+            localStorage.setItem('aos_v9_favs', JSON.stringify(favs));
+            updateFavList(); notify("Added to Favourites");
         }
     }
 
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderDiary(); } }
-    function syncGPS() { navigator.geolocation.getCurrentPosition(pos => { notify("GPS Synced"); }); }
+    function updateFavList() {
+        document.getElementById('favList').innerHTML = favs.map(f => `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b;">
+                <span onclick="handlePortSelect('${f.id}')" style="cursor:pointer">📍 ${f.name}</span>
+                <span onclick="removeFav('${f.name}')" style="color:var(--red); cursor:pointer">✕</span>
+            </div>`).join('') || "No favourites.";
+    }
+
+    function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_v9_favs', JSON.stringify(favs)); updateFavList(); }
+    function previewPhoto(e) {
+        const reader = new FileReader();
+        reader.onload = () => { currentBase64 = reader.result; document.getElementById('imgPrev').src = reader.result; document.getElementById('imgPrev').style.display = 'block'; };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+    async function shareCatch(i) {
+        const c = catches[i];
+        const text = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\n🌊 ${c.env}\nLogged via AnglerOS`;
+        if (navigator.share) await navigator.share({ text });
+        else { navigator.clipboard.writeText(text); notify("Copied!"); }
+    }
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v9_logs', JSON.stringify(catches)); renderCalendar(); renderDiary(); } }
     function exportData() {
         const blob = new Blob([JSON.stringify(catches)], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'AnglerOS_Backup.json'; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'AnglerOS_Logs.json'; a.click();
     }
 </script>
 </body>
