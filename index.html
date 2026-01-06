@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.4</title>
+    <title>Angler OS v12.5</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.4</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.5</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -204,7 +204,6 @@
     function syncGPS() {
         navigator.geolocation.getCurrentPosition(pos => {
             const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
-            // Clear manual search and dropdown state
             document.getElementById('pSearch').value = "";
             filterPorts(""); 
             handlePortSelect(p.id);
@@ -221,21 +220,17 @@
     function saveEntry() {
         const s = document.getElementById('sp').value.trim();
         if(!s) return notify("Enter Species");
-        
         let targetDate = new Date().toLocaleDateString('en-GB');
         let targetTime = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        
         if(editIdx > -1) {
             targetDate = catches[editIdx].dt;
             targetTime = catches[editIdx].tm;
         }
-
         const entry = {
             sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
             dt: targetDate, tm: targetTime,
             loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro} | ${env.cond}`, img: curImg, nt: document.getElementById('notes').value
         };
-        
         if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
         localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
         editIdx = -1; curImg = ""; 
@@ -304,12 +299,32 @@
     }
     function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
-    function shareCatch(i) { const c = catches[i]; const t = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\nLogged via AnglerOS`; if(navigator.share) navigator.share({text:t}); else notify("Sharing not supported"); }
+    
+    async function shareCatch(i) {
+        const c = catches[i];
+        const shareText = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}\nLogged via AnglerOS`;
+        
+        if (!navigator.share) return notify("Sharing not supported");
+
+        const shareData = { text: shareText, title: 'AnglerOS Catch' };
+
+        if (c.img) {
+            try {
+                const blob = await (await fetch(c.img)).blob();
+                const file = new File([blob], 'catch.jpg', { type: 'image/jpeg' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    shareData.files = [file];
+                }
+            } catch (e) { console.error("Photo processing failed"); }
+        }
+
+        navigator.share(shareData).catch(() => notify("Sharing failed"));
+    }
     
     function showSessionTotals() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
+        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">`;
         if(session.length === 0) {
             h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
         } else {
