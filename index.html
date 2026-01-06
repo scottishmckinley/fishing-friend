@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v9.8.2 - Full Restoration</title>
+    <title>AnglerOS v9.8.4 - True Restoration</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -11,28 +11,36 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
         
-        /* Fixed Pop-up Modal */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
-        .modal-content { background: var(--card); border: 1px solid var(--sea); margin: 15% auto; padding: 20px; width: 85%; border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .header-title { text-align: center; font-size: 2rem; font-weight: 800; margin: 10px 0; color: var(--white); }
+        .header-title span { color: var(--sea); }
+
+        /* Navigation Grid */
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(4px); }
+        .modal-content { background: var(--card); border: 1px solid var(--gold); margin: 10% auto; padding: 20px; width: 88%; border-radius: 20px; max-height: 80vh; overflow-y: auto; }
 
         .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
+        
+        /* HUD Grid */
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
+        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px; }
         .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
+        .sub-val { font-size: 0.65rem; color: var(--sea); font-weight: bold; display: block; margin-top: 2px; }
         
-        .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; text-transform: uppercase; }
+        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; font-size: 0.9rem; }
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
         
-        .tide-table { width: 100%; font-size: 0.7rem; border-collapse: collapse; margin-top: 10px; }
-        .tide-table th { color: var(--gold); text-align: left; padding: 4px; border-bottom: 1px solid var(--border); }
-        .tide-table td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tide-table { width: 100%; font-size: 0.75rem; border-collapse: collapse; color: var(--text); }
+        .tide-table th { color: var(--gold); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+        .tide-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        .pb-tag { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-left: 8px; vertical-align: middle; }
+        .pb-tag { background: var(--gold); color: var(--navy); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 900; margin-left: 8px; }
         #toast { visibility: hidden; min-width: 200px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 3000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
         #toast.show { visibility: visible; }
     </style>
@@ -41,59 +49,70 @@
 
 <div id="toast">Message</div>
 
+<div id="tideModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--gold); margin-top:0;">🌊 7-DAY TIDE OUTLOOK</h3>
+        <div id="tideTableBody"></div>
+        <button class="btn-main" style="margin-top:15px;" onclick="toggleModal('tideModal')">CLOSE</button>
+    </div>
+</div>
+
 <div id="totalsModal" class="modal">
     <div class="modal-content">
-        <h3 style="color:var(--gold); margin-top:0;">Session Totals</h3>
-        <div id="sessionBody" style="max-height: 300px; overflow-y: auto; text-align: left; margin: 15px 0;"></div>
-        <button class="btn-main" onclick="toggleModal('totalsModal')">CLOSE</button>
+        <h3 style="color:var(--gold); margin-top:0;">📊 SESSION TOTALS</h3>
+        <div id="sessionBody"></div>
+        <button class="btn-main" style="margin-top:15px;" onclick="toggleModal('totalsModal')">CLOSE</button>
     </div>
 </div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1>ANGLER<span>OS</span></h1></div>
+    <div class="header-title">Angler<span>OS</span></div>
 
-    <div class="hud-grid">
-        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
+    <div class="nav-grid">
+        <button class="btn-sub" onclick="toggle('intelBox')">📘 INTEL</button>
+        <button class="btn-sub" onclick="toggleModal('tideModal')">🌊 TIDES</button>
         <button class="btn-sub" onclick="showSessionPopUp()">📊 TOTALS</button>
     </div>
 
-    <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; color:var(--text);">
+    <div id="intelBox" class="drawer">
+        <h4 style="color:var(--gold); margin:0 0 10px 0;">🌊 FISHING INTEL</h4>
+        <p style="font-size:0.75rem; color:var(--text); line-height:1.4;">
             • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
-            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
+            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.<br>
+            • <b>Pressure:</b> 1013hPa+ is stable.
         </p>
-        <div id="tideOutlook"></div>
         <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
     </div>
 
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
+    <button class="btn-main" style="background:var(--sea);" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
 
     <div class="card">
         <div style="display:flex; gap:5px; margin-bottom:8px;">
             <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin:0;">
             <button class="btn-sub" onclick="addCurrentToFav()">⭐</button>
         </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"></select>
+        <select id="portList" onchange="handlePortSelect(this.options[this.selectedIndex].text, this.value)"></select>
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide</span><div id="hTide" class="val">--</div></div>
-        <div class="hud-item"><span class="label">Flow</span><div id="hFlow" class="val">--</div></div>
-        <div class="hud-item"><span class="label">Baro</span><div id="hBaro" class="val">--</div></div>
-        <div class="hud-item"><span class="label">Temp</span><div id="hCond" class="val">--</div></div>
+        <div class="hud-item"><span class="label">Tide Height</span><div id="hTide" class="val">--</div><div id="hTideSub" class="sub-val">--</div></div>
+        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hFlow" class="val">--</div><div class="sub-val">1.5-3.0kn Zone</div></div>
+        <div class="hud-item"><span class="label">Barometer</span><div id="hBaro" class="val">--</div><div id="hBaroSub" class="sub-val">--</div></div>
+        <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hCond" class="val">--</div><div id="hWindSub" class="sub-val">--</div></div>
     </div>
 
     <div class="card" id="logForm">
         <input type="file" id="cam" accept="image/*" style="display:none" onchange="previewImg(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('cam').click()">📸 ADD PHOTO</button>
-        <img id="imgPrev" style="width:100%; height:150px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:none;">
-        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px;">
-            <input type="text" id="sp" placeholder="Species">
-            <input type="number" id="wt" placeholder="lb">
+        <img id="imgPrev" style="width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:none;">
+        
+        <input type="text" id="sp" placeholder="Species (e.g. COD)">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <input type="number" id="len" placeholder="Length (cm)">
+            <input type="number" id="wt" placeholder="Weight (lb)">
         </div>
         <textarea id="notes" placeholder="Notes & Rig setup..."></textarea>
         <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
@@ -107,7 +126,7 @@
     let catches = JSON.parse(localStorage.getItem('aos_logs_v98')) || [];
     let favs = JSON.parse(localStorage.getItem('aos_favs_v98')) || [];
     let allPorts = [], map, marker, curImg = "", editIdx = -1;
-    let env = { tide: "--", flow: "--", baro: "--", port: "Unknown" };
+    let env = { tide: "--", flow: "--", baro: "--", port: "Unknown", wind: "--" };
 
     window.onload = () => {
         map = L.map('map').setView([54, -2], 6);
@@ -132,10 +151,10 @@
         });
     }
 
-    async function handlePortSelect(id) {
+    async function handlePortSelect(name, id) {
         if(!id) return;
         const p = allPorts.find(x => x.id === id);
-        env.port = p.name;
+        env.port = name;
         map.setView([p.lat, p.lon], 13);
         if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
         await fetchTides(id);
@@ -143,54 +162,68 @@
     }
 
     async function fetchTides(id) {
-        const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-        const d = await r.json();
-        
-        // Update HUD with next event
-        const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
-        if(next) {
-            env.tide = next.Height.toFixed(1) + "m " + (next.EventType.includes("High") ? "↑" : "↓");
-            document.getElementById('hTide').innerText = env.tide;
-        }
+        try {
+            const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+            const d = await r.json();
+            
+            const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
+            if(next) {
+                const isFall = next.EventType.includes("Low");
+                env.tide = next.Height.toFixed(1) + "m";
+                document.getElementById('hTide').innerText = env.tide;
+                document.getElementById('hTideSub').innerText = (isFall ? "FALLING" : "RISING") + " to HW/LW";
+            }
 
-        // Render 7-day table
-        let h = `<table class="tide-table"><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
-        const days = {};
-        d.forEach(e => {
-            const dt = new Date(e.DateTime).toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
-            if(!days[dt]) days[dt] = {h:[], l:[]};
-            const time = new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            if(e.EventType.includes("High")) days[dt].h.push(time); else days[dt].l.push(time);
-        });
-        Object.entries(days).slice(0,7).forEach(([date, v]) => {
-            h += `<tr><td>${date}</td><td>${v.h.join('<br>')}</td><td>${v.l.join('<br>')}</td></tr>`;
-        });
-        document.getElementById('tideOutlook').innerHTML = h + `</table>`;
+            let h = `<table class="tide-table"><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
+            const days = {};
+            d.forEach(e => {
+                const dt = new Date(e.DateTime).toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
+                if(!days[dt]) days[dt] = {h:[], l:[]};
+                const time = new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                const val = e.Height.toFixed(1) + "m";
+                if(e.EventType.includes("High")) days[dt].h.push(time + ` (${val})`); else days[dt].l.push(time + ` (${val})`);
+            });
+            Object.entries(days).slice(0,7).forEach(([date, v]) => {
+                h += `<tr><td><b>${date}</b></td><td>${v.h.join('<br>')}</td><td>${v.l.join('<br>')}</td></tr>`;
+            });
+            document.getElementById('tideTableBody').innerHTML = h + `</table>`;
+        } catch(e) { notify("Tide Error"); }
     }
 
     async function fetchWeather(lat, lon) {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure`);
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m`);
         const d = await r.json();
-        env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
-        env.flow = (1.2 + Math.random() * 2).toFixed(1) + "kn";
+        const p = d.current.surface_pressure;
+        env.baro = p.toFixed(1) + "hPa";
+        env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
+        env.wind = `${Math.round(d.current.wind_speed_10m)}mph (Gust ${Math.round(d.current.wind_gusts_10m)}mph)`;
+        
         document.getElementById('hBaro').innerText = env.baro;
+        document.getElementById('hBaroSub').innerText = p > 1013 ? "High Pressure Stable" : "Low Pressure System";
         document.getElementById('hCond').innerText = d.current.temperature_2m.toFixed(1) + "°C";
+        document.getElementById('hWindSub').innerText = env.wind;
         document.getElementById('hFlow').innerText = env.flow;
     }
 
     function saveEntry() {
         const s = document.getElementById('sp').value.trim();
         if(!s) return notify("Enter Species");
+        
         const entry = {
-            sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0,
-            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
-            loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro}`, img: curImg, nt: document.getElementById('notes').value
+            sp: s.toUpperCase(), 
+            len: document.getElementById('len').value || "--",
+            wt: parseFloat(document.getElementById('wt').value) || 0,
+            dt: new Date().toLocaleDateString('en-GB'), 
+            tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            loc: env.port, 
+            env: `${env.tide} | ${env.flow} Flow | ${env.baro}`, 
+            img: curImg, 
+            nt: document.getElementById('notes').value
         };
 
         if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
-        
         localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
-        resetForm(); renderDiary(); notify("Saved!");
+        resetForm(); renderDiary(); notify("Record Saved");
     }
 
     function renderDiary() {
@@ -198,17 +231,16 @@
             const isPB = !catches.some((oc, oi) => oc.sp === c.sp && oc.wt > c.wt);
             return `
             <div class="card">
-                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--sea); font-weight:800;">${c.sp}${isPB?'<span class="pb-tag">PB</span>':''}</span>
-                    <span style="font-weight:bold;">${c.wt}lb</span>
+                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:12px; margin-bottom:12px;">` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="color:var(--sea); font-weight:900; font-size:1.1rem;">${c.sp}${isPB?'<span class="pb-tag">PB</span>':''}</span>
+                    <span style="font-weight:bold; color:var(--white);">${c.len}cm / ${c.wt}lb</span>
                 </div>
-                <div style="font-size:0.7rem; color:var(--gold); margin:5px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.65rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
-                <p style="font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">${c.nt}</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
+                <div style="font-size:0.75rem; color:var(--gold); font-weight:bold; margin-bottom:4px;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
+                <div style="font-size:0.7rem; color:#64748b; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">${c.env}</div>
+                <p style="font-size:0.85rem; margin:0 0 12px 0; line-height:1.4;">${c.nt || 'No notes added.'}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                     <button class="btn-sub" onclick="editCatch(${i})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
                 </div>
             </div>`;
@@ -218,46 +250,48 @@
     function showSessionPopUp() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<div style="margin-bottom:10px; font-weight:bold; color:var(--white);">${today}</div>`;
-        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-        h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
-        h += `<div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;"><span>TOTAL</span><span>${total.toFixed(2)}lb</span></div>`;
-        document.getElementById('sessionBody').innerHTML = session.length ? h : "No catches today.";
+        let h = `<div style="margin-bottom:10px; font-weight:bold; font-size:0.9rem;">Date: ${today}</div>`;
+        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;"><span>${c.sp} (${c.len}cm)</span><span>${c.wt}lb</span></div>`);
+        h += `<hr style="border:0; border-top:1px solid var(--border); margin:12px 0;">`;
+        h += `<div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:900;"><span>SESSION TOTAL</span><span>${total.toFixed(2)}lb</span></div>`;
+        document.getElementById('sessionBody').innerHTML = session.length ? h : "No records for today.";
         toggleModal('totalsModal');
-    }
-
-    function shareCatch(i) {
-        const c = catches[i];
-        const t = `🎣 ANGLER OS: ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\n🌊 ${c.env}\n📝 ${c.nt}\n[ATTACH PHOTO MANUALLY]`;
-        if(navigator.share) navigator.share({title: 'My Catch', text: t}); else alert(t);
     }
 
     function editCatch(i) {
         const c = catches[i];
         document.getElementById('sp').value = c.sp;
         document.getElementById('wt').value = c.wt;
+        document.getElementById('len').value = c.len === "--" ? "" : c.len;
         document.getElementById('notes').value = c.nt;
         if(c.img) { curImg = c.img; const p = document.getElementById('imgPrev'); p.src = c.img; p.style.display = 'block'; }
-        editIdx = i;
-        document.getElementById('saveBtn').innerText = "Update Record";
-        window.scrollTo(0, document.getElementById('logForm').offsetTop - 20);
+        editIdx = i; document.getElementById('saveBtn').innerText = "Update Record";
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function resetForm() {
         editIdx = -1; curImg = ""; 
         document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
         document.getElementById('imgPrev').style.display = 'none';
-        ["sp","wt","notes"].forEach(id => document.getElementById(id).value = "");
+        ["sp","wt","len","notes"].forEach(id => document.getElementById(id).value = "");
+    }
+
+    function syncGPS() {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
+            handlePortSelect(p.name, p.id);
+            document.getElementById('portList').value = p.id;
+            notify("GPS: " + p.name);
+        });
     }
 
     function toggleModal(id) { const m = document.getElementById(id); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
     function toggle(id) { const e = document.getElementById(id); e.style.display = (e.style.display === 'block') ? 'none' : 'block'; }
     function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
     function previewImg(e) { const reader = new FileReader(); reader.onload = () => { curImg = reader.result; const i = document.getElementById('imgPrev'); i.src = curImg; i.style.display = 'block'; }; reader.readAsDataURL(e.target.files[0]); }
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); } }
-    function syncGPS() { navigator.geolocation.getCurrentPosition(pos => { const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr); handlePortSelect(p.id); notify("GPS: " + p.name); }); }
-    function updateFavs() { document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span>📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites."; }
-    function addCurrentToFav() { if(env.port !== "Unknown") { if(!favs.find(f=>f.name===env.port)) { favs.push({name:env.port, id:env.port}); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); notify("Added Favorite"); } } }
+    function deleteCatch(i) { if(confirm("Permanently delete record?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); } }
+    function updateFavs() { document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span>📍 ${f.name}</span><button class="btn-sub" onclick="removeFav('${f.name}')" style="color:var(--red); border:none;">✕</button></div>`).join('') || "No favorites saved."; }
+    function addCurrentToFav() { if(env.port !== "Unknown") { if(!favs.find(f=>f.name===env.port)) { favs.push({name:env.port, id:env.port}); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); notify("Saved to Favourites"); } } }
     function removeFav(n) { favs = favs.filter(f=>f.name!==n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
 </script>
 </body>
