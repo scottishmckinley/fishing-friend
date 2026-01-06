@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AnglerOS v9.8.7</title>
+    <title>AnglerOS v9.8.8</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -15,7 +15,6 @@
         .nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(4px); }
         .modal-content { background: var(--card); border: 1px solid var(--gold); margin: 10% auto; padding: 20px; width: 88%; border-radius: 20px; max-height: 80vh; overflow-y: auto; }
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
@@ -40,16 +39,16 @@
 <div id="tideModal" class="modal">
     <div class="modal-content">
         <h3 style="color:var(--gold); margin-top:0;">🌊 7-DAY TIDE OUTLOOK</h3>
-        <div id="tideTableBody"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="toggleModal('tideModal')">CLOSE</button>
+        <div id="tideTableBody">Select a port to see tides.</div>
+        <button class="btn-main" style="margin-top:15px;" onclick="closeModal('tideModal')">CLOSE</button>
     </div>
 </div>
 
 <div id="totalsModal" class="modal">
     <div class="modal-content">
         <h3 style="color:var(--gold); margin-top:0;">📊 SESSION TOTALS</h3>
-        <div id="sessionBody"></div>
-        <button class="btn-main" style="margin-top:15px;" onclick="toggleModal('totalsModal')">CLOSE</button>
+        <div id="sessionBody">No catches today.</div>
+        <button class="btn-main" style="margin-top:15px;" onclick="closeModal('totalsModal')">CLOSE</button>
     </div>
 </div>
 
@@ -57,42 +56,26 @@
     <div class="header-title">Angler<span>OS</span></div>
 
     <div class="nav-grid">
-        <button class="btn-sub" onclick="toggle('intelBox')">📘 HANDBOOK</button>
-        <button class="btn-sub" onclick="toggleModal('tideModal')">🌊 TIDES</button>
+        <button class="btn-sub" onclick="openTideModal()">🌊 TIDES</button>
         <button class="btn-sub" onclick="showSessionPopUp()">📊 TOTALS</button>
+        <button class="btn-sub" onclick="syncGPS()">📍 SYNC</button>
     </div>
-
-    <div id="intelBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 10px 0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; color:var(--text); line-height:1.4;">
-            • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
-            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.<br>
-            • <b>Pressure:</b> 1013hPa+ is stable.
-        </p>
-        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
-    </div>
-
-    <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
 
     <div class="card">
-        <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin:0;">
-            <button class="btn-sub" onclick="addCurrentToFav()">⭐</button>
-        </div>
+        <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)">
         <select id="portList" onchange="handlePortSelect(this.options[this.selectedIndex].text, this.value)"></select>
     </div>
 
     <div class="hud-grid">
         <div class="hud-item"><span class="label">Tide Height</span><div id="hTide" class="val">--</div><div id="hTideSub" class="sub-val">--</div></div>
-        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hFlow" class="val">--</div><div class="sub-val">1.5-3.0kn Zone</div></div>
-        <div class="hud-item"><span class="label">Barometer</span><div id="hBaro" class="val">--</div><div id="hBaroSub" class="sub-val">--</div></div>
         <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hCond" class="val">--</div><div id="hWindSub" class="sub-val">--</div></div>
+        <div class="hud-item"><span class="label">Barometer</span><div id="hBaro" class="val">--</div><div id="hBaroSub" class="sub-val">--</div></div>
+        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hFlow" class="val">--</div><div class="sub-val">1.5-3.0kn Zone</div></div>
     </div>
 
-    <div class="card" id="logForm">
+    <div class="card">
         <input type="file" id="cam" accept="image/*" style="display:none" onchange="previewImg(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('cam').click()">📸 ADD PHOTO</button>
         <img id="imgPrev" style="width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:none;">
@@ -111,17 +94,16 @@
 
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39', PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_logs_v987')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_favs_v987')) || [];
-    let allPorts = [], map, marker, curImg = "", editIdx = -1;
-    let env = { tide: "--", flow: "--", baro: "--", cond: "--", wind: "--", port: "Unknown" };
+    let catches = JSON.parse(localStorage.getItem('aos_logs_v988')) || [];
+    let allPorts = [], map, marker, curImg = "", editIdx = -1, tideDataGlobal = [];
+    let env = { tide: "--", flow: "--", baro: "--", cond: "--", wind: "--", port: "Unknown", tideState: "--" };
 
     const wCodes = { 0:"Clear", 1:"Mainly Clear", 2:"Partly Cloudy", 3:"Overcast", 45:"Fog", 51:"Drizzle", 61:"Slight Rain", 63:"Rain", 71:"Slight Snow", 95:"Storm" };
 
     window.onload = () => {
         map = L.map('map').setView([54, -2], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        loadPorts(); updateFavs(); renderDiary();
+        loadPorts(); renderDiary();
     };
 
     async function loadPorts() {
@@ -154,46 +136,54 @@
     async function fetchTides(id) {
         try {
             const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const d = await r.json();
-            const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
+            tideDataGlobal = await r.json();
+            const now = new Date(), next = tideDataGlobal.find(e => new Date(e.DateTime) > now);
             
             if(next) {
                 const diff = Math.abs(new Date(next.DateTime) - now);
                 const hrs = Math.floor(diff / 36e5), mins = Math.floor((diff % 36e5) / 6e4);
                 const type = next.EventType.includes("Low") ? "Low Water" : "High Water";
                 env.tide = next.Height.toFixed(1) + "m";
+                env.tideState = `${next.EventType.includes("Low") ? "FALLING" : "RISING"} (${hrs}h ${mins}m to ${type})`;
                 document.getElementById('hTide').innerText = env.tide;
-                document.getElementById('hTideSub').innerText = `${next.EventType.includes("Low") ? "FALLING" : "RISING"} (${hrs}h ${mins}m to ${type})`;
+                document.getElementById('hTideSub').innerText = env.tideState;
             }
-
-            let h = `<table class="tide-table"><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
-            const days = {};
-            d.forEach(e => {
-                const dt = new Date(e.DateTime).toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
-                if(!days[dt]) days[dt] = {h:[], l:[]};
-                const time = new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                if(e.EventType.includes("High")) days[dt].h.push(time); else days[dt].l.push(time);
-            });
-            Object.entries(days).slice(0,7).forEach(([date, v]) => {
-                h += `<tr><td>${date}</td><td>${v.h.join('<br>')}</td><td>${v.l.join('<br>')}</td></tr>`;
-            });
-            document.getElementById('tideTableBody').innerHTML = h + `</table>`;
+            buildTideTable();
         } catch(e) { notify("Tide Error"); }
     }
 
+    function buildTideTable() {
+        if(!tideDataGlobal.length) return;
+        let h = `<table class="tide-table"><tr><th>Date</th><th>High</th><th>Low</th></tr>`;
+        const days = {};
+        tideDataGlobal.forEach(e => {
+            const dt = new Date(e.DateTime).toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
+            if(!days[dt]) days[dt] = {h:[], l:[]};
+            const time = new Date(e.DateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            if(e.EventType.includes("High")) days[dt].h.push(time); else days[dt].l.push(time);
+        });
+        Object.entries(days).slice(0,7).forEach(([date, v]) => {
+            h += `<tr><td>${date}</td><td>${v.h.join('<br>')}</td><td>${v.l.join('<br>')}</td></tr>`;
+        });
+        document.getElementById('tideTableBody').innerHTML = h + `</table>`;
+    }
+
     async function fetchWeather(lat, lon) {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m,weather_code`);
-        const d = await r.json();
-        const condTxt = wCodes[d.current.weather_code] || "Fair";
-        env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
-        env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
-        env.cond = `${condTxt} | ${d.current.temperature_2m.toFixed(1)}°C`;
-        env.wind = `${Math.round(d.current.wind_speed_10m)}mph (Gust ${Math.round(d.current.wind_gusts_10m)}mph)`;
-        document.getElementById('hBaro').innerText = env.baro;
-        document.getElementById('hBaroSub').innerText = d.current.surface_pressure > 1013 ? "1013hPa Stable" : "Pressure Falling";
-        document.getElementById('hCond').innerText = env.cond;
-        document.getElementById('hWindSub').innerText = env.wind;
-        document.getElementById('hFlow').innerText = env.flow;
+        try {
+            const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m,weather_code`);
+            const d = await r.json();
+            const condTxt = wCodes[d.current.weather_code] || "Fair";
+            env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
+            env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
+            env.cond = `${condTxt} | ${d.current.temperature_2m.toFixed(1)}°C`;
+            env.wind = `${Math.round(d.current.wind_speed_10m)}mph (Gust ${Math.round(d.current.wind_gusts_10m)}mph)`;
+            
+            document.getElementById('hBaro').innerText = env.baro;
+            document.getElementById('hBaroSub').innerText = d.current.surface_pressure > 1013 ? "1013hPa Stable" : "Pressure Falling";
+            document.getElementById('hCond').innerText = env.cond;
+            document.getElementById('hWindSub').innerText = env.wind;
+            document.getElementById('hFlow').innerText = env.flow;
+        } catch(e) { notify("Weather Error"); }
     }
 
     function saveEntry() {
@@ -206,48 +196,55 @@
             loc: env.port, env: `${env.tide} | ${env.flow} Flow | ${env.baro} | ${env.cond}`, img: curImg, nt: document.getElementById('notes').value
         };
         if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_logs_v987', JSON.stringify(catches));
-        resetForm(); renderDiary(); notify("Saved!");
+        localStorage.setItem('aos_logs_v988', JSON.stringify(catches));
+        resetForm(); renderDiary(); notify("Record Saved");
     }
 
     function renderDiary() {
-        document.getElementById('diary').innerHTML = catches.map((c, i) => {
-            const isPB = !catches.some((oc, oi) => oc.sp === c.sp && oc.wt > c.wt);
-            return `
+        const diary = document.getElementById('diary');
+        diary.innerHTML = catches.map((c, i) => `
             <div class="card">
                 ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--sea); font-weight:800; font-size:1.1rem;">${c.sp}${isPB?'<span style="background:var(--gold); color:var(--navy); padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:900; margin-left:8px;">PB</span>':''}</span>
+                    <span style="color:var(--sea); font-weight:800; font-size:1.1rem;">${c.sp}</span>
                     <span style="font-weight:bold;">${c.len}cm / ${c.wt}lb</span>
                 </div>
                 <div style="font-size:0.75rem; color:var(--gold); font-weight:bold; margin-top:4px;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
                 <div style="font-size:0.65rem; color:#64748b; margin-bottom:8px;">${c.env}</div>
                 <p style="font-size:0.85rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">${c.nt || 'No notes.'}</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:10px;">
                     <button class="btn-sub" onclick="shareCatch(${i})">SHARE</button>
+                    <button class="btn-sub" onclick="editCatch(${i})">EDIT</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${i})">DEL</button>
-                    <button class="btn-sub" style="grid-column: span 2; color:var(--gold);" onclick="editCatch(${i})">EDIT RECORD</button>
                 </div>
-            </div>`;
-        }).join('');
+            </div>`).join('');
+    }
+
+    function showSessionPopUp() {
+        const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
+        const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
+        let h = `<div style="margin-bottom:10px; font-weight:bold;">${today}</div>`;
+        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
+        h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;"><span>SESSION TOTAL</span><span>${total.toFixed(2)}lb</span></div>`;
+        document.getElementById('sessionBody').innerHTML = session.length ? h : "No catches today.";
+        document.getElementById('totalsModal').style.display = 'block';
     }
 
     async function shareCatch(i) {
         const c = catches[i];
-        const text = `AnglerOS Catch: ${c.sp} (${c.len}cm / ${c.wt}lb) at ${c.loc}. Conditions: ${c.env}`;
+        const text = `AnglerOS Catch: ${c.sp} at ${c.loc}. ${c.len}cm / ${c.wt}lb. Conditions: ${c.env}`;
         if (navigator.share) {
             try {
-                const shareData = { title: 'AnglerOS Catch', text: text };
+                let shareData = { title: 'AnglerOS Catch', text: text };
                 if (c.img) {
-                    const blob = await (await fetch(c.img)).blob();
+                    const res = await fetch(c.img);
+                    const blob = await res.blob();
                     const file = new File([blob], 'catch.jpg', { type: 'image/jpeg' });
                     shareData.files = [file];
                 }
                 await navigator.share(shareData);
             } catch (err) { notify("Share Failed"); }
-        } else {
-            prompt("Copy Share Text:", text);
-        }
+        } else { prompt("Copy details:", text); }
     }
 
     function editCatch(i) {
@@ -266,7 +263,7 @@
             const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
             handlePortSelect(p.name, p.id);
             document.getElementById('portList').value = p.id;
-            notify("GPS Linked: " + p.name);
+            notify("Linked: " + p.name);
         });
     }
 
@@ -276,19 +273,11 @@
         reader.readAsDataURL(e.target.files[0]);
     }
 
-    function resetForm() {
-        editIdx = -1; curImg = ""; 
-        document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
-        document.getElementById('imgPrev').style.display = 'none';
-        ["sp","wt","len","notes"].forEach(id => document.getElementById(id).value = "");
-    }
-
-    function toggleModal(id) { const m = document.getElementById(id); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
-    function toggle(id) { const e = document.getElementById(id); e.style.display = (e.style.display === 'block') ? 'none' : 'block'; }
+    function resetForm() { editIdx = -1; curImg = ""; document.getElementById('saveBtn').innerText = "💾 SAVE RECORD"; document.getElementById('imgPrev').style.display = 'none'; ["sp","wt","len","notes"].forEach(id => document.getElementById(id).value = ""); }
+    function openTideModal() { document.getElementById('tideModal').style.display = 'block'; buildTideTable(); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v987', JSON.stringify(catches)); renderDiary(); } }
-    function updateFavs() { document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span>📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites."; }
-    function addCurrentToFav() { if(env.port !== "Unknown") { if(!favs.find(f=>f.name===env.port)) { favs.push({name:env.port, id:env.port}); localStorage.setItem('aos_favs_v987', JSON.stringify(favs)); updateFavs(); notify("Saved Fav"); } } }
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v988', JSON.stringify(catches)); renderDiary(); } }
 </script>
 </body>
 </html>
