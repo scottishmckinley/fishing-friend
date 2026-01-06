@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.2</title>
+    <title>Angler OS v12.3</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.2</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.3</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -218,11 +218,21 @@
     function saveEntry() {
         const s = document.getElementById('sp').value.trim();
         if(!s) return notify("Enter Species");
+        
+        let targetDate = new Date().toLocaleDateString('en-GB');
+        let targetTime = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        
+        if(editIdx > -1) {
+            targetDate = catches[editIdx].dt;
+            targetTime = catches[editIdx].tm;
+        }
+
         const entry = {
             sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
-            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            dt: targetDate, tm: targetTime,
             loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro} | ${env.cond}`, img: curImg, nt: document.getElementById('notes').value
         };
+        
         if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
         localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
         editIdx = -1; curImg = ""; 
@@ -301,7 +311,7 @@
             h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
         } else {
             session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-            h += `<hr style="border:0; border-top:1px solid var(--border); margin:15px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea); font-size:1.1rem;"><b>TOTAL WEIGHT</b><b>${total.toFixed(2)}lb</b></div>`;
+            h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea); font-size:1.1rem;"><b>TOTAL WEIGHT</b><b>${total.toFixed(2)}lb</b></div>`;
         }
         h += `<button class="btn-main" style="margin-top:20px; margin-bottom:0;" onclick="closeModal()">CLOSE</button>`;
         document.getElementById('modalBody').innerHTML = h;
