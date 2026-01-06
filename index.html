@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v8.5</title>
+    <title>Angler OS v8.6 Restored</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -13,24 +13,30 @@
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { font-size: 1.8rem; color: var(--white); margin: 0; font-weight: 800; }
         .header span { color: var(--sea); }
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; font-size: 0.8rem; }
+        
+        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
+        
         #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; z-index: 1; }
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .hud-item { background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .label { font-size: 0.55rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px;}
-        .val { font-size: 0.9rem; font-weight: bold; color: var(--white); }
-        .sub-val { font-size: 0.65rem; font-weight: bold; display: block; margin-top: 2px; }
+        
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 4px;}
+        .val { font-size: 1rem; font-weight: bold; color: var(--white); }
+        .sub-val { font-size: 0.7rem; font-weight: bold; display: block; margin-top: 2px; }
+
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
+        
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
         
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .cal-day { padding: 5px 0; height: 38px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--navy); border-radius: 8px; cursor: pointer; font-size: 0.75rem; border: 1px solid var(--border); position: relative;}
-        .cal-day.active { border: 2px solid var(--sea); color: var(--sea); font-weight: bold; }
-        .has-catch::after { content: ''; width: 5px; height: 5px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 4px; }
+        .cal-day { padding: 5px 0; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--navy); border-radius: 8px; cursor: pointer; font-size: 0.8rem; border: 1px solid var(--border); position: relative;}
+        .cal-day.active { border: 2px solid var(--sea); color: var(--sea); }
+        .has-catch::after { content: ''; width: 6px; height: 6px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 4px; }
+        
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
@@ -39,21 +45,30 @@
     <div class="header"><h1>ANGLER<span>OS</span></h1></div>
 
     <div class="hud-grid">
-        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
+        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK & DATA</button>
         <button class="btn-sub" onclick="showSummary()">📊 SESSION TOTALS</button>
     </div>
 
     <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0 0 5px 0;">🌊 FISHING INTEL</h4>
-        <p><b>Tides:</b> Best 2hrs either side of High Tide.<br><b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".</p>
-        <button class="btn-sub" style="width:100%" onclick="exportData()">EXPORT LOGS (JSON)</button>
+        <h4 style="color:var(--gold); margin:0 0 10px 0;">🌊 FISHING INTEL</h4>
+        <p style="font-size:0.8rem;"><b>Tides:</b> Best 2hrs either side of High Tide.<br>
+        <b>Flow:</b> 1.5 - 3.0 kn is the "Feeding Zone".<br>
+        <b>Pressure:</b> 1013hPa+ is stable. Sharp drops trigger feeding.</p>
+        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+        <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 DATABASE BACKUP</h4>
+        <p style="font-size:0.7rem; opacity:0.8;">Export history to JSON or import a log file.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
+            <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
+        </div>
+        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
     </div>
 
     <div id="summaryBox" class="drawer"></div>
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC NEAREST PORT & WEATHER</button>
+    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE, WEATHER & GPS</button>
 
     <div class="card" style="padding: 10px;">
         <div style="display:flex; gap:5px; margin-bottom:8px;">
@@ -65,8 +80,10 @@
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val" style="color:var(--sea)">--</span></div>
-        <div class="hud-item"><span class="label">Flow</span><div id="hudFlow" class="val">--</div><span class="sub-val">1.5 - 3.0 kn Zone</span></div>
+        <div class="hud-item"><span class="label">Tide Height</span><div id="hudTide" class="val">--</div><span id="hudState" class="sub-val" style="color:var(--sea)">--</span></div>
+        <div class="hud-item"><span class="label">Current (Flow)</span><div id="hudFlow" class="val">--</div><span class="sub-val">1.5 - 3.0 kn Zone</span></div>
+        <div class="hud-item"><span class="label">Barometer</span><div id="hudBaro" class="val">--</div><span class="sub-val" id="hudBaroDesc">1013hPa Stable</span></div>
+        <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hudTemp" class="val">--</div><span class="sub-val" id="hudWind" style="color:var(--sea)">--</span></div>
     </div>
 
     <div class="card" id="logForm">
@@ -84,7 +101,7 @@
     <div class="card">
         <div style="display:flex; justify-content:space-between; color:var(--gold); font-weight:bold;">
             <span id="monthDisplay"></span>
-            <div><span onclick="changeMonth(-1)">◀ </span> <span onclick="changeMonth(1)"> ▶</span></div>
+            <div><span onclick="changeMonth(-1)" style="cursor:pointer">◀ </span> <span onclick="changeMonth(1)" style="cursor:pointer"> ▶</span></div>
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
     </div>
@@ -98,7 +115,7 @@
     let catches = JSON.parse(localStorage.getItem('aos_v6_logs')) || [];
     let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
     let allPorts = [], map, marker, editIndex = -1;
-    let curData = { pt: "Unknown", ptId: "", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
+    let curData = { pt: "Unknown", ptId: "", td: "--", st: "--", baro: "1010.0", temp: "--", wind: "--" };
     let viewDate = new Date();
     let selectedDateStr = new Date().toISOString().split('T')[0];
 
@@ -118,14 +135,15 @@
         
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const activityDays = catches.map(c => c.dt);
+        
+        const catchDates = new Set(catches.map(c => c.dt));
 
         for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) grid.appendChild(document.createElement('div'));
         
         for (let d = 1; d <= daysInMonth; d++) {
             const dayEl = document.createElement('div');
             const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            dayEl.className = `cal-day ${dStr === selectedDateStr ? 'active' : ''} ${activityDays.includes(dStr) ? 'has-catch' : ''}`;
+            dayEl.className = `cal-day ${dStr === selectedDateStr ? 'active' : ''} ${catchDates.has(dStr) ? 'has-catch' : ''}`;
             dayEl.innerText = d;
             dayEl.onclick = () => { selectedDateStr = dStr; renderCalendar(); renderDiary(); };
             grid.appendChild(dayEl);
@@ -157,9 +175,13 @@
         curData.pt = port.name; curData.ptId = port.id;
         map.setView([port.lat, port.lon], 12);
         if(marker) marker.setLatLng([port.lat, port.lon]); else marker = L.marker([port.lat, port.lon]).addTo(map);
-        document.getElementById('manualSearch').value = ""; // Clear search
-        document.getElementById('portList').value = ""; // Reset dropdown
+        
+        // Fix: Manual reset of search and select
+        document.getElementById('manualSearch').value = "";
+        document.getElementById('portList').value = "";
+        
         fetchTides(id);
+        fetchWeather(port.lat, port.lon);
     }
 
     async function fetchTides(id) {
@@ -177,6 +199,19 @@
         }
     }
 
+    async function fetchWeather(lat, lon) {
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_gusts_10m`);
+            const data = await res.json();
+            curData.baro = data.current.surface_pressure.toFixed(1);
+            curData.temp = data.current.temperature_2m.toFixed(1) + "°C";
+            curData.wind = data.current.wind_speed_10m.toFixed(0) + "mph";
+            document.getElementById('hudBaro').innerText = curData.baro + "hPa";
+            document.getElementById('hudTemp').innerText = curData.temp;
+            document.getElementById('hudWind').innerText = `${curData.wind} (Gust ${data.current.wind_gusts_10m.toFixed(0)}mph)`;
+        } catch(e) { console.error("Weather failed"); }
+    }
+
     async function syncGPS() {
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const { latitude, longitude } = pos.coords;
@@ -191,16 +226,18 @@
             favs.push({id: curData.ptId, name: curData.pt});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
             updateFavList();
-            alert(`⭐ Added ${curData.pt}`);
         }
     }
 
     function saveEntry() {
         const sp = document.getElementById('sp').value; if(!sp) return;
+        const wtVal = parseFloat(document.getElementById('wt').value) || 0;
+        const isPB = !catches.some(c => c.sp.toLowerCase() === sp.toLowerCase() && parseFloat(c.wt) >= wtVal);
+        
         const entry = {
-            sp, wt: document.getElementById('wt').value, ln: document.getElementById('ln').value,
+            sp, wt: wtVal, ln: document.getElementById('ln').value, pb: isPB,
             dt: selectedDateStr, tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: curData.pt, env: `${curData.td} | ${curData.knots}kn`, nt: document.getElementById('notes').value
+            loc: curData.pt, env: `${curData.td} | ${curData.knots}kn | ${curData.baro}hPa`, nt: document.getElementById('notes').value
         };
         if(editIndex > -1) catches[editIndex] = entry; else catches.unshift(entry);
         localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
@@ -219,6 +256,25 @@
         window.scrollTo(0, document.getElementById('logForm').offsetTop - 20);
     }
 
+    function renderDiary() {
+        const filtered = catches.filter(c => c.dt === selectedDateStr);
+        document.getElementById('diary').innerHTML = filtered.length ? filtered.map((c, i) => `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;">
+                    <span>${c.sp.toUpperCase()} ${c.pb ? '<span class="pb-badge">PB</span>' : ''}</span>
+                    <span>${c.ln}cm / ${c.wt}lb</span>
+                </div>
+                <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
+                <div style="font-size:0.65rem; opacity:0.6;">${c.env}</div>
+                <p style="font-size:0.85rem; margin:10px 0;">${c.nt}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
+                    <button class="btn-sub" onclick="editCatch(${catches.indexOf(c)})">EDIT</button>
+                    <button class="btn-sub" onclick="alert('Shared to Clipboard!')">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
+                </div>
+            </div>`).join('') : '<p style="text-align:center; opacity:0.5;">No records for this date.</p>';
+    }
+
     function resetForm() {
         editIndex = -1;
         document.getElementById('sp').value = ""; document.getElementById('wt').value = "";
@@ -228,35 +284,44 @@
         document.getElementById('cancelEdit').style.display = "none";
     }
 
-    function renderDiary() {
-        const filtered = catches.filter(c => c.dt === selectedDateStr);
-        document.getElementById('diary').innerHTML = filtered.length ? filtered.map((c, i) => `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;">
-                    <span>${c.sp.toUpperCase()}</span><span>${c.ln}cm / ${c.wt}lb</span>
-                </div>
-                <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | ${c.tm}</div>
-                <p style="font-size:0.85rem; margin:5px 0;">${c.nt}</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                    <button class="btn-sub" onclick="editCatch(${catches.indexOf(c)})">EDIT</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
-                </div>
-            </div>`).join('') : '<p style="text-align:center; opacity:0.5;">No records for this date.</p>';
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderCalendar(); renderDiary(); } }
+    
+    function updateFavList() {
+        document.getElementById('favList').innerHTML = favs.length ? favs.map((f, i) => `
+            <div class="summary-row"><span onclick="handlePortSelect('${f.id}'); toggle('favBox')" style="cursor:pointer">📍 ${f.name}</span>
+            <span onclick="favs.splice(${i},1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList()" style="color:var(--red); cursor:pointer">✕</span></div>`).join('') : 'No favorites yet.';
     }
 
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); renderCalendar(); renderDiary(); } }
-    function updateFavList() {
-        document.getElementById('favList').innerHTML = favs.map((f, i) => `
-            <div class="summary-row"><span onclick="handlePortSelect('${f.id}'); toggle('favBox')">📍 ${f.name}</span>
-            <span onclick="favs.splice(${i},1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList()">✕</span></div>`).join('');
-    }
     function showSummary() {
         const day = catches.filter(c => c.dt === selectedDateStr);
         let total = day.reduce((a, b) => a + (parseFloat(b.wt) || 0), 0);
-        document.getElementById('summaryBox').innerHTML = `<h4>Totals: ${selectedDateStr}</h4>` + day.map(c => `<div class="summary-row"><span>${c.sp}</span><span>${c.wt}lb</span></div>`).join('') + `<div class="summary-row" style="border-top:1px solid var(--gold)"><b>Total</b><b>${total.toFixed(2)}lb</b></div><button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('summaryBox')">CLOSE</button>`;
+        document.getElementById('summaryBox').innerHTML = `<h4>Totals: ${selectedDateStr}</h4>` + 
+            day.map(c => `<div class="summary-row"><span>${c.sp}</span><span>${c.wt}lb</span></div>`).join('') + 
+            `<div class="summary-row" style="border-top:1px solid var(--gold); margin-top:5px; padding-top:10px;"><b>TOTAL WEIGHT</b><b>${total.toFixed(2)}lb</b></div>
+            <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('summaryBox')">CLOSE</button>`;
         toggle('summaryBox');
     }
-    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify(catches)], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `AnglerOS_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+    }
+
+    function importData(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const imported = JSON.parse(event.target.result);
+                if(Array.isArray(imported)) {
+                    catches = imported;
+                    localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
+                    renderCalendar(); renderDiary();
+                    alert("Import Successful!");
+                }
+            } catch(err) { alert("Invalid File Format"); }
+        };
+        reader.readAsText(e.target.files[0]);
+    }
 </script>
 </body>
 </html>
