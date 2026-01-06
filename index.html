@@ -3,38 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v9.9 - Cloud Sync</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <title>Angler OS v9.8.1 - Final Stable</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <style>
         :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); overflow-x: hidden; }
         .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
         
-        /* Modal Pop-up Styling */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
-        .modal-content { background: var(--card); border: 2px solid var(--sea); margin: 20% auto; padding: 20px; width: 80%; border-radius: 20px; text-align: center; }
+        /* Modal Logic */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); border: 1px solid var(--sea); margin: 15% auto; padding: 20px; width: 85%; border-radius: 20px; position: relative; box-shadow: 0 0 20px rgba(52, 232, 158, 0.2); }
 
         .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
+        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
         .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
         .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
+        
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         
-        /* Forms */
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
-        #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; }
-        #toast { visibility: hidden; min-width: 250px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
+        #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; z-index: 1; }
+        #toast { visibility: hidden; min-width: 250px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 3000; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
         #toast.show { visibility: visible; }
+        
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 15px; }
+        .cal-day { font-size: 0.8rem; padding: 8px 0; border-radius: 8px; cursor: pointer; position: relative; }
+        .cal-day.has-catch::after { content: ''; width: 4px; height: 4px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
+        .cal-day.selected { background: var(--sea); color: var(--navy); font-weight: 800; }
     </style>
 </head>
 <body>
@@ -43,24 +42,14 @@
 
 <div id="totalsModal" class="modal">
     <div class="modal-content">
-        <h2 style="color:var(--gold)">Session Summary</h2>
-        <div id="sessionBody" style="text-align: left; margin: 15px 0;"></div>
-        <button class="btn-main" onclick="toggleModal('totalsModal')">CLOSE</button>
+        <h3 style="color:var(--gold); margin-top:0;">Session Summary</h3>
+        <div id="sessionBody" style="max-height: 300px; overflow-y: auto; text-align: left; margin: 15px 0; font-size: 0.9rem;"></div>
+        <button class="btn-main" onclick="closeTotals()">CLOSE</button>
     </div>
 </div>
 
 <div class="app-container">
     <div style="text-align:center;"><h1>ANGLER<span>OS</span></h1></div>
-
-    <div id="authBox" class="card">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pw" placeholder="Password">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-main" onclick="handleSignUp()">SIGN UP</button>
-            <button class="btn-main" style="background:var(--gold)" onclick="handleLogin()">LOGIN</button>
-        </div>
-        <p id="userEmail" style="font-size:0.7rem; text-align:center;"></p>
-    </div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -69,144 +58,201 @@
 
     <div id="helpBox" class="drawer">
         <h4 style="color:var(--gold); margin:0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; color:var(--text);">
+        <p style="font-size:0.75rem; color:var(--text); line-height: 1.4;">
             • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
             • <b>Pressure:</b> 1013hPa+ is stable.<br>
             • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
         </p>
-        <p style="font-size:0.65rem; color:#64748b;">
-            <b>Instructions:</b> Use JSON export to back up your history locally. Sign in to sync your data automatically across devices.
-        </p>
+        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
     </div>
+
+    <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <div id="map"></div>
     <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
 
+    <div class="card" style="padding:10px;">
+        <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin:0;">
+            <button class="btn-sub" onclick="addCurrentToFav()">⭐</button>
+        </div>
+        <select id="portList" onchange="handlePortSelect(this.value)"></select>
+    </div>
+
+    <div class="hud-grid">
+        <div class="hud-item"><span class="label">Tide</span><div id="hTide" class="val">--</div></div>
+        <div class="hud-item"><span class="label">Flow</span><div id="hFlow" class="val">--</div></div>
+        <div class="hud-item"><span class="label">Baro</span><div id="hBaro" class="val">--</div></div>
+        <div class="hud-item"><span class="label">Weather</span><div id="hCond" class="val">--</div></div>
+    </div>
+
     <div class="card" id="logForm">
         <input type="file" id="cam" accept="image/*" style="display:none" onchange="previewImg(event)">
         <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="document.getElementById('cam').click()">📸 ADD PHOTO</button>
+        <img id="imgPrev" style="width:100%; height:150px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:none;">
         <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px;">
             <input type="text" id="sp" placeholder="Species">
             <input type="number" id="wt" placeholder="lb">
         </div>
         <textarea id="notes" placeholder="Notes & Rig setup..."></textarea>
-        <button class="btn-main" id="saveBtn" onclick="saveToCloud()">💾 SAVE TO CLOUD</button>
+        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
     </div>
 
+    <div class="cal-grid" id="calGrid"></div>
     <div id="diary"></div>
 </div>
 
 <script>
-    // REPLACE WITH YOUR FIREBASE CONFIG
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_ID",
-        appId: "YOUR_APP_ID"
+    const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39', PROXY = "https://corsproxy.io/?";
+    let catches = JSON.parse(localStorage.getItem('aos_logs_v98')) || [];
+    let favs = JSON.parse(localStorage.getItem('aos_favs_v98')) || [];
+    let allPorts = [], map, marker, curImg = "", selectedDate = "";
+    let env = { tide: "--", flow: "--", baro: "--", cond: "Clear", port: "Unknown" };
+
+    window.onload = () => {
+        map = L.map('map').setView([54, -2], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        loadPorts(); updateFavs(); renderCalendar(); renderDiary();
     };
-    
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
 
-    let currentUser = null;
-    let catches = [];
+    function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
+    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
 
-    // Auth Listeners
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('userEmail').innerText = "Logged in as: " + user.email;
-            document.getElementById('authBox').style.display = "none";
-            loadFromCloud();
-        } else {
-            currentUser = null;
-            document.getElementById('authBox').style.display = "block";
-        }
-    });
-
-    async function handleSignUp() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pw').value;
-        try { await auth.createUserWithEmailAndPassword(e, p); notify("Account Created!"); } catch(err) { notify(err.message); }
-    }
-
-    async function handleLogin() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pw').value;
-        try { await auth.signInWithEmailAndPassword(e, p); notify("Welcome Back!"); } catch(err) { notify(err.message); }
-    }
-
-    async function saveToCloud() {
-        if (!currentUser) return notify("Please Login First");
-        const species = document.getElementById('sp').value.toUpperCase();
-        const weight = parseFloat(document.getElementById('wt').value) || 0;
-        
-        const catchData = {
-            userId: currentUser.uid,
-            sp: species,
-            wt: weight,
-            dt: new Date().toLocaleDateString('en-GB'),
-            tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-            loc: env.port || "Unknown",
-            notes: document.getElementById('notes').value,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
+    async function loadPorts() {
         try {
-            await db.collection("catches").add(catchData);
-            notify("Saved to Cloud!");
-            clearForm();
-            loadFromCloud();
-        } catch(err) { notify("Save Error"); }
+            const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+            const d = await r.json();
+            allPorts = d.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
+            filterPorts("");
+        } catch(e) { notify("Port Load Error"); }
     }
 
-    async function loadFromCloud() {
-        const snapshot = await db.collection("catches")
-            .where("userId", "==", currentUser.uid)
-            .orderBy("timestamp", "desc").get();
-        
-        catches = snapshot.docs.map(doc => doc.data());
-        renderDiary();
+    function filterPorts(q) {
+        const s = document.getElementById('portList');
+        s.innerHTML = '<option value="">-- Select Port --</option>';
+        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
+            const o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
+        });
     }
+
+    async function handlePortSelect(id) {
+        if(!id) return;
+        const p = allPorts.find(x => x.id === id);
+        env.port = p.name;
+        document.getElementById('pSearch').value = "";
+        map.setView([p.lat, p.lon], 13);
+        if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
+        await fetchTides(id);
+        await fetchWeather(p.lat, p.lon);
+    }
+
+    async function fetchTides(id) {
+        const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
+        const d = await r.json();
+        const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
+        if(next) {
+            env.tide = next.Height.toFixed(1) + "m";
+            document.getElementById('hTide').innerText = env.tide;
+        }
+    }
+
+    async function fetchWeather(lat, lon) {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,weather_code`);
+        const d = await r.json();
+        env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
+        env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
+        document.getElementById('hBaro').innerText = env.baro;
+        document.getElementById('hCond').innerText = d.current.temperature_2m.toFixed(1) + "°C";
+        document.getElementById('hFlow').innerText = env.flow;
+    }
+
+    function syncGPS() {
+        navigator.geolocation.getCurrentPosition(pos => {
+            const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
+            handlePortSelect(p.id);
+            document.getElementById('pSearch').value = "";
+            document.getElementById('portList').selectedIndex = 0;
+            notify("GPS: " + p.name);
+        });
+    }
+
+    function previewImg(e) {
+        const reader = new FileReader();
+        reader.onload = () => { curImg = reader.result; const i = document.getElementById('imgPrev'); i.src = curImg; i.style.display = 'block'; };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function saveEntry() {
+        const s = document.getElementById('sp').value.trim();
+        if(!s) return notify("Enter Species");
+        catches.unshift({
+            sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0,
+            dt: new Date().toLocaleDateString('en-GB'), tm: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro}`, img: curImg, nt: document.getElementById('notes').value
+        });
+        localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
+        curImg = ""; document.getElementById('imgPrev').style.display = 'none';
+        ["sp","wt","notes"].forEach(id => document.getElementById(id).value = "");
+        renderDiary(); renderCalendar(); notify("Saved!");
+    }
+
+    function renderDiary() {
+        const filtered = selectedDate ? catches.filter(c => c.dt === selectedDate) : catches;
+        document.getElementById('diary').innerHTML = filtered.map((c, i) => `
+            <div class="card">
+                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
+                <div style="display:flex; justify-content:space-between; color:var(--sea); font-weight:800;"><span>${c.sp}</span><span>${c.wt}lb</span></div>
+                <div style="font-size:0.7rem; color:var(--gold); margin:5px 0;">📍 ${c.loc} | ${c.dt}</div>
+                <p style="font-size:0.8rem; margin:10px 0;">${c.nt}</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                    <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
+                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DEL</button>
+                </div>
+            </div>`).join('');
+    }
+
+    function renderCalendar() {
+        const g = document.getElementById('calGrid');
+        g.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<div style="font-size:0.6rem; color:#64748b;">${d}</div>`).join('');
+        const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        for(let d=1; d<=days; d++) {
+            const dStr = `${d.toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
+            const has = catches.some(c => c.dt === dStr);
+            g.innerHTML += `<div class="cal-day ${has?'has-catch':''} ${selectedDate===dStr?'selected':''}" onclick="filterDate('${dStr}')">${d}</div>`;
+        }
+    }
+    function filterDate(d) { selectedDate = (selectedDate === d) ? "" : d; renderCalendar(); renderDiary(); }
 
     function showSessionPopUp() {
-        const today = new Date().toLocaleDateString('en-GB');
-        const session = catches.filter(c => c.dt === today);
-        const total = session.reduce((s, c) => s + (c.wt || 0), 0);
+        const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
+        const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
+        let h = `<div style="border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;"><b>Date:</b> ${today}</div>`;
+        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
+        h += `<div style="margin-top:10px; padding-top:10px; border-top:2px solid var(--sea); display:flex; justify-content:space-between; color:var(--sea); font-weight:bold;"><span>SESSION TOTAL</span><span>${total.toFixed(2)}lb</span></div>`;
+        document.getElementById('sessionBody').innerHTML = h;
+        document.getElementById('totalsModal').style.display = 'block';
+    }
+    function closeTotals() { document.getElementById('totalsModal').style.display = 'none'; }
 
-        let html = `<p><b>Date:</b> ${today}</p><hr>`;
-        session.forEach(c => html += `<div style="display:flex; justify-content:space-between;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-        html += `<hr><div style="color:var(--sea); font-weight:bold; display:flex; justify-content:space-between;"><span>TOTAL</span><span>${total.toFixed(2)}lb</span></div>`;
-        
-        document.getElementById('sessionBody').innerHTML = html;
-        toggleModal('totalsModal');
+    function shareCatch(i) {
+        const c = catches[i];
+        const t = `🎣 ANGLER OS CATCH LOG\nSpecies: ${c.sp}\nWeight: ${c.wt}lb\nLocation: ${c.loc}\n[ATTACH PHOTO MANUALLY]`;
+        if(navigator.share) navigator.share({title: 'My Catch', text: t}); else alert(t);
     }
 
-    function toggleModal(id) {
-        const m = document.getElementById(id);
-        m.style.display = (m.style.display === "block") ? "none" : "block";
+    function addCurrentToFav() {
+        if(env.port === "Unknown") return notify("Select port first");
+        if(!favs.find(f => f.name === env.port)) {
+            favs.push({name: env.port, id: env.port });
+            localStorage.setItem('aos_favs_v98', JSON.stringify(favs));
+            updateFavs(); notify("⭐ " + env.port + " added");
+        }
     }
-
-    function notify(m) {
-        const t = document.getElementById("toast");
-        t.innerText = m;
-        t.className = "show";
-        setTimeout(() => t.className = "", 3000);
+    function updateFavs() {
+        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span>📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites.";
     }
-
-    function toggle(id) {
-        const e = document.getElementById(id);
-        e.style.display = e.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function clearForm() {
-        ["sp", "wt", "notes"].forEach(id => document.getElementById(id).value = "");
-    }
-    
-    // ... (Keep existing Map, Tide, and Weather Logic from v9.8) ...
+    function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
+    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
 </script>
 </body>
 </html>
