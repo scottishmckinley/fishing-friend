@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12 - Final Stable</title>
+    <title>Angler OS v12.1</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -50,7 +50,7 @@
 <div id="toast">Message</div>
 
 <div class="app-container">
-    <div style="text-align:center;"><h1>ANGLER<span>OS</span></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.1</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -65,10 +65,7 @@
             • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
         </p>
         <hr border="0" style="border-top:1px solid var(--border); margin:10px 0;">
-        <button class="btn-sub" onclick="exportData()">EXPORT JSON</button>
-        <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT JSON</button>
-        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-        <button class="btn-sub" style="width:100%; margin-top:10px;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
+        <button class="btn-sub" style="width:100%;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
     </div>
 
     <div id="favBox" class="drawer"><div id="favList"></div></div>
@@ -151,7 +148,6 @@
         const p = allPorts.find(x => x.id === id);
         env.port = p.name;
         document.getElementById('pSearch').value = "";
-        document.getElementById('portList').selectedIndex = 0;
         map.setView([p.lat, p.lon], 13);
         if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
         await fetchTides(id);
@@ -219,6 +215,7 @@
         localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
         editIdx = -1; curImg = ""; 
         document.getElementById('imgPrev').style.display = 'none';
+        document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
         ["sp","wt","ln","notes"].forEach(id => document.getElementById(id).value = "");
         renderDiary(); renderCalendar(); notify("Record Saved");
     }
@@ -271,19 +268,18 @@
     function addCurrentToFav() {
         if(env.port === "Unknown") return notify("Select port first");
         if(!favs.find(f => f.name === env.port)) {
-            favs.push({name: env.port, id: env.port });
+            const pid = document.getElementById('portList').value;
+            favs.push({name: env.port, id: pid });
             localStorage.setItem('aos_favs_v98', JSON.stringify(favs));
             updateFavs(); notify("⭐ " + env.port + " saved");
         }
     }
     function updateFavs() {
-        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;"><span>📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red)">✕</span></div>`).join('') || "No favorites.";
+        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span onclick="handlePortSelect('${f.id}')" style="cursor:pointer">📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red); cursor:pointer; font-weight:bold">✕</span></div>`).join('') || "No favorites.";
     }
     function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
-    function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Backup.json'; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); notify("Imported!"); }; r.readAsText(e.target.files[0]); }
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
-    function shareCatch(i) { const c = catches[i]; const t = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\nLogged via AnglerOS`; if(navigator.share) navigator.share({text:t}); else notify("Not supported"); }
+    function shareCatch(i) { const c = catches[i]; const t = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\nLogged via AnglerOS`; if(navigator.share) navigator.share({text:t}); else notify("Sharing not supported"); }
     function showSessionTotals() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
