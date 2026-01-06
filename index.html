@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v8.1</title>
+    <title>Angler OS v8.4</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -24,6 +24,14 @@
         .btn-main { width: 100%; background: linear-gradient(135deg, #34e89e 0%, #0fb9b1 100%); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
         .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; text-align: center; }
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
+        
+        /* CALENDAR STYLES */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .cal-day { padding: 5px 0; height: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--navy); border-radius: 8px; cursor: pointer; font-size: 0.75rem; border: 1px solid var(--border); position: relative;}
+        .cal-day.active { border: 2px solid var(--sea); color: var(--sea); font-weight: bold; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--gold); font-weight: bold; }
+        .has-catch::after { content: ''; width: 4px; height: 4px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 4px; }
+        
         .pb-badge { background: var(--gold); color: var(--navy); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; margin-left: 5px; }
         .summary-row { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center; }
     </style>
@@ -45,7 +53,8 @@
            <b>Pressure:</b> 1013hPa+ is stable. Sharp drops trigger feeding.</p>
         <hr style="border:0; border-top:1px solid #1e293b; margin:10px 0;">
         <h4 style="color:var(--gold); margin:0 0 5px 0;">💾 DATABASE BACKUP</h4>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px;">
+        <p style="color:#64748b; font-size:0.65rem; margin-bottom:8px;">Export history to JSON or import log files.</p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
             <button class="btn-sub" onclick="exportData()">EXPORT</button>
             <button class="btn-sub" onclick="document.getElementById('importFile').click()">IMPORT</button>
         </div>
@@ -80,7 +89,7 @@
         <div class="hud-item"><span class="label">Current (Flow)</span><div id="hudFlow" class="val">--</div><span class="sub-val">1.5 - 3.0 kn Zone</span></div>
     </div>
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span class="sub-val">1013hPa Stable</span></div>
+        <div class="hud-item"><span class="label">Barometer</span><div id="hudPress" class="val">--</div><span id="hudPressState" class="sub-val">--</span></div>
         <div class="hud-item"><span class="label">Weather & Gusts</span><div id="hudWeather" class="val">--</div><span id="hudWind" class="sub-val" style="color:var(--sea)">--</span></div>
     </div>
 
@@ -99,28 +108,69 @@
     </div>
 
     <div class="card">
-        <span class="label">View Session History</span>
-        <input type="date" id="diaryDate" onchange="renderDiary()">
+        <div class="cal-header">
+            <span id="monthDisplay">Month Year</span>
+            <div style="display:flex; gap:15px;">
+                <span onclick="changeMonth(-1)" style="cursor:pointer; padding: 5px;">◀</span>
+                <span onclick="changeMonth(1)" style="cursor:pointer; padding: 5px;">▶</span>
+            </div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
     </div>
+    
     <div id="diary"></div>
 </div>
 
 <script>
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
     const PROXY = "https://corsproxy.io/?";
+    const W_CODES = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 45: "Fog", 61: "Rain", 63: "Rain", 71: "Snow" };
+    
     let catches = JSON.parse(localStorage.getItem('aos_v6_logs')) || [];
     let favs = JSON.parse(localStorage.getItem('aos_v6_favs')) || [];
-    let allPorts = [], map, marker, editingIndex = -1, selectedPortId = null, currentPhoto = "";
+    let allPorts = [], map, marker, currentPhoto = "";
     let curData = { pt: "Unknown", td: "--", st: "--", prs: "--", wind: "--", wDesc: "--", knots: "--" };
+    
+    let viewDate = new Date();
+    let selectedDateStr = new Date().toISOString().split('T')[0];
 
     window.onload = () => {
         map = L.map('map').setView([54.0, -2.0], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        document.getElementById('diaryDate').valueAsDate = new Date();
-        loadPorts(); updateFavList(); updatePBs(); renderDiary();
+        loadPorts(); updateFavList(); updatePBs(); renderCalendar(); renderDiary();
     };
 
     function toggle(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const monthLabel = document.getElementById('monthDisplay');
+        grid.innerHTML = '';
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        monthLabel.innerText = viewDate.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Days with catches for the green dots
+        const activityDays = catches.map(c => c.dt);
+
+        for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) { grid.appendChild(document.createElement('div')); }
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'cal-day';
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            if(dateStr === selectedDateStr) dayEl.classList.add('active');
+            if(activityDays.includes(dateStr)) dayEl.classList.add('has-catch');
+            dayEl.innerText = d;
+            dayEl.onclick = () => { selectedDateStr = dateStr; renderCalendar(); renderDiary(); };
+            grid.appendChild(dayEl);
+        }
+    }
+    
+    function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderCalendar(); }
 
     async function loadPorts() {
         const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
@@ -139,7 +189,6 @@
 
     function handlePortSelect(id) {
         if(!id) return;
-        selectedPortId = id;
         const port = allPorts.find(p => p.id === id);
         curData.pt = port.name;
         map.setView([port.lat, port.lon], 12);
@@ -151,21 +200,16 @@
         const res = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
         const data = await res.json();
         const next = data.find(e => new Date(e.DateTime) > new Date());
-        
         if(next) {
             curData.td = next.Height.toFixed(1) + "m";
             curData.st = next.EventType.includes("High") ? "RISING" : "FALLING";
             document.getElementById('hudTide').innerText = curData.td;
             document.getElementById('hudState').innerText = curData.st;
-            
-            // Countdown Logic
             const diff = new Date(next.DateTime) - new Date();
             const h = Math.floor(diff / 3600000);
             const m = Math.floor((diff % 3600000) / 60000);
-            document.getElementById('tideCountdown').innerText = `${h}h ${m}m until next ${next.EventType}`;
-            
-            const hrs = diff / 3600000;
-            curData.knots = (Math.abs(Math.sin((hrs/6)*Math.PI)) * 3.5).toFixed(1);
+            document.getElementById('tideCountdown').innerText = `${h}h ${m}m until ${next.EventType}`;
+            curData.knots = (Math.abs(Math.sin((diff/3600000/6)*Math.PI)) * 3.5).toFixed(1);
             document.getElementById('hudFlow').innerText = curData.knots + " kn";
         }
     }
@@ -176,11 +220,13 @@
             const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=surface_pressure,windgusts_10m`);
             const wData = await wRes.json();
             const cw = wData.current_weather;
+            curData.wDesc = W_CODES[cw.weathercode] || "Clear";
             curData.wind = `${cw.windspeed}mph (Gust ${wData.hourly.windgusts_10m[0]}mph)`;
             curData.prs = wData.hourly.surface_pressure[0];
-            document.getElementById('hudWeather').innerText = `${cw.temperature}°C`;
+            document.getElementById('hudWeather').innerText = `${curData.wDesc} | ${cw.temperature}°C`;
             document.getElementById('hudWind').innerText = curData.wind;
             document.getElementById('hudPress').innerText = curData.prs + "hPa";
+            document.getElementById('hudPressState').innerText = curData.prs >= 1013 ? "1013hPa Stable" : "Low Pressure";
             const near = allPorts.reduce((p, c) => Math.hypot(p.lat - latitude, p.lon - longitude) < Math.hypot(c.lat - latitude, c.lon - longitude) ? p : c);
             handlePortSelect(near.id);
         });
@@ -190,16 +236,16 @@
         const sp = document.getElementById('sp').value; if(!sp) return;
         const entry = {
             sp, wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value || 0,
-            dt: new Date().toISOString().split('T')[0], // Standardized for calendar
+            dt: new Date().toISOString().split('T')[0],
             tm: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
             loc: curData.pt, photo: currentPhoto,
-            env: `${curData.td} | ${curData.knots}kn | ${curData.prs}hPa`,
+            env: `${curData.td} | ${curData.knots}kn | ${curData.prs}hPa | ${curData.wDesc}`,
             nt: document.getElementById('notes').value, isPB: false
         };
         catches.unshift(entry);
         updatePBs();
         localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
-        resetForm(); renderDiary();
+        resetForm(); renderCalendar(); renderDiary();
     }
 
     function updatePBs() {
@@ -213,43 +259,54 @@
         catches.forEach(c => {
             if (parseFloat(c.wt) === pbs[c.sp.toLowerCase()] && pbs[c.sp.toLowerCase()] > 0) {
                 c.isPB = true;
-                pbs[c.sp.toLowerCase()] = 999999; // Only first one found is marked
+                pbs[c.sp.toLowerCase()] = 999999;
             }
         });
     }
 
     function renderDiary() {
-        const selectedDate = document.getElementById('diaryDate').value;
-        const filtered = catches.filter(c => c.dt === selectedDate);
-        document.getElementById('diary').innerHTML = filtered.length ? filtered.map((c, i) => `
+        const filtered = catches.filter(c => c.dt === selectedDateStr);
+        document.getElementById('diary').innerHTML = filtered.length ? filtered.map((c) => `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--sea);">
                     <span>${c.sp.toUpperCase()} ${c.isPB ? '<span class="pb-badge">PB</span>' : ''}</span>
                     <span>${c.ln}cm / ${c.wt}lb</span>
                 </div>
                 <div style="font-size:0.7rem; color:var(--gold); margin:4px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.6rem; color:#64748b;">${c.env}</div>
-                ${c.photo ? `<img src="${c.photo}" style="width:100%; border-radius:10px; margin-top:10px;">` : ''}
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:10px;">
+                <div style="font-size:0.65rem; color:#64748b; margin-bottom:5px;">${c.env}</div>
+                ${c.photo ? `<img src="${c.photo}" style="width:100%; border-radius:10px; margin:5px 0;">` : ''}
+                <div style="font-size:0.85rem;">${c.nt}</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px;">
                     <button class="btn-sub" onclick="shareCatch(${catches.indexOf(c)})">SHARE</button>
-                    <button class="btn-sub" onclick="editEntry(${catches.indexOf(c)})">EDIT</button>
                     <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${catches.indexOf(c)})">DELETE</button>
                 </div>
-            </div>`).join('') : '<div style="text-align:center; padding:20px; color:#64748b;">No catches logged for this date.</div>';
+            </div>`).join('') : '<div style="text-align:center; padding:20px; color:#64748b;">No catches for this date.</div>';
+    }
+
+    function shareCatch(i) {
+        const c = catches[i];
+        const msg = `Catch Report: ${c.sp} (${c.ln}cm, ${c.wt}lb) at ${c.loc}. Conditions: ${c.env}. Notes: ${c.nt}`;
+        if (navigator.share) {
+            navigator.share({ title: 'Angler OS Catch', text: msg }).catch(() => {
+                navigator.clipboard.writeText(msg); alert("Copied to clipboard!");
+            });
+        } else {
+            navigator.clipboard.writeText(msg); alert("Copied to clipboard!");
+        }
     }
 
     function deleteCatch(i) {
-        if(confirm("Permanently delete this record?")) {
+        if(confirm("Delete record?")) {
             catches.splice(i, 1);
             localStorage.setItem('aos_v6_logs', JSON.stringify(catches));
-            updatePBs(); renderDiary();
+            updatePBs(); renderCalendar(); renderDiary();
         }
     }
 
     function addFav() {
-        if (!selectedPortId) return;
-        const port = allPorts.find(p => p.id === selectedPortId);
-        if (!favs.some(f => f.id === port.id)) {
+        const val = document.getElementById('portList').value;
+        const port = allPorts.find(p => p.id === val);
+        if (port && !favs.some(f => f.id === port.id)) {
             favs.push({id: port.id, name: port.name});
             localStorage.setItem('aos_v6_favs', JSON.stringify(favs));
             updateFavList();
@@ -259,30 +316,29 @@
 
     function updateFavList() {
         const list = document.getElementById('favList');
-        list.innerHTML = favs.map((f, i) => `
+        list.innerHTML = favs.length ? favs.map((f, i) => `
             <div class="summary-row">
                 <span onclick="handlePortSelect('${f.id}'); toggle('favBox')" style="cursor:pointer;">📍 ${f.name}</span>
                 <span style="color:var(--red); cursor:pointer;" onclick="removeFav(${i})">✕</span>
-            </div>`).join('');
+            </div>`).join('') : 'No favorites.';
     }
 
     function showSummary() {
-        const selectedDate = document.getElementById('diaryDate').value;
-        const todayCatches = catches.filter(c => c.dt === selectedDate);
-        let h = `<h4 style="text-align:center; color:var(--sea);">SESSION TOTALS (${selectedDate})</h4>`;
+        const dayCatches = catches.filter(c => c.dt === selectedDateStr);
         let totalW = 0;
-        todayCatches.forEach(c => {
+        let h = `<h4 style="text-align:center; color:var(--sea);">TOTALS FOR ${selectedDateStr}</h4>`;
+        dayCatches.forEach(c => {
             h += `<div class="summary-row"><span>${c.sp.toUpperCase()}</span><span>${c.wt} lb</span></div>`;
             totalW += parseFloat(c.wt);
         });
-        h += `<div class="summary-row" style="border-top:2px solid var(--gold); font-weight:bold;"><span>TOTAL:</span><span>${totalW.toFixed(2)} lb</span></div>`;
+        h += `<div class="summary-row" style="border-top:2px solid var(--gold); font-weight:bold; margin-top:10px;"><span>TOTAL:</span><span>${totalW.toFixed(2)} lb</span></div>`;
         document.getElementById('summaryBox').innerHTML = h + `<button class="btn-sub" style="width:100%; margin-top:10px" onclick="toggle('summaryBox')">CLOSE</button>`;
         toggle('summaryBox');
     }
 
     function removeFav(i) { favs.splice(i, 1); localStorage.setItem('aos_v6_favs', JSON.stringify(favs)); updateFavList(); }
     function exportData() { const b = new Blob([JSON.stringify(catches)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'AnglerOS_Log.json'; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); updatePBs(); renderDiary(); }; r.readAsText(e.target.files[0]); }
+    function importData(e) { const r = new FileReader(); r.onload = (ev) => { catches = JSON.parse(ev.target.result); localStorage.setItem('aos_v6_logs', JSON.stringify(catches)); updatePBs(); renderCalendar(); renderDiary(); }; r.readAsText(e.target.files[0]); }
     function resetForm() { document.getElementById('sp').value = ""; document.getElementById('wt').value = ""; document.getElementById('ln').value = ""; document.getElementById('notes').value = ""; document.getElementById('photoPreview').innerHTML = ""; currentPhoto = ""; }
     function processPhoto(e) { const reader = new FileReader(); reader.onload = (ev) => { currentPhoto = ev.target.result; document.getElementById('photoPreview').innerHTML = `<img src="${currentPhoto}" style="width:100px; border-radius:10px; margin-top:10px;">`; }; reader.readAsDataURL(e.target.files[0]); }
 </script>
