@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v12.1</title>
+    <title>Angler OS v12.2</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -19,6 +19,10 @@
         .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
         .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
         .sub-val { font-size: 0.7rem; font-weight: bold; display: block; color: var(--sea); }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--card); border: 2px solid var(--gold); border-radius: 20px; width: 85%; max-width: 400px; padding: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
 
         /* Buttons */
         .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
@@ -49,8 +53,14 @@
 
 <div id="toast">Message</div>
 
+<div id="totalsModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div id="modalBody"></div>
+    </div>
+</div>
+
 <div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.1</small></h1></div>
+    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v12.2</small></h1></div>
 
     <div class="hud-grid">
         <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
@@ -125,6 +135,8 @@
 
     function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
+    
+    function closeModal() { document.getElementById('totalsModal').style.display = 'none'; }
 
     async function loadPorts() {
         try {
@@ -280,13 +292,20 @@
     function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
     function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
     function shareCatch(i) { const c = catches[i]; const t = `🎣 ${c.sp} (${c.wt}lb)\n📍 ${c.loc}\nLogged via AnglerOS`; if(navigator.share) navigator.share({text:t}); else notify("Sharing not supported"); }
+    
     function showSessionTotals() {
         const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
         const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<div class="card"><h3 style="margin:0; color:var(--gold);">Today: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
-        session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.8rem;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-        h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea);"><b>TOTAL</b><b>${total.toFixed(2)}lb</b></div><button class="btn-sub" style="width:100%; margin-top:10px;" onclick="renderDiary()">BACK</button></div>`;
-        document.getElementById('diary').innerHTML = h;
+        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">`;
+        if(session.length === 0) {
+            h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
+        } else {
+            session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
+            h += `<hr style="border:0; border-top:1px solid var(--border); margin:15px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea); font-size:1.1rem;"><b>TOTAL WEIGHT</b><b>${total.toFixed(2)}lb</b></div>`;
+        }
+        h += `<button class="btn-main" style="margin-top:20px; margin-bottom:0;" onclick="closeModal()">CLOSE</button>`;
+        document.getElementById('modalBody').innerHTML = h;
+        document.getElementById('totalsModal').style.display = 'flex';
     }
 </script>
 </body>
