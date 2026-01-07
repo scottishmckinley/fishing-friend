@@ -788,8 +788,10 @@ Notes: ${c.notes || ""}`.trim();
         updatedAt: Date.now()
       });
 
-      editState.delete(id);
-      notify("Record updated");
+        editState.delete(id);
+        renderDiary();          // 👈 this closes the edit UI immediately
+        notify("Record updated");
+
     };
 
     // ===== Diary =====
