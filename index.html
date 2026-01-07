@@ -128,20 +128,22 @@
     #modalClose{background:none;border:none;color:var(--gold);font-weight:900;font-size:1.2rem;cursor:pointer;}
 
     .muted{opacity:0.7}
-
+  
     /* Photo picker: use camera icon instead of "Choose file" */
     .photo-input{display:none;}
+    .photo-actions{display:flex; gap:10px; align-items:center;}
     .photo-btn{
       display:flex;align-items:center;justify-content:center;
-      height:44px;width:100%;
+      height:44px; width:52px;
       border:1px solid var(--border);
       border-radius:10px;
       background:var(--navy);
       color:var(--gold);
-      font-size:1.15rem;
+      font-size:1.25rem;
       font-weight:900;
       cursor:pointer;
       user-select:none;
+      flex: 0 0 auto;
     }
     .photo-btn:active{transform:scale(.99);}
 
@@ -173,23 +175,20 @@
       </div>
 
       <div class="header-right">
-        <button class="btn-sub" id="totalsBtn" title="Session summary" style="white-space:nowrap;">📊 TOTALS: 0</button>
+        <button class="btn-sub" id="totalsBtn" title="Session summary" style="white-space:nowrap;">🧭 SESSION: 0</button>
       </div>
     </div>
 
-    <!-- Session drawer -->
+    <!-- Totals drawer (today only) -->
     <div id="totalsBox" class="drawer">
-      <div class="intel-header">🎣 SESSION</div>
-
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 12px;">
-        <button class="btn-sub" id="sessionStartBtn" title="Start a new session">▶️ START SESSION</button>
-        <button class="btn-sub" id="sessionEndBtn" title="End active session" style="border-color:var(--red); color:var(--red);">⏹️ END SESSION</button>
+      <div class="intel-header">🧭 SESSION SUMMARY</div>
+      
+      <div style="display:flex; gap:8px; margin:10px 0;">
+        <button class="btn-sub" id="startSessionBtn" style="flex:1;">▶️ START SESSION</button>
+        <button class="btn-sub" id="endSessionBtn" style="flex:1; border-color:var(--red); color:var(--red);">⏹ END SESSION</button>
       </div>
-
       <div id="totalsSummary" class="muted">No active session.</div>
-    </div>
 
-<div id="totalsSummary" class="muted">No data yet.</div>
     </div>
 
     <!-- Favourites -->
@@ -258,8 +257,10 @@
       </div>
       <div class="edit-grid">
         <input type="number" id="len" placeholder="Length (cm)" style="margin:0;">
-        <input type="file" id="photo" class="photo-input" accept="image/*" />
-        <label for="photo" class="photo-btn" title="Add photo" aria-label="Add photo">📷</label>
+        <div class="photo-actions">
+  <input type="file" id="photo" class="photo-input" accept="image/*">
+  <label for="photo" class="photo-btn" title="Add photo" aria-label="Add photo">📷</label>
+</div>
       </div>
       <textarea id="notes" placeholder="Notes..." style="margin-top:8px; height:70px;"></textarea>
       <button class="btn-main" id="saveBtn">💾 SAVE RECORD</button>
@@ -287,7 +288,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, getDocs, where, deleteDoc, doc, orderBy, limit, updateDoc} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDICIj5QIcCLhrq_tlC0QsLKwpB4T7CkoU",
@@ -311,155 +312,6 @@
     let map, marker;
     let selectedDate = "";
     let currentUid = null;
-
-    let sessions = [];
-    let activeSession = null;
-
-    function getMarkerLocation() {
-      try {
-        if (marker && typeof marker.getLatLng === "function") {
-          const ll = marker.getLatLng();
-          return { lat: ll.lat, lon: ll.lng };
-        }
-      } catch {}
-      return null;
-    }
-
-    async function fetchActiveSession() {
-      if (!currentUid) return null;
-      const qy = query(
-        collection(db, "sessions"),
-        where("userId", "==", currentUid),
-        where("endAt", "==", null),
-        orderBy("startAt", "desc"),
-        limit(1)
-      );
-      const snap = await getDocs(qy);
-      const doc0 = snap.docs[0];
-      activeSession = doc0 ? ({ id: doc0.id, ...doc0.data() }) : null;
-      return activeSession;
-    }
-
-    async function endAllActiveSessions() {
-      if (!currentUid) return;
-      const qy = query(
-        collection(db, "sessions"),
-        where("userId", "==", currentUid),
-        where("endAt", "==", null),
-        orderBy("startAt", "desc"),
-        limit(5)
-      );
-      const snap = await getDocs(qy);
-      const now = Date.now();
-      await Promise.all(snap.docs.map(d => updateDoc(doc(db, "sessions", d.id), { endAt: now, updatedAt: now })));
-    }
-
-    async function startSession() {
-      if (!currentUid) return null;
-      await endAllActiveSessions();
-
-      const now = Date.now();
-      const loc = getMarkerLocation();
-      const ref = await addDoc(collection(db, "sessions"), {
-        userId: currentUid,
-        startAt: now,
-        endAt: null,
-        port: envData.port || "Unknown",
-        location: loc ? { ...loc } : null,
-        createdAt: now,
-        updatedAt: now
-      });
-
-      activeSession = { id: ref.id, userId: currentUid, startAt: now, endAt: null, port: envData.port || "Unknown", location: loc ? { ...loc } : null };
-      updateSessionUI();
-      notify("SESSION STARTED");
-      return activeSession;
-    }
-
-    async function endActiveSession() {
-      if (!activeSession?.id) { notify("No active session"); return; }
-      const now = Date.now();
-      await updateDoc(doc(db, "sessions", activeSession.id), { endAt: now, updatedAt: now });
-      activeSession = null;
-      updateSessionUI();
-      notify("SESSION ENDED");
-    }
-
-    async function ensureActiveSession() {
-      if (activeSession) return activeSession;
-      await fetchActiveSession();
-      return activeSession || await startSession();
-    }
-
-    function msToHhMm(ms) {
-      const mins = Math.max(0, Math.round(ms / 60000));
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      return h ? `${h}h ${m}m` : `${m}m`;
-    }
-
-    function computeCaughtAt(dStr, tStr, sessionStartAt) {
-      // Prefer user-entered dt/time when both exist; otherwise now.
-      if (dStr && tStr) {
-        const dt = new Date(`${dStr}T${tStr}`);
-        let t = dt.getTime();
-        if (Number.isFinite(sessionStartAt) && t < sessionStartAt) {
-          // Overnight session: if user entered time after midnight but date stayed on start date, bump +1 day
-          t += 24 * 60 * 60 * 1000;
-        }
-        return t;
-      }
-      return Date.now();
-    }
-
-    function buildSessionSummaryHtml() {
-      if (!activeSession) return "No active session. Tap <b>START SESSION</b> to begin.";
-
-      const endAt = activeSession.endAt ?? Date.now();
-      const duration = msToHhMm(endAt - activeSession.startAt);
-
-      const sessCatches = catches.filter(c => c.sessionId === activeSession.id);
-      const bySpecies = {};
-      for (const c of sessCatches) {
-        const k = (c.sp || "UNKNOWN").trim() || "UNKNOWN";
-        bySpecies[k] = (bySpecies[k] || 0) + 1;
-      }
-      const top = Object.entries(bySpecies).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-      const locLine = activeSession.port ? `<div><b>Port:</b> ${escapeHtml(activeSession.port)}</div>` : "";
-      const topLine = top.length ? `<div style="margin-top:8px;"><b>Species:</b> ${top.map(([s,n])=>`${escapeHtml(s)} (${n})`).join(", ")}</div>` : "";
-
-      return `
-        <div><b>Status:</b> ACTIVE</div>
-        <div><b>Duration:</b> ${duration}</div>
-        <div><b>Catches:</b> ${sessCatches.length}</div>
-        ${locLine}
-        ${topLine}
-      `;
-    }
-
-    function updateSessionUI() {
-      const btn = document.getElementById("totalsBtn");
-      const box = document.getElementById("totalsBox");
-      const summary = document.getElementById("totalsSummary");
-
-      if (!btn || !summary) return;
-
-      if (!activeSession) {
-        btn.innerText = "🎣 SESSION: OFF";
-        document.getElementById("sessionEndBtn")?.setAttribute("disabled", "disabled");
-        summary.innerHTML = buildSessionSummaryHtml();
-        return;
-      }
-
-      const duration = msToHhMm((activeSession.endAt ?? Date.now()) - activeSession.startAt);
-      const sessCount = catches.filter(c => c.sessionId === activeSession.id).length;
-      btn.innerText = `🎣 SESSION: ${duration} • ${sessCount}`;
-      document.getElementById("sessionEndBtn")?.removeAttribute("disabled");
-
-      if (box?.style.display === "block") summary.innerHTML = buildSessionSummaryHtml();
-    }
-
 
     let envData = { id:"", port:"Unknown", press:"--", temp:"--", wind:"--", gust:"", weather:"--", tide:"--", flow:"--", tideDir:"--", tideETA:"--" };
 
@@ -575,9 +427,7 @@
       placeholder.selected = true;
       s.appendChild(placeholder);
 
-      const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), {
-        headers: { 'Ocp-Apim-Subscription-Key': AD_KEY }
-      });
+      const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations?subscription-key=${AD_KEY}`));
       const d = await r.json();
 
       allPorts = (d?.features || [])
@@ -591,7 +441,7 @@
 
       allPorts.forEach(p => {
         const o = document.createElement('option');
-        o.value = p.id;
+        o.value = p.idd;
         o.textContent = p.name;
         s.appendChild(o);
       });
@@ -691,9 +541,7 @@
 
       try {
         const tr = await fetch(
-          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${portId}/TidalEvents?duration=7`),
-          { headers: { 'Ocp-Apim-Subscription-Key': AD_KEY } }
-        );
+          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${portId}/TidalEvents?duration=7&subscription-key=${AD_KEY}`));
         const td = await tr.json();
 
         if (!Array.isArray(td) || !td.length) {
@@ -701,7 +549,26 @@
           return;
         }
 
-        const byDay = new Map();
+        
+
+        // Also update the main Tide HUD using the same 7‑day data (more reliable than the 1‑day fetch in some environments)
+        try {
+          const now0 = new Date();
+          const events0 = td.map(e => ({...e, _dt:new Date(e.DateTime)})).sort((a,b)=>a._dt-b._dt);
+          const next0 = events0.find(e => e._dt > now0);
+          if (next0) {
+            const type0 = String(next0.EventType || '').replace('Water','');
+            const ht0 = (typeof next0.Height === 'number') ? next0.Height.toFixed(1) : "--";
+            const eta0 = fmtDuration(next0._dt - now0);
+            const dir0 = type0.toLowerCase().includes("high") ? "Rising" : "Falling";
+            const a = document.getElementById('hTide');
+            const b = document.getElementById('hTideD');
+            if (a) a.innerText = `${ht0}m ${type0}`;
+            if (b) b.innerText = `${dir0} • in ${eta0}`;
+          }
+        } catch {}
+
+const byDay = new Map();
         for (const e of td) {
           const dt = new Date(e.DateTime);
           const dayKey = dt.toDateString();
@@ -760,8 +627,7 @@
       // Tide next event + ETA + rising/falling approx
       try {
         const tr = await fetch(
-          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`),
-          { headers: { 'Ocp-Apim-Subscription-Key': AD_KEY } }
+          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1&subscription-key=${AD_KEY}`)
         );
         const td = await tr.json();
         const now = new Date();
@@ -915,6 +781,114 @@ Notes: ${c.notes || ""}`.trim();
       await deleteDoc(doc(db, "catches", id));
     };
 
+    
+    // ===== Session Engine (one active session) =====
+    const SessionEngine = (() => {
+      const KEY = "aos_sessions_v1";
+      const now = () => Date.now();
+      const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(now()) + Math.random().toString(16).slice(2));
+
+      const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+      const write = (rows) => localStorage.setItem(KEY, JSON.stringify(rows));
+
+      const getActive = () => read().find(s => !s.endAt) || null;
+
+      const start = ({ port="", lat=null, lon=null, acc=null } = {}) => {
+        const rows = read().map(s => s.endAt ? s : ({ ...s, endAt: now(), updatedAt: now() })); // auto-end any active
+        const s = {
+          id: "sess_" + uid(),
+          startAt: now(),
+          endAt: null,
+          port,
+          lat, lon, acc,
+          createdAt: now(),
+          updatedAt: now()
+        };
+        rows.push(s);
+        write(rows);
+        return s;
+      };
+
+      const end = (id=null) => {
+        const rows = read();
+        const s = id ? rows.find(x => x.id === id) : rows.find(x => !x.endAt);
+        if (!s || s.endAt) return s || null;
+        s.endAt = now();
+        s.updatedAt = now();
+        write(rows);
+        return s;
+      };
+
+      const ensureActive = (meta={}) => getActive() || start(meta);
+
+      const durationMs = (s) => ( (s.endAt || now()) - s.startAt );
+      const durationLabel = (ms) => {
+        const mins = Math.max(0, Math.round(ms/60000));
+        const h = Math.floor(mins/60), m = mins%60;
+        return h ? `${h}h ${m}m` : `${m}m`;
+      };
+
+      return { read, write, getActive, start, end, ensureActive, durationMs, durationLabel };
+    })();
+
+    function getSessionMetaFromEnv(){
+      return {
+        port: envData.port || "",
+        lat: envData.lat ?? null,
+        lon: envData.lon ?? null,
+        acc: envData.acc ?? null
+      };
+    }
+
+    function formatLocal(dt){
+      try {
+        return new Date(dt).toLocaleString([], { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      } catch { return ""; }
+    }
+
+    function buildSessionSummaryHtml() {
+      const s = SessionEngine.getActive();
+      if (!s) return `<div class="muted">No active session. Press <b>START SESSION</b> or save a catch to auto-start.</div>`;
+
+      // Use in-memory catches array filtered by sessionId (if present)
+      const sessionCatches = catches.filter(c => c.sessionId === s.id);
+      const totalCount = sessionCatches.length;
+      const totalWeight = sessionCatches.reduce((sum, c) => sum + (Number(c.wt)||0), 0);
+
+      const bySpecies = {};
+      for (const c of sessionCatches) {
+        const k = (c.sp || "UNKNOWN").toUpperCase();
+        bySpecies[k] = (bySpecies[k] || 0) + 1;
+      }
+      const rows = Object.entries(bySpecies)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([sp,n]) => `<div class="row" style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);">
+          <div><b>${escapeHtml(sp)}</b></div><div>${n}</div>
+        </div>`).join("");
+
+      return `
+        <div class="card" style="padding:10px;">
+          <div><b>Session:</b> ${escapeHtml(s.port || "—")}</div>
+          <div><b>Start:</b> ${escapeHtml(formatLocal(s.startAt))}</div>
+          <div><b>Duration:</b> ${escapeHtml(SessionEngine.durationLabel(SessionEngine.durationMs(s)))}</div>
+          <div style="margin-top:6px;"><b>Total caught:</b> ${totalCount}</div>
+          <div><b>Total weight:</b> ${totalWeight.toFixed(1)} lb</div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="intel-header" style="margin:0 0 6px;">Species breakdown</div>
+          ${rows || `<div class="muted">No catches in this session yet.</div>`}
+        </div>
+      `;
+    }
+
+    function updateSessionBadge(){
+      const s = SessionEngine.getActive();
+      const n = s ? catches.filter(c => c.sessionId === s.id).length : 0;
+      const btn = document.getElementById('totalsBtn');
+      if (btn) btn.textContent = `🧭 SESSION: ${n}`;
+    }
+
+
     // ===== Inline edit =====
     const editState = new Map();
 
@@ -1018,8 +992,10 @@ Notes: ${c.notes || ""}`.trim();
             </div>
             <div class="edit-grid">
               <input id="el_${c.id}" type="number" value="${escapeHtml(String(c.len ?? 0))}" placeholder="Length (cm)" />
-              <input id="ep_${c.id}" type="file" class="photo-input" accept="image/*" />
-              <label for="ep_${c.id}" class="photo-btn" title="Replace photo" aria-label="Replace photo">📷</label>
+              <div class="photo-actions">
+  <input id="ep_${c.id}" type="file" class="photo-input" accept="image/*" />
+  <label for="ep_${c.id}" class="photo-btn" title="Replace photo" aria-label="Replace photo">📷</label>
+</div>
             </div>
             <textarea id="en_${c.id}" style="height:80px;" placeholder="Notes...">${escapeHtml(c.notes || "")}</textarea>
 
@@ -1069,7 +1045,22 @@ Notes: ${c.notes || ""}`.trim();
       }
     }
 
-    // ===== Totals (session-based) =====
+    // ===== Totals (today only) =====
+    function buildTodaySummaryHtml() {
+      const dtStr = todayStr();
+      const dayCatches = catches.filter(c => c.dt === dtStr);
+      const totalCount = dayCatches.length;
+      const totalWeight = dayCatches.reduce((sum, c) => sum + Number(c.wt || 0), 0);
+
+      const bySpecies = new Map();
+      for (const c of dayCatches) {
+        const sp = (c.sp || "UNKNOWN").toUpperCase();
+        const obj = bySpecies.get(sp) || { count: 0, weight: 0 };
+        obj.count += 1;
+        obj.weight += Number(c.wt || 0);
+        bySpecies.set(sp, obj);
+      }
+
       const rows = [...bySpecies.entries()]
         .sort((a,b) => b[1].count - a[1].count)
         .map(([sp, v]) => `
@@ -1108,13 +1099,11 @@ Notes: ${c.notes || ""}`.trim();
       const file = document.getElementById('photo').files?.[0];
       const photo = file ? await fileToCompressedDataUrl(file, 900, 0.72) : "";
 
-      const sess = await ensureActiveSession();
-      const caughtAt = computeCaughtAt(dStr, tStr, sess?.startAt);
+      const nowMs = Date.now();
+      const activeSession = SessionEngine.ensureActive(getSessionMetaFromEnv());
 
       await addDoc(collection(db, "catches"), {
         userId: auth.currentUser.uid,
-        sessionId: sess.id,
-        caughtAt,
         sp: s.toUpperCase(),
         wt,
         len,
@@ -1134,10 +1123,14 @@ Notes: ${c.notes || ""}`.trim();
         tide: envData.tide || "",
         flow: envData.flow || "",
 
+        sessionId: activeSession.id,
+        caughtAt: nowMs,
+
         createdAt: Date.now(),
-        timestamp: caughtAt
+        timestamp: Date.now()
       });
 
+      updateSessionBadge();
       notify("RECORD SAVED");
       document.getElementById('sp').value = "";
       document.getElementById('wt').value = "";
@@ -1228,6 +1221,25 @@ Notes: ${c.notes || ""}`.trim();
         }
       };
 
+
+
+      document.getElementById('startSessionBtn').onclick = async () => {
+        // Start (auto-ends any existing)
+        const s = SessionEngine.start(getSessionMetaFromEnv());
+        updateSessionBadge();
+        document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+        notify("Session started");
+      };
+
+      document.getElementById('endSessionBtn').onclick = async () => {
+        const s = SessionEngine.getActive();
+        if (!s) return notify("No active session");
+        SessionEngine.end(s.id);
+        updateSessionBadge();
+        document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+        notify("Session ended");
+      };
+
       document.getElementById('aboutBtn').onclick = () => {
         const year = new Date().getFullYear();
         openModal("About AnglerOS", `
@@ -1240,20 +1252,11 @@ Notes: ${c.notes || ""}`.trim();
           </div>
         `);
       };
-    
-      // Session controls
-      const ss = document.getElementById("sessionStartBtn");
-      const se = document.getElementById("sessionEndBtn");
-      if (ss) ss.addEventListener("click", async () => { await startSession(); });
-      if (se) se.addEventListener("click", async () => { await endActiveSession(); });
-}
+    }
 
     // ===== App init =====
     async function initApp(uid) {
       currentUid = uid;
-
-      await fetchActiveSession();
-      updateSessionUI();
 
       initMapOnce();
       await loadPorts();
@@ -1270,11 +1273,11 @@ Notes: ${c.notes || ""}`.trim();
         qy,
         (snap) => {
           catches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          updateSessionUI();
+          document.getElementById('totalsBtn').innerText = `📊 TOTALS: ${catches.length}`;
 
           const box = document.getElementById('totalsBox');
           if (box.style.display === 'block') {
-            document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+            document.getElementById('totalsSummary').innerHTML = buildTodaySummaryHtml();
           }
 
           renderCalendar();
