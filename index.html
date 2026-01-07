@@ -1069,22 +1069,7 @@ Notes: ${c.notes || ""}`.trim();
       }
     }
 
-    // ===== Totals (today only) =====
-    function buildSessionSummaryHtml() {
-      const dtStr = todayStr();
-      const dayCatches = catches.filter(c => c.dt === dtStr);
-      const totalCount = dayCatches.length;
-      const totalWeight = dayCatches.reduce((sum, c) => sum + Number(c.wt || 0), 0);
-
-      const bySpecies = new Map();
-      for (const c of dayCatches) {
-        const sp = (c.sp || "UNKNOWN").toUpperCase();
-        const obj = bySpecies.get(sp) || { count: 0, weight: 0 };
-        obj.count += 1;
-        obj.weight += Number(c.wt || 0);
-        bySpecies.set(sp, obj);
-      }
-
+    // ===== Totals (session-based) =====
       const rows = [...bySpecies.entries()]
         .sort((a,b) => b[1].count - a[1].count)
         .map(([sp, v]) => `
