@@ -128,6 +128,23 @@
     #modalClose{background:none;border:none;color:var(--gold);font-weight:900;font-size:1.2rem;cursor:pointer;}
 
     .muted{opacity:0.7}
+
+    /* Photo picker: use camera icon instead of "Choose file" */
+    .photo-input{display:none;}
+    .photo-btn{
+      display:flex;align-items:center;justify-content:center;
+      height:44px;width:100%;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:var(--navy);
+      color:var(--gold);
+      font-size:1.15rem;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .photo-btn:active{transform:scale(.99);}
+
   </style>
 </head>
 
@@ -232,7 +249,8 @@
       </div>
       <div class="edit-grid">
         <input type="number" id="len" placeholder="Length (cm)" style="margin:0;">
-        <input type="file" id="catchPhoto" accept="image/*" style="margin:0;">
+        <input type="file" id="photo" class="photo-input" accept="image/*" />
+        <label for="photo" class="photo-btn" title="Add photo" aria-label="Add photo">📷</label>
       </div>
       <textarea id="notes" placeholder="Notes..." style="margin-top:8px; height:70px;"></textarea>
       <button class="btn-main" id="saveBtn">💾 SAVE RECORD</button>
@@ -841,7 +859,8 @@ Notes: ${c.notes || ""}`.trim();
             </div>
             <div class="edit-grid">
               <input id="el_${c.id}" type="number" value="${escapeHtml(String(c.len ?? 0))}" placeholder="Length (cm)" />
-              <input id="ep_${c.id}" type="file" accept="image/*" />
+              <input id="ep_${c.id}" type="file" class="photo-input" accept="image/*" />
+              <label for="ep_${c.id}" class="photo-btn" title="Replace photo" aria-label="Replace photo">📷</label>
             </div>
             <textarea id="en_${c.id}" style="height:80px;" placeholder="Notes...">${escapeHtml(c.notes || "")}</textarea>
 
