@@ -1,401 +1,1131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Angler OS v13.1</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        :root { --navy: #050b14; --card: #121c2b; --sea: #34e89e; --gold: #f4af1b; --white: #f1f2f6; --text: #cbd5e0; --red: #ff4757; --border: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--navy); margin: 0; padding: 10px; color: var(--text); }
-        .app-container { max-width: 500px; margin: 0 auto; padding-bottom: 100px; }
-        
-        /* UI Components */
-        .drawer { display: none; background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 20px; margin-bottom: 15px; position: relative; }
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .hud-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; }
-        .val { font-size: 1.1rem; font-weight: bold; color: var(--white); }
-        .sub-val { font-size: 0.7rem; font-weight: bold; display: block; color: var(--sea); }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Angler OS</title>
 
-        /* Modal Styles */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .modal-content { background: var(--card); border: 2px solid var(--gold); border-radius: 20px; width: 85%; max-width: 400px; padding: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        /* Buttons */
-        .btn-main { width: 100%; background: var(--sea); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { background: var(--card); border: 1px solid var(--border); color: var(--gold); padding: 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-        
-        /* Calendar */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 15px; background: var(--card); padding: 10px; border-radius: 15px; border: 1px solid var(--border); }
-        .cal-day { font-size: 0.8rem; padding: 8px 0; border-radius: 8px; cursor: pointer; position: relative; }
-        .cal-day.has-catch::after { content: ''; width: 4px; height: 4px; background: var(--sea); border-radius: 50%; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
-        .cal-day.selected { background: var(--sea); color: var(--navy); font-weight: 800; }
+  <style>
+    :root{
+      --navy:#050b14; --card:#121c2b; --sea:#34e89e; --gold:#f4af1b; --white:#f1f2f6;
+      --text:#cbd5e0; --red:#ff4757; --border:#1e293b; --muted:#64748b;
+    }
 
-        /* Forms */
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--navy); color: var(--white); box-sizing: border-box; }
-        .img-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; display: none; }
-        
-        #map { height: 160px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 10px; z-index: 1; }
-        #toast { visibility: hidden; min-width: 250px; background: var(--gold); color: var(--navy); text-align: center; border-radius: 10px; padding: 12px; position: fixed; z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%); font-weight: 800; }
-        #toast.show { visibility: visible; }
-        
-        /* Tide Table */
-        .tide-table { width: 100%; font-size: 0.75rem; border-collapse: collapse; }
-        .tide-table tr.day-head { background: var(--border); color: var(--sea); font-weight: bold; }
-        .tide-table td { padding: 6px; border-bottom: 1px solid #1e293b; }
-        .pb-badge { background: var(--gold); color: var(--navy); padding: 2px 5px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-left: 5px; }
+    *{ box-sizing:border-box; }
 
-        /* About Footer */
-        .footer-about { text-align: center; margin-top: 20px; }
-        .btn-about { background: transparent; border: none; color: #64748b; font-size: 0.7rem; text-decoration: underline; cursor: pointer; font-weight: bold; }
-    </style>
+    body{
+      font-family:'Segoe UI',sans-serif;background:var(--navy);
+      margin:0;padding:10px;color:var(--text);-webkit-tap-highlight-color:transparent;
+    }
+
+    .app-container{max-width:500px;margin:0 auto;padding-bottom:50px;display:none;}
+
+    #authScreen{
+      position:fixed;inset:0;background:var(--navy);z-index:9999;
+      display:flex;justify-content:center;align-items:center;
+    }
+    .auth-card{
+      background:var(--card);border:2px solid var(--gold);
+      padding:30px;border-radius:20px;width:85%;max-width:340px;text-align:center;
+    }
+
+    .drawer{display:none;background:var(--card);border:1px solid var(--gold);border-radius:15px;padding:15px;margin-bottom:15px;}
+    .card{background:var(--card);border:1px solid var(--border);padding:15px;border-radius:20px;margin-bottom:15px;}
+    .intel-card{border:1px solid var(--gold);border-radius:20px;padding:15px;margin-bottom:15px;background:var(--card);}
+
+    .intel-header{color:var(--gold);font-weight:900;margin-bottom:10px;display:flex;align-items:center;gap:8px;font-size:0.9rem;}
+    .intel-list{list-style:none;padding:0;margin:0;font-size:0.8rem;color:var(--white);line-height:1.8;margin-bottom:0;}
+    .intel-list li::before{content:"• ";color:var(--gold);font-weight:bold;}
+
+    /* Header with truly centered logo */
+    .app-header{
+      position:relative;
+      display:flex;
+      align-items:center;
+      margin-bottom:12px;
+      min-height:42px;
+      gap:8px;
+    }
+    .header-left,.header-right{display:flex;gap:8px;z-index:1;}
+    .header-right{margin-left:auto;}
+    .header-center{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      pointer-events:none;
+    }
+    .app-logo{
+      font-size:1.2rem;
+      font-weight:900;
+      color:var(--white);
+      letter-spacing:.5px;
+      white-space:nowrap;
+    }
+
+    .hud-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;}
+    .hud-item{background:var(--card);padding:12px;border-radius:12px;border:1px solid var(--border);text-align:center;}
+    .label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;font-weight:900;display:block;margin-bottom:4px;}
+    .val{font-size:1.05rem;font-weight:900;color:var(--white);}
+    .sub-val{font-size:0.72rem;font-weight:900;display:block;color:var(--sea);margin-top:2px;}
+    .sub-val.red{color:var(--red);}
+
+    .btn-main{
+      width:100%;background:var(--sea);color:var(--navy);border:none;
+      padding:14px;border-radius:12px;font-weight:900;cursor:pointer;margin-bottom:10px;
+      font-size:0.9rem;text-transform:uppercase;
+    }
+    .btn-sub{
+      background:var(--card);border:1px solid var(--border);color:var(--gold);
+      padding:10px;border-radius:10px;font-size:0.75rem;font-weight:900;cursor:pointer;
+    }
+
+    .btn-fav{
+      width:44px;min-width:44px;background:var(--card);border:1px solid var(--border);
+      color:var(--gold);border-radius:10px;font-size:1rem;font-weight:900;cursor:pointer;line-height:1;
+    }
+    .btn-fav.active{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+    .btn-fav.disabled{background:#2a3344;color:#7b879d;border-color:#2a3344;cursor:not-allowed;}
+
+    input,select,textarea{
+      width:100%;padding:12px;margin-bottom:8px;border:1px solid var(--border);
+      border-radius:10px;background:var(--navy);color:var(--white);
+    }
+    #map{height:180px;border-radius:15px;border:1px solid var(--border);margin-bottom:15px;cursor:crosshair;}
+
+    #toast{
+      visibility:hidden;min-width:250px;background:var(--gold);color:var(--navy);
+      text-align:center;border-radius:10px;padding:15px;position:fixed;z-index:100000;
+      left:50%;bottom:20px;transform:translateX(-50%);font-weight:900;
+    }
+    #toast.show{visibility:visible;}
+
+    .catch-meta{font-size:0.65rem;color:var(--muted);margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+    .thumb{width:100%;border-radius:12px;border:1px solid var(--border);margin-top:10px;cursor:pointer;}
+    .pb{border:1px solid var(--gold)!important;box-shadow:0 0 0 1px rgba(244,175,27,0.15);}
+    .pb-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:rgba(244,175,27,0.15);color:var(--gold);font-size:0.65rem;font-weight:900;}
+
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;}
+    .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:0.8rem;border-radius:10px;cursor:pointer;position:relative;color:var(--text);background:var(--navy);}
+    .cal-day.has-catch::after{content:'';width:6px;height:6px;background:var(--sea);border-radius:50%;position:absolute;bottom:4px;}
+    .cal-day.selected{background:var(--sea);color:var(--navy);font-weight:900;}
+
+    .tide-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+    .tide-table th,.tide-table td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:top;}
+    .tide-table th{color:var(--gold);text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;}
+    .day-row{color:var(--white);font-weight:900;padding-top:10px;}
+
+    .inline-actions{display:flex;flex-direction:column;gap:6px;}
+    .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+
+    /* Modal */
+    #modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200000;justify-content:center;align-items:center;padding:12px;}
+    #modal{width:100%;max-width:480px;background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:14px;}
+    #modalTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+    #modalTitle{margin:0;color:var(--white);font-size:1rem;font-weight:900;}
+    #modalClose{background:none;border:none;color:var(--gold);font-weight:900;font-size:1.2rem;cursor:pointer;}
+
+    .muted{opacity:0.7}
+  </style>
 </head>
+
 <body>
+  <div id="toast">Message</div>
 
-<div id="toast">Message</div>
-
-<div id="totalsModal" class="modal-overlay" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div id="modalBody"></div>
+  <div id="authScreen">
+    <div class="auth-card">
+      <h2 style="color:var(--white); margin-top:0;">ANGLER<span style="color:var(--sea)">OS</span></h2>
+      <input type="email" id="loginEmail" placeholder="Email Address" />
+      <input type="password" id="loginPass" placeholder="Password" />
+      <button class="btn-main" id="loginBtn">LOG IN</button>
     </div>
-</div>
+  </div>
 
-<div id="aboutModal" class="modal-overlay" onclick="closeAbout()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div style="text-align: center;">
-            <h2 style="color:var(--white); margin-top: 0;">ANGLER<span style="color:var(--sea)">OS</span></h2>
-            <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text);">
-                <p>Designed for the Serious Angler.</p>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-                <p style="font-size: 0.8rem; margin-bottom: 5px;">© 2026 <strong>Scott McKinley</strong></p>
-                <p style="font-size: 0.75rem; margin-top: 0;">All Rights Reserved.</p>
-                <p style="font-size: 0.65rem; opacity: 0.7; margin-top: 20px;">
-                    Version 13.1<br>
-                    Build: Stable 0131
-                </p>
-            </div>
-            <button class="btn-main" style="margin-top: 15px;" onclick="closeAbout()">CLOSE</button>
-        </div>
-    </div>
-</div>
+  <div class="app-container" id="mainApp">
+    <!-- Header -->
+    <div class="app-header">
+      <div class="header-left">
+        <button class="btn-sub" style="border-color:var(--red); color:var(--red);" id="logoutBtn">LOGOUT</button>
+        <button class="btn-sub" id="aboutBtn">ℹ️ ABOUT</button>
+      </div>
 
-<div class="app-container">
-    <div style="text-align:center;"><h1 style="color:var(--white)">ANGLER<span style="color:var(--sea)">OS</span> <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.6;">v13.1</small></h1></div>
+      <div class="header-center">
+        <span class="app-logo">ANGLER<span style="color:var(--sea)">OS</span></span>
+      </div>
 
-    <div class="hud-grid">
-        <button class="btn-sub" onclick="toggle('helpBox')">📘 HANDBOOK</button>
-        <button class="btn-sub" onclick="showSessionTotals()">📊 TOTALS</button>
+      <div class="header-right">
+        <button class="btn-sub" id="totalsBtn" title="Today's summary" style="white-space:nowrap;">📊 TOTALS: 0</button>
+      </div>
     </div>
 
-    <div id="helpBox" class="drawer">
-        <h4 style="color:var(--gold); margin:0;">🌊 FISHING INTEL</h4>
-        <p style="font-size:0.75rem; color:var(--text);">
-            • <b>Tides:</b> Best +/- 2hrs from High Tide.<br>
-            • <b>Pressure:</b> 1013hPa+ is stable.<br>
-            • <b>Flow:</b> 1.5 - 3.0 kn feeding zone.
-        </p>
-        <hr border="0" style="border-top:1px solid var(--border); margin:10px 0;">
-        <button class="btn-sub" style="width:100%;" onclick="toggle('favBox')">⭐ MANAGE FAVOURITES</button>
+    <!-- Totals drawer (today only) -->
+    <div id="totalsBox" class="drawer">
+      <div class="intel-header">📊 TODAY’S SUMMARY</div>
+      <div id="totalsSummary" class="muted">No data yet.</div>
     </div>
 
+    <!-- Favourites -->
+    <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="toggle('favBox')">⭐ FAVOURITES</button>
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
+    <!-- Fishing intel -->
+    <div class="intel-card">
+      <div class="intel-header">🌊 FISHING INTEL</div>
+      <ul class="intel-list">
+        <li>Tides: Best +/- 2hrs from High Tide.</li>
+        <li>Pressure: 1013hPa+ is stable.</li>
+        <li>Flow: 1.5 - 3.0 kn feeding zone.</li>
+      </ul>
+    </div>
+
     <div id="map"></div>
-    <button class="btn-main" onclick="syncGPS()">📍 SYNC TIDE & WEATHER</button>
+
+    <button class="btn-main" id="gpsSyncBtn">📍 Find Nearest Port</button>
 
     <div class="card" style="padding:10px;">
-        <div style="display:flex; gap:5px; margin-bottom:8px;">
-            <input type="text" id="pSearch" placeholder="Search ports..." oninput="filterPorts(this.value)" style="margin:0;">
-            <button class="btn-sub" onclick="addCurrentToFav()">⭐</button>
-        </div>
-        <select id="portList" onchange="handlePortSelect(this.value)"></select>
+      <div style="display:flex; gap:5px;">
+        <input type="text" id="pSearch" placeholder="Search ports..." style="margin:0;" />
+        <button class="btn-fav" id="addFavBtn" title="">⭐</button>
+      </div>
+      <select id="portList" style="margin-top:8px;"></select>
     </div>
 
     <div class="hud-grid">
-        <div class="hud-item"><span class="label">Tide</span><div id="hTide" class="val">--</div><span id="hTideD" class="sub-val">--</span></div>
-        <div class="hud-item"><span class="label">Flow</span><div id="hFlow" class="val">--</div><span class="sub-val">1.5-3.0kn Zone</span></div>
-        <div class="hud-item"><span class="label">Baro</span><div id="hBaro" class="val">--</div><span id="hBaroD" class="sub-val">--</span></div>
-        <div class="hud-item"><span class="label">Weather</span><div id="hCond" class="val">--</div><span id="hWind" class="sub-val">--</span></div>
+      <div class="hud-item">
+        <span class="label">Tide</span>
+        <div id="hTide" class="val">--</div>
+        <span id="hTideD" class="sub-val">--</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="label">Flow</span>
+        <div id="hFlow" class="val">--</div>
+        <span id="hFlowD" class="sub-val">--</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="label">Pressure</span>
+        <div id="hPress" class="val">--</div>
+        <span id="hPressD" class="sub-val">--</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="label">Weather</span>
+        <div id="hCond" class="val">--</div>
+        <span id="hWind" class="sub-val">--</span>
+        <span id="hGust" class="sub-val red" style="display:none;">--</span>
+      </div>
     </div>
 
-    <button class="btn-sub" style="width:100%; margin-bottom:15px; border-color:var(--gold);" onclick="toggle('tideDrawer')">📅 7-DAY TIDE OUTLOOK</button>
-    <div id="tideDrawer" class="drawer"><div id="tideOutlook">Select port...</div></div>
-
-    <div class="card" id="logForm">
-        <img id="imgPrev" class="img-preview">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <button class="btn-sub" onclick="document.getElementById('cam').click()">📸 PHOTO</button>
-            <input type="file" id="cam" accept="image/*" style="display:none" onchange="previewImg(event)">
-            <input type="text" id="sp" placeholder="Species" style="margin:0;">
-        </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
-            <input type="number" id="ln" placeholder="cm">
-            <input type="number" id="wt" placeholder="lb">
-        </div>
-        <textarea id="notes" placeholder="Notes..."></textarea>
-        <button class="btn-main" id="saveBtn" onclick="saveEntry()">💾 SAVE RECORD</button>
+    <button class="btn-sub" style="width:100%; margin-bottom:15px;" onclick="toggle('tideBox')">🌙 7-DAY TIDES</button>
+    <div id="tideBox" class="drawer">
+      <div class="intel-header">🌙 7-DAY TIDE OUTLOOK</div>
+      <div id="tideOutlook" class="muted">Select a port to load tides.</div>
     </div>
 
-    <div class="cal-grid" id="calGrid"></div>
+    <div class="card">
+      <div class="edit-grid">
+        <input type="text" id="sp" placeholder="Species" style="margin:0;">
+        <input type="number" id="wt" placeholder="Weight (lb)" style="margin:0;">
+      </div>
+      <div class="edit-grid">
+        <input type="number" id="len" placeholder="Length (cm)" style="margin:0;">
+        <input type="file" id="photo" accept="image/*" capture="environment" style="margin:0;">
+      </div>
+      <textarea id="notes" placeholder="Notes..." style="margin-top:8px; height:70px;"></textarea>
+      <button class="btn-main" id="saveBtn">💾 SAVE RECORD</button>
+    </div>
+
+    <div class="card">
+      <div class="intel-header">HISTORY CALENDAR</div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
     <div id="diary"></div>
+  </div>
 
-    <div class="footer-about">
-        <button class="btn-about" onclick="showAbout()">ABOUT ANGLEROS</button>
+  <!-- Modal overlay (About / image preview) -->
+  <div id="modalOverlay">
+    <div id="modal">
+      <div id="modalTop">
+        <h3 id="modalTitle">Modal</h3>
+        <button id="modalClose" aria-label="Close">✕</button>
+      </div>
+      <div id="modalBody"></div>
     </div>
-</div>
+  </div>
 
-<script>
-    const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39', PROXY = "https://corsproxy.io/?";
-    let catches = JSON.parse(localStorage.getItem('aos_logs_v98')) || [];
-    let favs = JSON.parse(localStorage.getItem('aos_favs_v98')) || [];
-    let allPorts = [], map, marker, editIdx = -1, curImg = "", selectedDate = "";
-    let env = { tide: "--", flow: "--", baro: "--", cond: "Clear", wind: "--", port: "Unknown" };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    window.onload = () => {
-        map = L.map('map').setView([54, -2], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        loadPorts(); updateFavs(); renderCalendar(); renderDiary();
+    const firebaseConfig = {
+      apiKey: "AIzaSyDICIj5QIcCLhrq_tlC0QsLKwpB4T7CkoU",
+      authDomain: "angleros.firebaseapp.com",
+      projectId: "angleros",
+      storageBucket: "angleros.firebasestorage.app",
+      messagingSenderId: "471426311094",
+      appId: "1:471426311094:web:25c0b54a6e1fa7a42e5717"
     };
 
-    function notify(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); }
-    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
-    
-    function closeModal() { document.getElementById('totalsModal').style.display = 'none'; }
-    function showAbout() { document.getElementById('aboutModal').style.display = 'flex'; }
-    function closeAbout() { document.getElementById('aboutModal').style.display = 'none'; }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
+    const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
+    const PROXY = "https://corsproxy.io/?";
+
+    let catches = [];
+    let allPorts = [];
+    let favs = JSON.parse(localStorage.getItem('aos_favs')) || [];
+    let map, marker;
+    let selectedDate = "";
+    let currentUid = null;
+
+    let envData = { id:"", port:"Unknown", press:"--", temp:"--", wind:"--", gust:"", weather:"--", tide:"--", flow:"--", tideDir:"--", tideETA:"--" };
+
+    function notify(m) {
+      const t = document.getElementById("toast");
+      t.innerText = m;
+      t.className = "show";
+      setTimeout(() => (t.className = ""), 3200);
+    }
+    window.notify = notify;
+
+    function escapeHtml(str) {
+      return (str ?? "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function toggle(id) {
+      const e = document.getElementById(id);
+      e.style.display = e.style.display === 'block' ? 'none' : 'block';
+    }
+    window.toggle = toggle;
+
+    // ===== Modal =====
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    document.getElementById('modalClose').onclick = () => closeModal();
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    function openModal(title, html) {
+      modalTitle.innerText = title;
+      modalBody.innerHTML = html;
+      modalOverlay.style.display = "flex";
+    }
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      modalBody.innerHTML = "";
+    }
+    window.openModal = openModal;
+
+    // ===== Date helpers =====
+    function todayStr() {
+      const now = new Date();
+      return `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    }
+    function fmtDuration(ms) {
+      const s = Math.max(0, Math.floor(ms/1000));
+      const h = Math.floor(s/3600);
+      const m = Math.floor((s%3600)/60);
+      if (h <= 0) return `${m}m`;
+      return `${h}h ${m}m`;
+    }
+
+    // ===== Weather helpers =====
+    function degToDir(deg) {
+      if (typeof deg !== "number") return "--";
+      const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+      return dirs[Math.round(deg/22.5) % 16];
+    }
+    function weatherCodeToText(code) {
+      const map = {
+        0:"Clear", 1:"Mainly clear", 2:"Partly cloudy", 3:"Overcast",
+        45:"Fog", 48:"Rime fog",
+        51:"Light drizzle", 53:"Drizzle", 55:"Heavy drizzle",
+        56:"Freezing drizzle", 57:"Heavy freezing drizzle",
+        61:"Light rain", 63:"Rain", 65:"Heavy rain",
+        66:"Freezing rain", 67:"Heavy freezing rain",
+        71:"Light snow", 73:"Snow", 75:"Heavy snow",
+        77:"Snow grains",
+        80:"Rain showers", 81:"Heavy showers", 82:"Violent showers",
+        85:"Snow showers", 86:"Heavy snow showers",
+        95:"Thunderstorm", 96:"Thunderstorm + hail", 99:"Thunderstorm + heavy hail"
+      };
+      return map[code] ?? "—";
+    }
+
+    // ✅ Proper Earth distance (meters)
+    function haversineMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = (v) => (v * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function nearestPort(lat, lon) {
+      if (!allPorts.length) return null;
+      let best = null;
+      let bestDist = Infinity;
+      for (const p of allPorts) {
+        const d = haversineMeters(lat, lon, p.lat, p.lon);
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      if (best) best._distMeters = bestDist;
+      return best;
+    }
+
+    // ===== Ports loading + search =====
     async function loadPorts() {
-        try {
-            const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-            const d = await r.json();
-            allPorts = d.features.map(f => ({ id: f.properties.Id, name: f.properties.Name, lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0] })).sort((a,b)=>a.name.localeCompare(b.name));
-            filterPorts("");
-        } catch(e) { notify("API Error"); }
-    }
+      const s = document.getElementById('portList');
+      s.innerHTML = "";
 
-    function filterPorts(q) {
-        const s = document.getElementById('portList');
-        s.innerHTML = '<option value="">-- Select Port --</option>';
-        allPorts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
-            const o = document.createElement('option'); o.value = p.id; o.innerText = p.name; s.appendChild(o);
+      const placeholder = document.createElement('option');
+      placeholder.value = "";
+      placeholder.textContent = "Please select a port...";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      s.appendChild(placeholder);
+
+      const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations`), {
+        headers: { 'Ocp-Apim-Subscription-Key': AD_KEY }
+      });
+      const d = await r.json();
+
+      allPorts = (d?.features || [])
+        .map(f => ({
+          id: f.properties.Id,
+          name: f.properties.Name,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0]
+        }))
+        .sort((a,b) => a.name.localeCompare(b.name));
+
+      allPorts.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p.id;
+        o.textContent = p.name;
+        s.appendChild(o);
+      });
+
+      const search = document.getElementById('pSearch');
+      search.oninput = () => {
+        const q = search.value.trim().toLowerCase();
+        [...s.options].forEach((opt, idx) => {
+          if (idx === 0) return;
+          opt.hidden = q && !opt.textContent.toLowerCase().includes(q);
         });
+      };
     }
 
-    async function handlePortSelect(id) {
-        if(!id) return;
-        const p = allPorts.find(x => x.id === id);
-        env.port = p.name;
-        document.getElementById('pSearch').value = "";
-        map.setView([p.lat, p.lon], 13);
-        if(marker) marker.setLatLng([p.lat, p.lon]); else marker = L.marker([p.lat, p.lon]).addTo(map);
-        await fetchTides(id);
-        await fetchWeather(p.lat, p.lon);
+    function resetPortSearchUI() {
+      const search = document.getElementById('pSearch');
+      search.value = "";
+      const s = document.getElementById('portList');
+      [...s.options].forEach((opt, idx) => { if (idx !== 0) opt.hidden = false; });
     }
 
-    async function fetchTides(id) {
-        const r = await fetch(PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=7`), { headers: {'Ocp-Apim-Subscription-Key': AD_KEY} });
-        const d = await r.json();
-        const now = new Date(), next = d.find(e => new Date(e.DateTime) > now);
-        if(next) {
-            env.tide = next.Height.toFixed(1) + "m";
-            const diff = Math.floor((new Date(next.DateTime)-now)/60000);
-            document.getElementById('hTide').innerText = env.tide;
-            document.getElementById('hTideD').innerText = `${next.EventType.replace('Water','')} in ${Math.floor(diff/60)}h ${diff%60}m`;
+    // ===== Favs =====
+    function setFavButtonState() {
+      const btn = document.getElementById('addFavBtn');
+      if (!envData.id) {
+        btn.classList.remove('active'); btn.classList.add('disabled');
+        btn.disabled = true; btn.title = "";
+        return;
+      }
+      const exists = favs.some(f => f.id === envData.id);
+      if (exists) {
+        btn.classList.remove('active'); btn.classList.add('disabled');
+        btn.disabled = true; btn.title = "Already a favourite";
+      } else {
+        btn.classList.add('active'); btn.classList.remove('disabled');
+        btn.disabled = false; btn.title = "Add to favourites";
+      }
+    }
+
+    function updateFavsUI() {
+      document.getElementById('favList').innerHTML = favs.map(f => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <span onclick="handlePort('${f.id}')" style="cursor:pointer">📍 ${escapeHtml(f.name)}</span>
+          <span onclick="remFav('${f.id}')" style="color:var(--red); cursor:pointer;">✕</span>
+        </div>
+      `).join('') || `<div class="muted" style="font-size:0.8rem;">No favourites yet.</div>`;
+      setFavButtonState();
+    }
+
+    window.remFav = (id) => {
+      favs = favs.filter(x => x.id !== id);
+      localStorage.setItem('aos_favs', JSON.stringify(favs));
+      updateFavsUI();
+      notify("Favourite removed");
+    };
+
+    // ===== Map =====
+    function initMapOnce() {
+      if (map) return;
+      map = L.map('map').setView([53.6, -0.2], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+      map.on('click', (e) => {
+        const n = nearestPort(e.latlng.lat, e.latlng.lng);
+        if (!n) return;
+        resetPortSearchUI();
+        document.getElementById('portList').value = n.id;
+        handlePort(n.id);
+        notify(`Selected: ${n.name}`);
+      });
+    }
+
+    // ===== Flow / Pressure trend =====
+    function classifyFlow(flowStr) {
+      const n = parseFloat(String(flowStr).replace("kn",""));
+      if (!isFinite(n)) return { label: "—", ok:false };
+      if (n >= 1.5 && n <= 3.0) return { label: "Feeding zone", ok:true };
+      if (n < 1.5) return { label: "Slow", ok:false };
+      return { label: "Fast", ok:false };
+    }
+
+    function pressureTrend(portId, current) {
+      const key = `aos_press_${portId}`;
+      const prev = JSON.parse(localStorage.getItem(key) || "null");
+      localStorage.setItem(key, JSON.stringify({ v: current, t: Date.now() }));
+
+      if (!prev || typeof prev.v !== "number") return "—";
+      const delta = current - prev.v;
+      if (Math.abs(delta) < 0.5) return "Stable";
+      return delta > 0 ? "Rising" : "Falling";
+    }
+
+    // ===== Tides outlook =====
+    async function renderTideOutlook(portId) {
+      const box = document.getElementById('tideOutlook');
+      box.innerHTML = `<div class="muted">Loading 7-day tides…</div>`;
+
+      try {
+        const tr = await fetch(
+          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${portId}/TidalEvents?duration=7`),
+          { headers: { 'Ocp-Apim-Subscription-Key': AD_KEY } }
+        );
+        const td = await tr.json();
+
+        if (!Array.isArray(td) || !td.length) {
+          box.innerHTML = `<div class="muted">No tide events returned.</div>`;
+          return;
         }
-        let html = '<table class="tide-table">', lastD = "";
-        d.slice(0,24).forEach(e => {
-            const dt = new Date(e.DateTime);
-            const dStr = dt.toLocaleDateString('en-GB', {weekday:'short', day:'numeric'});
-            if(dStr !== lastD) { html += `<tr class="day-head"><td colspan="3">${dStr}</td></tr>`; lastD = dStr; }
-            html += `<tr><td>${dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td><td>${e.EventType.replace('Water','')}</td><td>${e.Height.toFixed(1)}m</td></tr>`;
-        });
-        document.getElementById('tideOutlook').innerHTML = html + '</table>';
-    }
 
-    async function fetchWeather(lat, lon) {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code`);
-        const d = await r.json();
-        const codes = { 0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast", 61: "Rain", 71: "Snow", 95: "Storm" };
-        env.cond = codes[d.current.weather_code] || "Cloudy";
-        env.baro = d.current.surface_pressure.toFixed(1) + "hPa";
-        env.wind = `${d.current.wind_speed_10m.toFixed(0)}mph (Gust ${d.current.wind_gusts_10m.toFixed(0)}mph)`;
-        env.flow = (1.5 + Math.random() * 1.5).toFixed(1) + "kn";
-        document.getElementById('hBaro').innerText = env.baro;
-        document.getElementById('hBaroD').innerText = parseFloat(env.baro) > 1013 ? "Stable High" : "Low Pressure";
-        document.getElementById('hCond').innerText = `${d.current.temperature_2m.toFixed(1)}°C ${env.cond}`;
-        document.getElementById('hWind').innerText = env.wind;
-        document.getElementById('hFlow').innerText = env.flow;
-    }
-
-    function syncGPS() {
-        navigator.geolocation.getCurrentPosition(pos => {
-            const p = allPorts.reduce((prev, curr) => Math.hypot(prev.lat - pos.coords.latitude, prev.lon - pos.coords.longitude) < Math.hypot(curr.lat - pos.coords.latitude, curr.lon - pos.coords.longitude) ? prev : curr);
-            document.getElementById('pSearch').value = "";
-            filterPorts(""); 
-            handlePortSelect(p.id);
-            notify("GPS Synced to " + p.name);
-        });
-    }
-
-    function previewImg(e) {
-        const reader = new FileReader();
-        reader.onload = () => { curImg = reader.result; const i = document.getElementById('imgPrev'); i.src = curImg; i.style.display = 'block'; };
-        reader.readAsDataURL(e.target.files[0]);
-    }
-
-    function saveEntry() {
-        const s = document.getElementById('sp').value.trim();
-        if(!s) return notify("Enter Species");
-        let targetDate = new Date().toLocaleDateString('en-GB');
-        let targetTime = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        if(editIdx > -1) {
-            targetDate = catches[editIdx].dt;
-            targetTime = catches[editIdx].tm;
+        const byDay = new Map();
+        for (const e of td) {
+          const dt = new Date(e.DateTime);
+          const dayKey = dt.toDateString();
+          const type = String(e.EventType || '').replace('Water','');
+          const height = (typeof e.Height === 'number') ? e.Height.toFixed(1) + "m" : "--";
+          const time = dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+          if (!byDay.has(dayKey)) byDay.set(dayKey, []);
+          byDay.get(dayKey).push({ dt, time, type, height });
         }
-        const entry = {
-            sp: s.toUpperCase(), wt: parseFloat(document.getElementById('wt').value) || 0, ln: document.getElementById('ln').value,
-            dt: targetDate, tm: targetTime,
-            loc: env.port, env: `${env.tide} | ${env.flow} | ${env.baro} | ${env.cond}`, img: curImg, nt: document.getElementById('notes').value
-        };
-        if(editIdx > -1) catches[editIdx] = entry; else catches.unshift(entry);
-        localStorage.setItem('aos_logs_v98', JSON.stringify(catches));
-        editIdx = -1; curImg = ""; 
-        document.getElementById('imgPrev').style.display = 'none';
-        document.getElementById('saveBtn').innerText = "💾 SAVE RECORD";
-        ["sp","wt","ln","notes"].forEach(id => document.getElementById(id).value = "");
-        renderDiary(); renderCalendar(); notify("Record Saved");
-    }
 
-    function renderDiary() {
-        const pbs = {}; catches.forEach(c => { const s = c.sp.toUpperCase(); if(!pbs[s] || c.wt > pbs[s]) pbs[s] = c.wt; });
-        const filtered = selectedDate ? catches.filter(c => c.dt === selectedDate) : catches;
-        document.getElementById('diary').innerHTML = filtered.map((c, i) => {
-            const realIdx = catches.indexOf(c);
-            return `
-            <div class="card">
-                ${c.img ? `<img src="${c.img}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="color:var(--sea); font-weight:800;">${c.sp}${c.wt === pbs[c.sp.toUpperCase()] && c.wt > 0 ? '<span class="pb-badge">PB</span>' : ''}</span>
-                    <span>${c.ln}cm / ${c.wt}lb</span>
-                </div>
-                <div style="font-size:0.7rem; color:var(--gold); margin:5px 0;">📍 ${c.loc} | 📅 ${c.dt} @ ${c.tm}</div>
-                <div style="font-size:0.7rem; color:#64748b; border-bottom:1px solid var(--border); padding-bottom:5px;">${c.env}</div>
-                <p style="font-size:0.8rem; margin:10px 0;">${c.nt}</p>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
-                    <button class="btn-sub" onclick="editEntry(${realIdx})">EDIT</button>
-                    <button class="btn-sub" onclick="shareCatch(${realIdx})">SHARE</button>
-                    <button class="btn-sub" style="color:var(--red)" onclick="deleteCatch(${realIdx})">DEL</button>
-                </div>
-            </div>`;
-        }).join('');
-    }
+        const days = [...byDay.entries()].sort((a,b) => new Date(a[0]) - new Date(b[0]));
+        for (const [, list] of days) list.sort((a,b) => a.dt - b.dt);
 
-    function editEntry(i) {
-        const c = catches[i]; editIdx = i;
-        document.getElementById('sp').value = c.sp; document.getElementById('wt').value = c.wt;
-        document.getElementById('ln').value = c.ln; document.getElementById('notes').value = c.nt;
-        if(c.img) { curImg = c.img; const pr = document.getElementById('imgPrev'); pr.src = c.img; pr.style.display = 'block'; }
-        document.getElementById('saveBtn').innerText = "UPDATE RECORD";
-        window.scrollTo(0,0);
-    }
+        let html = `<table class="tide-table">
+          <thead><tr><th style="width:28%;">Day</th><th>High</th><th>Low</th></tr></thead><tbody>`;
 
-    function renderCalendar() {
-        const g = document.getElementById('calGrid');
-        g.innerHTML = ['M','T','W','T','F','S','S'].map(d => `<div style="font-size:0.6rem; color:#64748b; font-weight:bold;">${d}</div>`).join('');
-        const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        for(let d=1; d<=days; d++) {
-            const dStr = `${d.toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
-            const has = catches.some(c => c.dt === dStr);
-            g.innerHTML += `<div class="cal-day ${has?'has-catch':''} ${selectedDate===dStr?'selected':''}" onclick="filterDate('${dStr}')">${d}</div>`;
+        for (const [dayKey, list] of days) {
+          const dayLabel = new Date(dayKey).toLocaleDateString([], { weekday:'short', day:'2-digit', month:'short' });
+          const highs = list.filter(x => x.type.toLowerCase().includes("high")).map(x => `${x.time} <span class="muted">${x.height}</span>`).join("<br>") || "—";
+          const lows  = list.filter(x => x.type.toLowerCase().includes("low")).map(x => `${x.time} <span class="muted">${x.height}</span>`).join("<br>") || "—";
+          html += `<tr>
+            <td class="day-row">${dayLabel}</td>
+            <td>${highs}</td>
+            <td>${lows}</td>
+          </tr>`;
         }
-    }
-    function filterDate(d) { selectedDate = (selectedDate === d) ? "" : d; renderCalendar(); renderDiary(); }
 
-    function addCurrentToFav() {
-        if(env.port === "Unknown") return notify("Select port first");
-        if(!favs.find(f => f.name === env.port)) {
-            const pid = document.getElementById('portList').value;
-            favs.push({name: env.port, id: pid });
-            localStorage.setItem('aos_favs_v98', JSON.stringify(favs));
-            updateFavs(); notify("⭐ " + env.port + " saved");
-        }
+        html += `</tbody></table>`;
+        box.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        box.innerHTML = `<div class="muted">Failed to load tides.</div>`;
+      }
     }
-    function updateFavs() {
-        document.getElementById('favList').innerHTML = favs.map(f => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span onclick="handlePortSelect('${f.id}')" style="cursor:pointer">📍 ${f.name}</span><span onclick="removeFav('${f.name}')" style="color:var(--red); cursor:pointer; font-weight:bold">✕</span></div>`).join('') || "No favorites.";
-    }
-    function removeFav(n) { favs = favs.filter(f => f.name !== n); localStorage.setItem('aos_favs_v98', JSON.stringify(favs)); updateFavs(); }
-    function deleteCatch(i) { if(confirm("Delete?")) { catches.splice(i,1); localStorage.setItem('aos_logs_v98', JSON.stringify(catches)); renderDiary(); renderCalendar(); } }
-    
-    async function shareCatch(i) {
-        const c = catches[i];
-        const infoText = `${c.sp} | ${c.wt}lb | ${c.ln}cm\n📍 ${c.loc}\n📅 ${c.dt} @ ${c.tm}`;
-        
-        if (!navigator.share) return notify("Sharing not supported");
 
-        try {
-            if (c.img) {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                
-                img.onload = async () => {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    
-                    const fontSize = Math.floor(canvas.width * 0.04);
-                    const padding = fontSize;
-                    const lines = infoText.split('\n');
-                    const footerHeight = (lines.length * fontSize * 1.5) + (padding * 2);
-                    
-                    ctx.fillStyle = "rgba(5, 11, 20, 0.85)";
-                    ctx.fillRect(0, canvas.height - footerHeight, canvas.width, footerHeight);
-                    
-                    ctx.fillStyle = "#34e89e"; 
-                    ctx.font = `bold ${fontSize}px sans-serif`;
-                    
-                    lines.forEach((line, index) => {
-                        ctx.fillText(line, padding, canvas.height - footerHeight + padding + (index + 1) * fontSize * 1.2);
-                    });
+    // ===== Handle Port =====
+    async function handlePort(id) {
+      const p = allPorts.find(x => x.id === id);
+      if (!p) return;
 
-                    canvas.toBlob(async (blob) => {
-                        const file = new File([blob], `${c.sp}_shared.jpg`, { type: 'image/jpeg' });
-                        await navigator.share({
-                            files: [file],
-                            title: `AnglerOS: ${c.sp}`,
-                            text: infoText
-                        });
-                    }, 'image/jpeg', 0.8);
-                };
-                img.src = c.img;
-            } else {
-                await navigator.share({
-                    title: `AnglerOS: ${c.sp}`,
-                    text: infoText
-                });
-            }
-        } catch (e) { 
-            notify("Share Canceled");
-        }
-    }
-    
-    function showSessionTotals() {
-        const today = new Date().toLocaleDateString('en-GB'), session = catches.filter(c => c.dt === today);
-        const total = session.reduce((s, c) => s + (parseFloat(c.wt) || 0), 0);
-        let h = `<h3 style="margin:0; color:var(--gold); text-align:center;">TODAY: ${today}</h3><hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">`;
-        if(session.length === 0) {
-            h += `<div style="text-align:center; padding:20px; color:#64748b;">No catches recorded today.</div>`;
+      envData.id = id;
+      envData.port = p.name;
+
+      // ✅ Keep UI in sync regardless of selection method
+      resetPortSearchUI();
+      const sel = document.getElementById('portList');
+      if (sel) sel.value = id;
+
+      initMapOnce();
+      map.setView([p.lat, p.lon], 13);
+      if (marker) marker.setLatLng([p.lat, p.lon]);
+      else marker = L.marker([p.lat, p.lon]).addTo(map);
+
+      setFavButtonState();
+
+      // Tide next event + ETA + rising/falling approx
+      try {
+        const tr = await fetch(
+          PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${id}/TidalEvents?duration=1`),
+          { headers: { 'Ocp-Apim-Subscription-Key': AD_KEY } }
+        );
+        const td = await tr.json();
+        const now = new Date();
+        const events = Array.isArray(td) ? td.map(e => ({...e, _dt:new Date(e.DateTime)})).sort((a,b)=>a._dt-b._dt) : [];
+        const next = events.find(e => e._dt > now);
+
+        if (next) {
+          const type = String(next.EventType || '').replace('Water','');
+          const ht = (typeof next.Height === 'number') ? next.Height.toFixed(1) : "--";
+          const eta = fmtDuration(next._dt - now);
+          const dir = type.toLowerCase().includes("high") ? "Rising" : "Falling";
+          envData.tideDir = dir;
+          envData.tideETA = eta;
+          envData.tide = `${ht}m ${type}`;
+
+          document.getElementById('hTide').innerText = `${ht}m ${type}`;
+          document.getElementById('hTideD').innerText = `${dir} • in ${eta}`;
         } else {
-            session.forEach(c => h += `<div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;"><span>${c.sp}</span><span>${c.wt}lb</span></div>`);
-            h += `<hr style="border:0; border-top:1px solid var(--border); margin:10px 0;"><div style="display:flex; justify-content:space-between; color:var(--sea); font-size:1.1rem;"><b>TOTAL WEIGHT</b><b>${total.toFixed(2)}lb</b></div>`;
+          document.getElementById('hTide').innerText = "--";
+          document.getElementById('hTideD').innerText = "--";
         }
-        h += `<button class="btn-main" style="margin-top:20px; margin-bottom:0;" onclick="closeModal()">CLOSE</button>`;
-        document.getElementById('modalBody').innerHTML = h;
-        document.getElementById('totalsModal').style.display = 'flex';
+      } catch (err) {
+        console.error(err);
+      }
+
+      // Weather + Pressure + Flow label
+      try {
+        const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure`);
+        const wd = await wr.json();
+
+        const tempC = wd?.current?.temperature_2m;
+        const code  = wd?.current?.weather_code;
+        const windKmh = wd?.current?.wind_speed_10m;
+        const gustKmh = wd?.current?.wind_gusts_10m;
+        const windDir = wd?.current?.wind_direction_10m;
+        const press = wd?.current?.surface_pressure;
+
+        const tempTxt = (typeof tempC === 'number') ? `${tempC.toFixed(1)}°C` : "--";
+        const wxTxt = weatherCodeToText(code);
+        const windMph = (typeof windKmh === 'number') ? (windKmh * 0.621371) : NaN;
+        const gustMph = (typeof gustKmh === 'number') ? (gustKmh * 0.621371) : NaN;
+
+        const windDirTxt = degToDir(windDir);
+        const windTxt = isFinite(windMph) ? `${windDirTxt} ${windMph.toFixed(0)} mph` : "--";
+        const gustTxt = isFinite(gustMph) ? `Gusts ${gustMph.toFixed(0)} mph` : "";
+
+        envData.temp = tempTxt;
+        envData.weather = wxTxt;
+        envData.wind = windTxt;
+        envData.gust = gustTxt;
+
+        document.getElementById('hCond').innerText = `${tempTxt} • ${wxTxt}`;
+        document.getElementById('hWind').innerText = `💨 ${windTxt}`;
+        const gustEl = document.getElementById('hGust');
+        if (gustTxt) {
+          gustEl.style.display = "block";
+          gustEl.innerText = `⚠️ ${gustTxt}`;
+        } else {
+          gustEl.style.display = "none";
+        }
+
+        if (typeof press === 'number') {
+          const trend = pressureTrend(id, press);
+          envData.press = `${press.toFixed(1)} hPa`;
+          document.getElementById('hPress').innerText = envData.press;
+          document.getElementById('hPressD').innerText = trend;
+        } else {
+          document.getElementById('hPress').innerText = "--";
+          document.getElementById('hPressD').innerText = "--";
+        }
+
+        // Flow placeholder (until you swap to a real current API)
+        envData.flow = (1.5 + Math.random()).toFixed(1) + "kn";
+        const fc = classifyFlow(envData.flow);
+        document.getElementById('hFlow').innerText = envData.flow;
+        document.getElementById('hFlowD').innerText = fc.ok ? "Feeding zone" : fc.label;
+
+      } catch (err) {
+        console.error(err);
+      }
+
+      renderTideOutlook(id);
     }
-</script>
+    window.handlePort = handlePort;
+
+    // ===== Photo compression (Firestore-friendly) =====
+    async function fileToCompressedDataUrl(file, maxW=900, quality=0.72) {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = URL.createObjectURL(file);
+      });
+
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      URL.revokeObjectURL(img.src);
+      return canvas.toDataURL('image/jpeg', quality);
+    }
+
+    // ===== PB by WEIGHT only =====
+    function computePBMap(items) {
+      const best = new Map();
+      for (const c of items) {
+        const sp = (c.sp || "").toUpperCase();
+        const wt = Number(c.wt || 0);
+        if (!best.has(sp)) best.set(sp, { wt, id:c.id });
+        else if (wt > best.get(sp).wt) best.set(sp, { wt, id:c.id });
+      }
+      return best;
+    }
+
+    // ===== Share =====
+    function shareCatch(c) {
+      const text =
+`AnglerOS Catch Log
+Species: ${c.sp || ""}
+Weight: ${c.wt || 0} lb
+Length: ${c.len || 0} cm
+Location: ${c.loc || ""}
+Date: ${c.dt || ""} @ ${c.time || ""}
+Weather: ${c.weather || ""}, ${c.temp || ""}, Wind ${c.wind || ""} ${c.gust ? "(" + c.gust + ")" : ""}
+Pressure: ${c.press || c.baro || ""}
+Tide: ${c.tide || ""}
+Flow: ${c.flow || ""}
+Notes: ${c.notes || ""}`.trim();
+
+      if (navigator.share) {
+        navigator.share({ title:"AnglerOS Catch", text }).catch(()=>{});
+        return;
+      }
+      navigator.clipboard?.writeText(text)
+        .then(() => notify("Copied to clipboard"))
+        .catch(() => notify("Share not supported"));
+    }
+    window.shareCatchById = (id) => {
+      const c = catches.find(x => x.id === id);
+      if (c) shareCatch(c);
+    };
+
+    // ===== Delete =====
+    window.delCatch = async (id) => {
+      if (!confirm("Delete record?")) return;
+      await deleteDoc(doc(db, "catches", id));
+    };
+
+    // ===== Inline edit =====
+    const editState = new Map();
+
+    window.startEdit = (id) => {
+      const c = catches.find(x => x.id === id);
+      if (!c) return;
+      editState.set(id, { photo: c.photo || "" });
+      renderDiary();
+    };
+    window.cancelEdit = (id) => { editState.delete(id); renderDiary(); };
+
+    window.saveEdit = async (id) => {
+      const c = catches.find(x => x.id === id);
+      if (!c) return;
+
+      const sp = document.getElementById(`es_${id}`).value.trim();
+      const wt = Number(document.getElementById(`ew_${id}`).value || 0);
+      const len = Number(document.getElementById(`el_${id}`).value || 0);
+      const notes = document.getElementById(`en_${id}`).value || "";
+      const staged = editState.get(id) || {};
+      const photo = staged.photo ?? (c.photo || "");
+
+      await updateDoc(doc(db, "catches", id), {
+        sp: sp.toUpperCase(),
+        wt,
+        len,
+        notes,
+        photo,
+        updatedAt: Date.now()
+      });
+
+      editState.delete(id);
+      notify("Record updated");
+    };
+
+    // ===== Diary =====
+    function renderDiary() {
+      const list = selectedDate ? catches.filter(c => c.dt === selectedDate) : catches;
+      const pbMap = computePBMap(catches);
+
+      document.getElementById('diary').innerHTML = list.map(c => {
+        const sp = (c.sp || "").toUpperCase();
+        const isPB = pbMap.get(sp)?.id === c.id;
+        const editing = editState.has(c.id);
+        const staged = editState.get(c.id) || {};
+        const photoToShow = staged.photo ?? c.photo ?? "";
+
+        if (!editing) {
+          const pbBadge = isPB ? `<span class="pb-badge">PB</span>` : "";
+          const photoHtml = photoToShow ? `<img class="thumb" src="${photoToShow}" onclick="openModal('Photo', '<img src=&quot;${photoToShow}&quot; style=&quot;width:100%;border-radius:12px;border:1px solid var(--border);&quot;>')">` : "";
+
+          return `
+            <div class="card ${isPB ? "pb" : ""}">
+              <div style="display:flex; justify-content:space-between; align-items:start; gap:10px;">
+                <div style="flex:1;">
+                  <b style="color:var(--sea);">${escapeHtml(sp)}</b>${pbBadge}
+                  <div style="margin-top:2px;"><small>${escapeHtml(String(c.wt ?? 0))}lb • ${escapeHtml(String(c.len ?? 0))}cm</small></div>
+                  <small style="color:var(--gold);">${escapeHtml(c.loc || '--')} | ${escapeHtml(c.dt || '--')} @ ${escapeHtml(c.time || '--:--')}</small>
+                </div>
+
+                <div class="inline-actions">
+                  <button class="btn-sub" onclick="startEdit('${c.id}')" style="padding:8px;">✏️ Edit</button>
+                  <button class="btn-sub" onclick="shareCatchById('${c.id}')" style="padding:8px;">📤 Share</button>
+                  <button class="btn-sub" onclick="delCatch('${c.id}')" style="padding:8px; border-color:var(--red); color:var(--red);">🗑️</button>
+                </div>
+              </div>
+
+              <div class="catch-meta" style="margin-top:10px;">
+                <span>🌡️ ${escapeHtml(c.temp || '--')} • ${escapeHtml(c.weather || '--')}</span>
+                <span>💨 ${escapeHtml(c.wind || '--')} ${c.gust ? `• <span style="color:var(--red); font-weight:900;">${escapeHtml(c.gust)}</span>` : ""}</span>
+                <span>🧭 Pressure: ${escapeHtml(c.press || c.baro || '--')}</span>
+                <span>🌊 Tide: ${escapeHtml(c.tide || '--')}</span>
+                <span>🚀 Flow: ${escapeHtml(c.flow || '--')}</span>
+                <span>📝 Notes: ${c.notes ? escapeHtml(c.notes) : '--'}</span>
+              </div>
+
+              ${photoHtml}
+            </div>
+          `;
+        }
+
+        return `
+          <div class="card ${isPB ? "pb" : ""}">
+            <div style="display:flex; justify-content:space-between; align-items:start; gap:10px;">
+              <div style="flex:1;">
+                <b style="color:var(--sea);">EDIT</b>
+                <div class="muted" style="font-size:0.75rem; margin-top:4px;">
+                  Original preserved: ${escapeHtml(c.dt || "")} @ ${escapeHtml(c.time || "")}
+                </div>
+              </div>
+              <div class="inline-actions">
+                <button class="btn-sub" onclick="cancelEdit('${c.id}')" style="padding:8px;">Cancel</button>
+                <button class="btn-sub" onclick="saveEdit('${c.id}')" style="padding:8px; border-color:var(--sea); color:var(--sea);">Save</button>
+              </div>
+            </div>
+
+            <div class="edit-grid" style="margin-top:12px;">
+              <input id="es_${c.id}" value="${escapeHtml(c.sp || "")}" placeholder="Species" />
+              <input id="ew_${c.id}" type="number" value="${escapeHtml(String(c.wt ?? 0))}" placeholder="Weight (lb)" />
+            </div>
+            <div class="edit-grid">
+              <input id="el_${c.id}" type="number" value="${escapeHtml(String(c.len ?? 0))}" placeholder="Length (cm)" />
+              <input id="ep_${c.id}" type="file" accept="image/*" />
+            </div>
+            <textarea id="en_${c.id}" style="height:80px;" placeholder="Notes...">${escapeHtml(c.notes || "")}</textarea>
+
+            <div class="muted" style="font-size:0.75rem;">Replace photo (optional). Photos are auto-compressed.</div>
+            ${photoToShow ? `<img class="thumb" src="${photoToShow}" onclick="openModal('Photo', '<img src=&quot;${photoToShow}&quot; style=&quot;width:100%;border-radius:12px;border:1px solid var(--border);&quot;>')">` : `<div class="muted" style="font-size:0.8rem; margin-top:10px;">No photo</div>`}
+          </div>
+        `;
+      }).join('') || `<div style="text-align:center; opacity:0.5;">No records</div>`;
+
+      for (const c of list) {
+        if (!editState.has(c.id)) continue;
+        const input = document.getElementById(`ep_${c.id}`);
+        if (!input) continue;
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const dataUrl = await fileToCompressedDataUrl(file, 900, 0.72);
+          editState.set(c.id, { ...(editState.get(c.id)||{}), photo: dataUrl });
+          renderDiary();
+        };
+      }
+    }
+
+    // ===== Calendar =====
+    function renderCalendar() {
+      const g = document.getElementById('calGrid');
+      g.innerHTML = "";
+      const now = new Date();
+      const m = now.getMonth();
+      const y = now.getFullYear();
+      const first = new Date(y, m, 1).getDay() || 7;
+      const total = new Date(y, m + 1, 0).getDate();
+
+      for (let i = 1; i < first; i++) g.appendChild(document.createElement('div'));
+
+      for (let d = 1; d <= total; d++) {
+        const dStr = `${String(d).padStart(2,'0')}/${String(m+1).padStart(2,'0')}/${y}`;
+        const div = document.createElement('div');
+        div.className = `cal-day ${catches.some(c => c.dt === dStr) ? 'has-catch' : ''} ${selectedDate === dStr ? 'selected' : ''}`;
+        div.innerText = d;
+        div.onclick = () => {
+          selectedDate = (selectedDate === dStr) ? "" : dStr;
+          renderCalendar();
+          renderDiary();
+        };
+        g.appendChild(div);
+      }
+    }
+
+    // ===== Totals (today only) =====
+    function buildTodaySummaryHtml() {
+      const dtStr = todayStr();
+      const dayCatches = catches.filter(c => c.dt === dtStr);
+      const totalCount = dayCatches.length;
+      const totalWeight = dayCatches.reduce((sum, c) => sum + Number(c.wt || 0), 0);
+
+      const bySpecies = new Map();
+      for (const c of dayCatches) {
+        const sp = (c.sp || "UNKNOWN").toUpperCase();
+        const obj = bySpecies.get(sp) || { count: 0, weight: 0 };
+        obj.count += 1;
+        obj.weight += Number(c.wt || 0);
+        bySpecies.set(sp, obj);
+      }
+
+      const rows = [...bySpecies.entries()]
+        .sort((a,b) => b[1].count - a[1].count)
+        .map(([sp, v]) => `
+          <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0; font-size:0.85rem;">
+            <div><b style="color:var(--sea)">${escapeHtml(sp)}</b> <span class="muted">x${v.count}</span></div>
+            <div><span class="muted">${v.weight.toFixed(1)}lb</span></div>
+          </div>
+        `).join("");
+
+      return `
+        <div style="font-size:0.85rem; margin-bottom:8px;">
+          <div><b>Date:</b> ${escapeHtml(dtStr)}</div>
+          <div style="margin-top:6px;"><b>Total caught:</b> ${totalCount}</div>
+          <div><b>Total weight:</b> ${totalWeight.toFixed(1)} lb</div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="intel-header" style="margin:0 0 6px;">Species breakdown</div>
+          ${rows || `<div class="muted">No catches recorded today.</div>`}
+        </div>
+      `;
+    }
+
+    // ===== Save catch =====
+    async function saveCatch() {
+      const s = document.getElementById('sp').value.trim();
+      if (!s) return notify("Enter Species");
+
+      const now = new Date();
+      const dStr = todayStr();
+      const tStr = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+      const wt = Number(document.getElementById('wt').value || 0);
+      const len = Number(document.getElementById('len').value || 0);
+      const notes = document.getElementById('notes').value || "";
+
+      const file = document.getElementById('photo').files?.[0];
+      const photo = file ? await fileToCompressedDataUrl(file, 900, 0.72) : "";
+
+      await addDoc(collection(db, "catches"), {
+        userId: auth.currentUser.uid,
+        sp: s.toUpperCase(),
+        wt,
+        len,
+        notes,
+        photo,
+
+        dt: dStr,
+        time: tStr,
+        loc: envData.port,
+
+        press: envData.press || "",
+        baro: envData.press || "",
+        temp: envData.temp || "",
+        weather: envData.weather || "",
+        wind: envData.wind || "",
+        gust: envData.gust || "",
+        tide: envData.tide || "",
+        flow: envData.flow || "",
+
+        createdAt: Date.now(),
+        timestamp: Date.now()
+      });
+
+      notify("RECORD SAVED");
+      document.getElementById('sp').value = "";
+      document.getElementById('wt').value = "";
+      document.getElementById('len').value = "";
+      document.getElementById('notes').value = "";
+      document.getElementById('photo').value = "";
+    }
+
+    // ===== Wire UI =====
+    function wireUI() {
+      document.getElementById('loginBtn').onclick = async () => {
+        try {
+          await signInWithEmailAndPassword(
+            auth,
+            document.getElementById('loginEmail').value,
+            document.getElementById('loginPass').value
+          );
+        } catch (e) {
+          console.error(e);
+          notify("Login Error");
+        }
+      };
+
+      document.getElementById('logoutBtn').onclick = () => signOut(auth);
+
+      document.getElementById('portList').onchange = (e) => {
+        const val = e.target.value;
+        if (val) handlePort(val);
+      };
+
+      document.getElementById('gpsSyncBtn').onclick = () => {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const acc = pos.coords.accuracy; // meters
+
+            const ACC_LIMIT = 5000; // 5km guardrail
+            if (!acc || acc > ACC_LIMIT) {
+              notify(`⚠️ GPS accuracy too low (±${Math.round(acc || 0)}m). Not selecting a port.`);
+              console.warn("Low-accuracy GPS:", { lat, lon, acc });
+              return;
+            }
+
+            const n = nearestPort(lat, lon);
+            if (!n) return notify("Ports not loaded yet");
+
+            resetPortSearchUI();
+            document.getElementById('portList').value = n.id;
+            handlePort(n.id);
+
+            const km = (n._distMeters / 1000).toFixed(1);
+            notify(`📍 GPS: ${n.name.toUpperCase()} (${km}km away, ±${Math.round(acc)}m)`);
+          },
+          err => {
+            console.warn("Geolocation error:", err);
+            notify("GPS Denied");
+          },
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
+        );
+      };
+
+      document.getElementById('addFavBtn').onclick = () => {
+        if (!envData.id) return;
+
+        const exists = favs.some(f => f.id === envData.id);
+        if (exists) {
+          notify(`"${envData.port}" is already a favourite`);
+          setFavButtonState();
+          return;
+        }
+
+        favs.push({ id: envData.id, name: envData.port });
+        localStorage.setItem('aos_favs', JSON.stringify(favs));
+        updateFavsUI();
+        notify(`Added "${envData.port}" to favourites`);
+      };
+
+      document.getElementById('saveBtn').onclick = saveCatch;
+
+      document.getElementById('totalsBtn').onclick = () => {
+        const box = document.getElementById('totalsBox');
+        if (box.style.display === 'block') {
+          box.style.display = 'none';
+        } else {
+          document.getElementById('totalsSummary').innerHTML = buildTodaySummaryHtml();
+          box.style.display = 'block';
+        }
+      };
+
+      document.getElementById('aboutBtn').onclick = () => {
+        const year = new Date().getFullYear();
+        openModal("About AnglerOS", `
+          <div style="font-size:0.9rem; line-height:1.6;">
+            <div><b>AnglerOS</b> v13.10.7</div>
+            <div class="muted">© ${year} AnglerOS. All rights reserved.</div>
+            <div class="muted" style="margin-top:10px;">
+              Prototype build for testing (Firestore-only photo storage with compression).
+            </div>
+          </div>
+        `);
+      };
+    }
+
+    // ===== App init =====
+    async function initApp(uid) {
+      currentUid = uid;
+
+      initMapOnce();
+      await loadPorts();
+      updateFavsUI();
+      setFavButtonState();
+
+      const qy = query(
+        collection(db, "catches"),
+        where("userId", "==", uid),
+        orderBy("timestamp", "desc")
+      );
+
+      onSnapshot(
+        qy,
+        (snap) => {
+          catches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          document.getElementById('totalsBtn').innerText = `📊 TOTALS: ${catches.length}`;
+
+          const box = document.getElementById('totalsBox');
+          if (box.style.display === 'block') {
+            document.getElementById('totalsSummary').innerHTML = buildTodaySummaryHtml();
+          }
+
+          renderCalendar();
+          renderDiary();
+        },
+        (err) => {
+          console.error("Firestore listener error:", err);
+          if (err?.code === "permission-denied") notify("Firestore blocked by rules (permission denied).");
+          else notify("Firestore error: " + (err?.code || "unknown"));
+        }
+      );
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      wireUI();
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          document.getElementById('authScreen').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          if (!currentUid) await initApp(user.uid);
+        } else {
+          currentUid = null;
+          document.getElementById('authScreen').style.display = 'flex';
+          document.getElementById('mainApp').style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
