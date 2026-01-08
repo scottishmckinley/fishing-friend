@@ -147,6 +147,89 @@
     }
     .photo-btn:active{transform:scale(.99);}
 
+  
+    /* Session bar */
+    .session-bar{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      background:rgba(18,28,43,.95);
+      border:1px solid var(--gold);
+      border-radius:14px;
+      padding:10px 12px;
+      margin-bottom:12px;
+    }
+    .session-left{display:flex; flex-direction:column; gap:2px; min-width:0;}
+    .session-title{font-weight:900; color:var(--white); font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .session-sub{font-weight:900; color:var(--muted); font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .session-actions{display:flex; gap:8px; flex:0 0 auto;}
+    .btn-pill{
+      border:1px solid var(--border);
+      background:var(--navy);
+      color:var(--gold);
+      padding:9px 10px;
+      border-radius:999px;
+      font-size:0.72rem;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .btn-pill.red{border-color:var(--red); color:var(--red);}
+    
+  
+    /* Header spacing fix */
+    .header{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .header-left{flex:0 0 auto;}
+    .header-center{flex:1 1 auto; text-align:center; padding:0 84px;} /* room for right buttons */
+    .header-right{flex:0 0 auto; display:flex; gap:8px; align-items:center;}
+    @media (max-width: 420px){
+      .header-center{padding:0 72px;}
+      #helpBtn{padding:10px 10px; min-width:auto;}
+      #totalsBtn{padding:10px 10px;}
+    }
+    
+  
+    /* Modal scroll fix */
+    .modal{
+      max-height: 90vh;
+      overflow: hidden;
+    }
+    .modal-content{
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal-header{
+      position: sticky;
+      top: 0;
+      background: var(--navy);
+      z-index: 2;
+    }
+    .modal-close{
+      background:none;
+      border:none;
+      color:var(--gold);
+      font-size:1.2rem;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    /* Modal fit + scroll (IDs) */
+    #modal{
+      max-height: 90vh;
+      overflow: hidden;
+    }
+    #modalTop{
+      position: sticky;
+      top: 0;
+      background: var(--navy);
+      z-index: 2;
+    }
+    #modalBody{
+      max-height: 78vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+    }
+    
   </style>
 </head>
 
@@ -175,18 +258,27 @@
       </div>
 
       <div class="header-right">
+        <button class="btn-sub" id="helpBtn" title="Help" style="white-space:nowrap;">❓</button>
         <button class="btn-sub" id="totalsBtn" title="Session summary" style="white-space:nowrap;">🧭 SESSION: 0</button>
       </div>
     </div>
 
-    <!-- Totals drawer (today only) -->
+
+    <!-- Session bar -->
+    <div id="sessionBar" class="session-bar" aria-label="Session controls">
+      <div class="session-left">
+        <div id="sessionTitle" class="session-title">No active session</div>
+        <div id="sessionSub" class="session-sub">Tap START to begin (auto-starts when you save your first catch).</div>
+      </div>
+      <div class="session-actions">
+        <button class="btn-pill" id="sessionStartBtn">▶️ START</button>
+        <button class="btn-pill red" id="sessionEndBtn">⏹ END</button>
+      </div>
+    </div>
+
+    <!-- Session summary drawer -->
     <div id="totalsBox" class="drawer">
       <div class="intel-header">🧭 SESSION SUMMARY</div>
-      
-      <div style="display:flex; gap:8px; margin:10px 0;">
-        <button class="btn-sub" id="startSessionBtn" style="flex:1;">▶️ START SESSION</button>
-        <button class="btn-sub" id="endSessionBtn" style="flex:1; border-color:var(--red); color:var(--red);">⏹ END SESSION</button>
-      </div>
       <div id="totalsSummary" class="muted">No active session.</div>
 
     </div>
@@ -195,14 +287,21 @@
     <button class="btn-sub" style="width:100%; margin-bottom:10px;" onclick="toggle('favBox')">⭐ FAVOURITES</button>
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
-    <!-- Fishing intel -->
+    <!-- My intel -->
     <div class="intel-card">
-      <div class="intel-header">🌊 FISHING INTEL</div>
-      <ul class="intel-list">
-        <li>Tides: Best +/- 2hrs from High Tide.</li>
-        <li>Pressure: 1013hPa+ is stable.</li>
-        <li>Flow: 1.5 - 3.0 kn feeding zone.</li>
-      </ul>
+      <div class="intel-header" style="justify-content:space-between; width:100%;">
+        <span>🧠 MY INTEL</span>
+        <select id="intelRange" style="width:auto; padding:8px 10px; margin:0; font-size:0.75rem; font-weight:900;">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="all">All-time</option>
+        </select>
+      </div>
+      <div id="intelRangeMeta" class="muted" style="font-size:0.72rem; margin-top:-6px; margin-bottom:8px;"></div>
+      <div id="myIntelBody" class="muted" style="line-height:1.55;">
+        Select a port to see patterns from your catches.
+      </div>
     </div>
 
     <div id="map"></div>
@@ -237,6 +336,19 @@
       </div>
 
       <div class="hud-item">
+        <span class="label">Moon</span>
+        <div id="hMoon" class="val">--</div>
+        <span id="hMoonD" class="sub-val">--</span>
+      </div>
+
+      <div class="hud-item">
+        <span class="label">Bite</span>
+        <div id="hBite" class="val">--</div>
+        <span id="hBiteD" class="sub-val">--</span>
+      </div>
+
+
+      <div class="hud-item">
         <span class="label">Weather</span>
         <div id="hCond" class="val">--</div>
         <span id="hWind" class="sub-val">--</span>
@@ -247,7 +359,7 @@
     <button class="btn-sub" style="width:100%; margin-bottom:15px;" onclick="toggle('tideBox')">🌙 7-DAY TIDES</button>
     <div id="tideBox" class="drawer">
       <div class="intel-header">🌙 7-DAY TIDE OUTLOOK</div>
-      <div id="tideOutlook" class="muted">Select a port to load tides.</div>
+<div id="tideOutlook" class="muted">Select a port to load tides.</div>
     </div>
 
     <div class="card">
@@ -311,9 +423,17 @@
     let favs = JSON.parse(localStorage.getItem('aos_favs')) || [];
     let map, marker;
     let selectedDate = "";
+    let userSelectedDate = false;
+
+    
+
     let currentUid = null;
 
     let envData = { id:"", port:"Unknown", press:"--", temp:"--", wind:"--", gust:"", weather:"--", tide:"--", flow:"--", tideDir:"--", tideETA:"--" };
+
+    // Tide cache for monthly view
+    const tideCache = { portId: null, events: [], fetchedAt: 0 };
+
 
     function notify(m) {
       const t = document.getElementById("toast");
@@ -346,6 +466,8 @@
       modalTitle.innerText = title;
       modalBody.innerHTML = html;
       modalOverlay.style.display = "flex";
+      document.getElementById('modalClose')?.addEventListener('click', closeModal);
+
     }
     function closeModal() {
       modalOverlay.style.display = "none";
@@ -354,10 +476,14 @@
     window.openModal = openModal;
 
     // ===== Date helpers =====
-    function todayStr() {
-      const now = new Date();
+    function dStr(ms){
+      const now = new Date(ms);
       return `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
     }
+    function todayStr(){
+      return dStr(Date.now());
+    }
+
     function fmtDuration(ms) {
       const s = Math.max(0, Math.floor(ms/1000));
       const h = Math.floor(s/3600);
@@ -432,7 +558,7 @@
 
       allPorts = (d?.features || [])
         .map(f => ({
-          id: f.properties.Id,
+          id: String(f.properties.Id),
           name: f.properties.Name,
           lat: f.geometry.coordinates[1],
           lon: f.geometry.coordinates[0]
@@ -441,7 +567,7 @@
 
       allPorts.forEach(p => {
         const o = document.createElement('option');
-        o.value = p.idd;
+        o.value = p.id;
         o.textContent = p.name;
         s.appendChild(o);
       });
@@ -449,10 +575,57 @@
       const search = document.getElementById('pSearch');
       search.oninput = () => {
         const q = search.value.trim().toLowerCase();
+        let visible = 0;
+        let firstMatch = null;
+        let lastMatch = null;
+
         [...s.options].forEach((opt, idx) => {
           if (idx === 0) return;
-          opt.hidden = q && !opt.textContent.toLowerCase().includes(q);
+          const ok = !q || opt.textContent.toLowerCase().includes(q);
+          opt.hidden = q && !ok;
+          if (ok) {
+            visible++;
+            if (!firstMatch) firstMatch = opt;
+            lastMatch = opt;
+          }
         });
+
+        // Show "suggestions" by expanding the select into a short list while typing
+        if (q) {
+          s.size = Math.min(7, Math.max(2, visible + 1)); // +1 for the placeholder row
+        } else {
+          s.size = 0;
+        }
+
+        // If there's exactly one match, auto-select it (but don't auto-load on every keystroke unless it's unique)
+        if (q && visible === 1 && firstMatch && firstMatch.value) {
+          s.value = firstMatch.value;
+        }
+      };
+
+      // Keyboard helpers: Enter selects the current/first match, ArrowDown jumps into the list
+      search.onkeydown = (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          s.focus();
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // If something is selected, confirm it
+          const v = s.value;
+          if (v) {
+            s.dispatchEvent(new Event('change'));
+            resetPortSearchUI();
+            search.blur();
+          }
+        }
+      };
+
+      // Close suggestion list when leaving the search box
+      search.onblur = () => {
+        // slight delay to allow click into the list
+        setTimeout(() => { try { s.size = 0; } catch {} }, 150);
       };
     }
 
@@ -461,6 +634,7 @@
       search.value = "";
       const s = document.getElementById('portList');
       [...s.options].forEach((opt, idx) => { if (idx !== 0) opt.hidden = false; });
+      try { s.size = 0; } catch {}
     }
 
     // ===== Favs =====
@@ -471,7 +645,7 @@
         btn.disabled = true; btn.title = "";
         return;
       }
-      const exists = favs.some(f => f.id === envData.id);
+      const exists = favs.some(f => String(f.id) === String(envData.id));
       if (exists) {
         btn.classList.remove('active'); btn.classList.add('disabled');
         btn.disabled = true; btn.title = "Already a favourite";
@@ -489,6 +663,9 @@
         </div>
       `).join('') || `<div class="muted" style="font-size:0.8rem;">No favourites yet.</div>`;
       setFavButtonState();
+            renderMyIntel();
+renderSessionBar();
+      showQuickStartOnce();
     }
 
     window.remFav = (id) => {
@@ -508,7 +685,7 @@
         const n = nearestPort(e.latlng.lat, e.latlng.lng);
         if (!n) return;
         resetPortSearchUI();
-        document.getElementById('portList').value = n.id;
+        document.getElementById('portList').value = String(n.id);
         handlePort(n.id);
         notify(`Selected: ${n.name}`);
       });
@@ -564,7 +741,7 @@
             const a = document.getElementById('hTide');
             const b = document.getElementById('hTideD');
             if (a) a.innerText = `${ht0}m ${type0}`;
-            if (b) b.innerText = `${dir0} • in ${eta0}`;
+            if (b) b.innerText = `${dir0} — in ${eta0}`;
           }
         } catch {}
 
@@ -606,11 +783,14 @@ const byDay = new Map();
 
     // ===== Handle Port =====
     async function handlePort(id) {
-      const p = allPorts.find(x => x.id === id);
+      id = String(id);
+      const p = allPorts.find(x => String(x.id) === id);
       if (!p) return;
 
       envData.id = id;
       envData.port = p.name;
+      window.currentLat = p.lat;
+      window.currentLon = p.lon;
 
       // ✅ Keep UI in sync regardless of selection method
       resetPortSearchUI();
@@ -623,6 +803,8 @@ const byDay = new Map();
       else marker = L.marker([p.lat, p.lon]).addTo(map);
 
       setFavButtonState();
+      renderSessionBar();
+      showQuickStartOnce();
 
       // Tide next event + ETA + rising/falling approx
       try {
@@ -644,7 +826,7 @@ const byDay = new Map();
           envData.tide = `${ht}m ${type}`;
 
           document.getElementById('hTide').innerText = `${ht}m ${type}`;
-          document.getElementById('hTideD').innerText = `${dir} • in ${eta}`;
+          document.getElementById('hTideD').innerText = `${dir} — in ${eta}`;
         } else {
           document.getElementById('hTide').innerText = "--";
           document.getElementById('hTideD').innerText = "--";
@@ -679,7 +861,7 @@ const byDay = new Map();
         envData.wind = windTxt;
         envData.gust = gustTxt;
 
-        document.getElementById('hCond').innerText = `${tempTxt} • ${wxTxt}`;
+        document.getElementById('hCond').innerText = `${tempTxt} — ${wxTxt}`;
         document.getElementById('hWind').innerText = `💨 ${windTxt}`;
         const gustEl = document.getElementById('hGust');
         if (gustTxt) {
@@ -699,6 +881,18 @@ const byDay = new Map();
           document.getElementById('hPressD').innerText = "--";
         }
 
+
+        // Moon (current)
+        try{
+          const mp = moonPhaseInfo(Date.now());
+          envData.moon = mp;
+          const mEl = document.getElementById('hMoon');
+          const mdEl = document.getElementById('hMoonD');
+          if (mEl) mEl.innerText = `${mp.emoji} ${mp.name}`;
+          if (mdEl) mdEl.innerText = `${mp.illum}% illum — age ${mp.ageDays}d`;
+          window.currentMoonAgeDays = mp.ageDays;
+        } catch {}
+
         // Flow placeholder (until you swap to a real current API)
         envData.flow = (1.5 + Math.random()).toFixed(1) + "kn";
         const fc = classifyFlow(envData.flow);
@@ -710,7 +904,11 @@ const byDay = new Map();
       }
 
       renderTideOutlook(id);
-    }
+    
+
+      // Refresh My Intel for the selected port
+      try { renderMyIntel(); } catch {}
+}
     window.handlePort = handlePort;
 
     // ===== Photo compression (Firestore-friendly) =====
@@ -838,6 +1036,10 @@ Notes: ${c.notes || ""}`.trim();
         lon: envData.lon ?? null,
         acc: envData.acc ?? null
       };
+
+      // Refresh My Intel for the selected port
+      try { renderMyIntel(); } catch {}
+
     }
 
     function formatLocal(dt){
@@ -886,6 +1088,246 @@ Notes: ${c.notes || ""}`.trim();
       const n = s ? catches.filter(c => c.sessionId === s.id).length : 0;
       const btn = document.getElementById('totalsBtn');
       if (btn) btn.textContent = `🧭 SESSION: ${n}`;
+    }
+
+
+    function renderSessionBar(){
+      const s = SessionEngine.getActive();
+      const titleEl = document.getElementById('sessionTitle');
+      const subEl = document.getElementById('sessionSub');
+      const startBtn = document.getElementById('sessionStartBtn');
+      const endBtn = document.getElementById('sessionEndBtn');
+
+      if (!titleEl || !subEl || !startBtn || !endBtn) return;
+
+      if (!s){
+        titleEl.innerText = "No active session";
+        subEl.innerText = "Tap START to begin (auto-starts when you save your first catch).";
+        startBtn.style.display = "inline-flex";
+        endBtn.style.display = "none";
+        return;
+      }
+
+      const count = catches.filter(c => c.sessionId === s.id).length;
+      const dur = SessionEngine.durationLabel(SessionEngine.durationMs(s));
+      const place = (s.port && s.port !== "Unknown") ? s.port : (envData.port || "Unknown");
+      titleEl.innerText = `Session active — ${dur}`;
+      subEl.innerText = `${place} — ${count} catch${count === 1 ? "" : "es"}`;
+      startBtn.style.display = "none";
+      endBtn.style.display = "inline-flex";
+    }
+
+    function helpHtml(){
+      return `
+        <div style="font-size:0.9rem; line-height:1.65;">
+          <div class="intel-header" style="margin-top:0;">Quick start</div>
+          <ol style="margin:0 0 12px 18px; padding:0;">
+            <li><b>Select a port</b> (or tap <b>Find Nearest Port</b>).</li>
+            <li>Tap <b>START</b> in the session bar (or just save your first catch to auto-start).</li>
+            <li><b>Save a catch</b> (species, weight/length, optional photo + notes).</li>
+            <li>Use the <b>History Calendar</b> to jump to a day’s catches.</li>
+            <li>Tap <b>END</b> when you finish.</li>
+          </ol>
+
+          <div class="intel-header">How sessions work</div>
+          <ul class="intel-list" style="margin-bottom:12px;">
+            <li>Only <b>one active session</b> at a time.</li>
+            <li>Sessions are <b>overnight-safe</b> (midnight doesn’t break totals).</li>
+            <li>Your catches are saved automatically.</li>
+          </ul>
+
+          <div class="intel-header">What each card shows</div>
+          <div style="display:grid; gap:10px; margin-bottom:12px;">
+            <div><b>Map & GPS</b><br><span class="muted">Your current location, selected port, and favourites. Use it to set where you’re fishing.</span></div>
+            <div><b>Fishing Intel</b><br><span class="muted">A quick at-a-glance summary for the selected location.</span></div>
+            <div><b>Weather</b><br><span class="muted">Forecast and current conditions for the selected port/location.</span></div>
+            <div><b>Tide</b><br><span class="muted">Next tide and a 7‑day outlook for the selected port.</span></div>
+            <div><b>Flow & Pressure</b><br><span class="muted">Supporting conditions that can affect feeding behaviour.</span></div>
+            <div><b>Catch entry</b><br><span class="muted">Log a catch with time/date, details, notes and a photo.</span></div>
+            <div><b>Previous catches</b><br><span class="muted">Your recent catch log. Edit or delete entries.</span></div>
+            <div><b>History Calendar</b><br><span class="muted">Jump to a specific day to review what you caught.</span></div>
+            <div><b>Session Summary</b><br><span class="muted">Totals for the current session (count, duration, breakdown).</span></div>
+          </div>
+
+          <div class="intel-header">Tips</div>
+          <ul class="intel-list" style="margin-bottom:12px;">
+            <li>Use <b>★ Favourites</b> to save regular marks.</li>
+            <li>Tap <b>🧭 SESSION</b> for a quick summary at any time.</li>
+          </ul>
+
+          <div style="margin-top:14px; display:flex; gap:10px;">
+            <button class="btn-main" id="helpGotItBtn" style="margin:0;">GOT IT</button>
+          </div>
+          <div style="margin-top:8px; font-size:0.8rem;" class="muted">
+            Tip: Help is always available from the <b>❓</b> button.
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== 7-day tide planner =====
+    function fmtTimeLocal(dtStr){
+      const d = new Date(dtStr);
+      return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function dayKeyFromDate(dt){
+      return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    }
+
+    function groupEventsByDay(events){
+      const by = {};
+      for (const e of (events || [])){
+        if (!e || !e.DateTime) continue;
+        const d = new Date(e.DateTime);
+        const key = dayKeyFromDate(d);
+        (by[key] ||= []).push(e);
+      }
+      for (const k of Object.keys(by)){
+        by[k].sort((a,b)=> new Date(a.DateTime) - new Date(b.DateTime));
+      }
+      return by;
+    }
+
+    function buildPlannerHtml(){
+      const by = groupEventsByDay(tideCache.events || []);
+      const today = new Date();
+      const days = [];
+      for (let i=0;i<7;i++){
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate()+i);
+        days.push(d);
+      }
+
+      const items = days.map(d => {
+        const key = dayKeyFromDate(d);
+        const ev = by[key] || [];
+        const label = d.toLocaleDateString([], { weekday:'short', day:'2-digit', month:'short' });
+        const hw = ev.filter(e => e.EventType === "HighWater").slice(0,2)
+          .map(e => `${fmtTimeLocal(e.DateTime)} (${(typeof e.Height==="number"?e.Height.toFixed(1):"--")}m)`).join(" • ");
+        const lw = ev.filter(e => e.EventType === "LowWater").slice(0,2)
+          .map(e => `${fmtTimeLocal(e.DateTime)} (${(typeof e.Height==="number"?e.Height.toFixed(1):"--")}m)`).join(" • ");
+
+        const body = ev.length
+          ? `<div style="display:grid; gap:6px;">
+               <div><b>High:</b> <span class="muted">${hw || "—"}</span></div>
+               <div><b>Low:</b> <span class="muted">${lw || "—"}</span></div>
+             </div>`
+          : `<div class="muted">No tide events available.</div>`;
+
+        return `
+          <div class="card" style="padding:10px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+              <div style="font-weight:900;">${escapeHtml(label)}</div>
+              <button class="btn-sub" data-tide-day="${key}" style="padding:8px 10px;">DETAILS</button>
+            </div>
+            <div style="margin-top:8px;">${body}</div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="muted" style="margin-bottom:10px;">
+          7-day tide planner for <b>${escapeHtml(envData.portName || envData.port || "selected port")}</b>.
+        </div>
+        ${items}
+      `;
+    }
+
+    function showTideDayDetail(dateKey){
+      const by = groupEventsByDay(tideCache.events);
+      const ev = by[dateKey] || [];
+      const [y,m,d] = dateKey.split('-').map(Number);
+      const nice = new Date(y, m-1, d).toLocaleDateString([], { weekday:'long', year:'numeric', month:'short', day:'2-digit' });
+
+      if (!ev.length){
+        openModal("Tides", `<div class="muted">No tide events available for ${escapeHtml(nice)}.</div>`);
+        return;
+      }
+
+      const rows = ev.map(e => {
+        const t = fmtTimeLocal(e.DateTime);
+        const h = (typeof e.Height === "number") ? e.Height.toFixed(2) : "--";
+        const type = (e.EventType === "HighWater") ? "High" : "Low";
+        return `<div class="row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.06);">
+          <div><b>${type}</b> • ${t}</div><div>${h} m</div>
+        </div>`;
+      }).join("");
+
+      openModal("Tides • " + nice, `<div>${rows}</div>`);
+    }
+
+    async function openTidePlanner(){
+      // Resolve selected station id
+      let portId = envData.portId || envData.id || document.getElementById('portList')?.value || null;
+      if (!portId){
+        const wanted = (envData.portName || envData.port || "").trim().toLowerCase();
+        const sel = document.getElementById('portList');
+        if (wanted && sel){
+          const opt = Array.from(sel.options || []).find(o => (o.textContent || "").trim().toLowerCase() === wanted);
+          if (opt && opt.value) portId = opt.value;
+        }
+      }
+      if (!portId){
+        notify("Select a port first");
+        return;
+      }
+      envData.portId = portId;
+      envData.id = portId;
+
+      // Ensure cache is fresh (10 minutes)
+      if (!tideCache.events?.length || tideCache.portId !== portId || (Date.now() - tideCache.fetchedAt) > 10*60*1000){
+        try {
+          const url = PROXY + encodeURIComponent(`https://admiraltyapi.azure-api.net/uktidalapi/api/V1/Stations/${portId}/TidalEvents?duration=7&subscription-key=${AD_KEY}`);
+          const resp = await fetch(url);
+          if (!resp.ok){
+            const txt = await resp.text();
+            console.warn("Tide fetch failed", resp.status, txt.slice(0,200));
+            notify("Couldn't load tides");
+            return;
+          }
+          const ctype = resp.headers.get('content-type') || '';
+          if (!ctype.includes('application/json')){
+            const txt = await resp.text();
+            console.warn("Non-JSON tide response", txt.slice(0,200));
+            notify("Couldn't load tides");
+            return;
+          }
+          const td = await resp.json();
+          tideCache.portId = portId;
+          tideCache.events = Array.isArray(td) ? td.slice() : [];
+          tideCache.fetchedAt = Date.now();
+        } catch (e){
+          console.warn(e);
+          notify("Couldn't load tides");
+          return;
+        }
+      }
+
+      openModal("7-day planner", buildPlannerHtml());
+      setTimeout(() => {
+        document.querySelectorAll('[data-tide-day]').forEach(btn => {
+          btn.onclick = () => showTideDayDetail(btn.getAttribute('data-tide-day'));
+        });
+      }, 0);
+    }
+
+
+    function showHelp(){
+      openModal("Help", helpHtml());
+      setTimeout(() => {
+        const b = document.getElementById('helpGotItBtn');
+        if (b) b.onclick = () => closeModal();
+      }, 0);
+    }
+
+    function showQuickStartOnce(){
+      const key = "aos_help_seen_v1";
+      if (localStorage.getItem(key) === "1") return;
+      showHelp();
+      setTimeout(() => {
+        const b = document.getElementById('helpGotItBtn');
+        if (b) b.onclick = () => { localStorage.setItem(key, "1"); closeModal(); };
+      }, 0);
     }
 
 
@@ -946,7 +1388,7 @@ Notes: ${c.notes || ""}`.trim();
               <div style="display:flex; justify-content:space-between; align-items:start; gap:10px;">
                 <div style="flex:1;">
                   <b style="color:var(--sea);">${escapeHtml(sp)}</b>${pbBadge}
-                  <div style="margin-top:2px;"><small>${escapeHtml(String(c.wt ?? 0))}lb • ${escapeHtml(String(c.len ?? 0))}cm</small></div>
+                  <div style="margin-top:2px;"><small>${escapeHtml(String(c.wt ?? 0))}lb — ${escapeHtml(String(c.len ?? 0))}cm</small></div>
                   <small style="color:var(--gold);">${escapeHtml(c.loc || '--')} | ${escapeHtml(c.dt || '--')} @ ${escapeHtml(c.time || '--:--')}</small>
                 </div>
 
@@ -958,7 +1400,7 @@ Notes: ${c.notes || ""}`.trim();
               </div>
 
               <div class="catch-meta" style="margin-top:10px;">
-                <span>🌡️ ${escapeHtml(c.temp || '--')} • ${escapeHtml(c.weather || '--')}</span>
+                <span>🌡️ ${escapeHtml(c.temp || '--')} — ${escapeHtml(c.weather || '--')}</span>
                 <span>💨 ${escapeHtml(c.wind || '--')} ${c.gust ? `• <span style="color:var(--red); font-weight:900;">${escapeHtml(c.gust)}</span>` : ""}</span>
                 <span>🧭 Pressure: ${escapeHtml(c.press || c.baro || '--')}</span>
                 <span>🌊 Tide: ${escapeHtml(c.tide || '--')}</span>
@@ -1037,7 +1479,14 @@ Notes: ${c.notes || ""}`.trim();
         div.className = `cal-day ${catches.some(c => c.dt === dStr) ? 'has-catch' : ''} ${selectedDate === dStr ? 'selected' : ''}`;
         div.innerText = d;
         div.onclick = () => {
-          selectedDate = (selectedDate === dStr) ? "" : dStr;
+          if (selectedDate === dStr) {
+            // Clear selection -> revert to today view
+            selectedDate = todayStr();
+            userSelectedDate = false;
+          } else {
+            selectedDate = dStr;
+            userSelectedDate = true;
+          }
           renderCalendar();
           renderDiary();
         };
@@ -1084,6 +1533,265 @@ Notes: ${c.notes || ""}`.trim();
     }
 
     // ===== Save catch =====
+    
+    // ===== My Intel (personal insights) =====
+    function moonPhaseInfo(dateMs){
+      // Simple synodic month model (good enough for angling insights)
+      const synodic = 29.53058867; // days
+      const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0); // 2000-01-06 18:14 UTC
+      const days = (dateMs - knownNewMoon) / 86400000;
+      let age = days % synodic;
+      if (age < 0) age += synodic;
+
+      const frac = age / synodic; // 0..1
+      const idx = Math.floor((frac * 8) + 0.5) % 8; // 8 phases
+      const phases = [
+        {name:"New Moon", emoji:"🌑"},
+        {name:"Waxing Crescent", emoji:"🌒"},
+        {name:"First Quarter", emoji:"🌓"},
+        {name:"Waxing Gibbous", emoji:"🌔"},
+        {name:"Full Moon", emoji:"🌕"},
+        {name:"Waning Gibbous", emoji:"🌖"},
+        {name:"Last Quarter", emoji:"🌗"},
+        {name:"Waning Crescent", emoji:"🌘"},
+      ];
+      const p = phases[idx];
+      const illum = (1 - Math.cos(2*Math.PI*frac)) / 2; // 0..1
+      return { ...p, ageDays: Number(age.toFixed(1)), illum: Math.round(illum*100) };
+    }
+
+    function tideContextFor(dateMs, portId){
+      try{
+        const events = (tideCache && Array.isArray(tideCache.events)) ? tideCache.events : [];
+        if (!events.length) return null;
+        if (tideCache.portId && portId && tideCache.portId !== portId) return null;
+
+        const t = new Date(dateMs).getTime();
+        const parsed = events
+          .filter(e => e && e.DateTime)
+          .map(e => ({...e, _t: new Date(e.DateTime).getTime()}))
+          .filter(e => Number.isFinite(e._t))
+          .sort((a,b)=>a._t-b._t);
+
+        if (!parsed.length) return null;
+
+        // Nearest future event
+        let next = parsed.find(e => e._t >= t) || null;
+        let prev = null;
+        for (let i=parsed.length-1;i>=0;i--){
+          if (parsed[i]._t <= t){ prev = parsed[i]; break; }
+        }
+        const nearest = next || prev;
+        if (!nearest) return null;
+
+        const minsTo = Math.round((nearest._t - t) / 60000); // + before event, - after event
+        const absH = Math.min(6, Math.max(0, Math.floor(Math.abs(minsTo)/60))); // cap at 6h for bucketing
+        const bucket = `${nearest.EventType === "HighWater" ? "HW" : "LW"} ${minsTo>=0 ? "-" : "+"}${absH}h`;
+
+        // Rising/falling approximation based on the next event type
+        let phase = "Unknown";
+        if (next){
+          phase = next.EventType === "HighWater" ? "Rising" : "Falling";
+        } else if (prev){
+          // after last known event, assume heading toward opposite (rough)
+          phase = prev.EventType === "HighWater" ? "Falling" : "Rising";
+        }
+
+        return {
+          phase,
+          nearestEventType: nearest.EventType,
+          minsToNearestEvent: minsTo,
+          bucket,
+          height: (typeof nearest.Height === "number") ? nearest.Height : null
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    
+function topN(mapObj, n=2){
+      return Object.entries(mapObj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+    }
+
+    // ===== My Intel range filter =====
+    const INTEL_RANGE_KEY = "aos_intel_range_v1";
+
+    function getIntelRangeValue(){
+      const sel = document.getElementById('intelRange');
+      const saved = localStorage.getItem(INTEL_RANGE_KEY);
+      const val = (sel && sel.value) ? sel.value : (saved || "30");
+      return val || "30";
+    }
+
+    function applySavedIntelRange(){
+      const sel = document.getElementById('intelRange');
+      if (!sel) return;
+      const saved = localStorage.getItem(INTEL_RANGE_KEY);
+      if (saved && Array.from(sel.options).some(o => o.value === saved)) {
+        sel.value = saved;
+      }
+    }
+
+    function intelRangeStartMs(){
+      const v = getIntelRangeValue();
+      if (v === "all") return null;
+      const days = Number(v);
+      if (!Number.isFinite(days) || days <= 0) return null;
+      return Date.now() - (days * 86400000);
+    }
+
+    function formatIntelRangeLabel(){
+      const v = getIntelRangeValue();
+      if (v === "all") return "All-time";
+      const days = Number(v);
+      if (!Number.isFinite(days)) return "Last 30 days";
+      return `Last ${days} days`;
+    }
+
+    function renderIntelRangeMeta(){
+      const meta = document.getElementById('intelRangeMeta');
+      if (!meta) return;
+      const v = getIntelRangeValue();
+      const start = intelRangeStartMs();
+      if (v === "all" || !start){
+        meta.innerHTML = `Showing <b>${escapeHtml(formatIntelRangeLabel())}</b>.`;
+        return;
+      }
+      const startStr = new Date(start).toLocaleDateString([], { day:'2-digit', month:'short', year:'numeric' });
+      const endStr = new Date().toLocaleDateString([], { day:'2-digit', month:'short', year:'numeric' });
+      meta.innerHTML = `Showing <b>${escapeHtml(formatIntelRangeLabel())}</b> (${escapeHtml(startStr)} – ${escapeHtml(endStr)}).`;
+    }
+
+    function catchTimestampMs(c){
+      const ts = c?.caughtAt ?? c?.timestamp ?? c?.createdAt;
+      const n = Number(ts);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function filterCatchesByIntelRange(list){
+      const start = intelRangeStartMs();
+      if (!start) return list;
+      return list.filter(c => {
+        const ts = catchTimestampMs(c);
+        return ts ? ts >= start : false;
+      });
+    }
+
+    function renderMyIntel(){
+      const el = document.getElementById('myIntelBody');
+      if (!el) return;
+
+      renderIntelRangeMeta();
+
+      const portName = (envData.port || "").trim();
+      const portId = envData.id || envData.portId || null;
+
+      if (!portName){
+        el.innerHTML = "Select a port to see patterns from your catches.";
+        return;
+      }
+
+      const pn = (portName || '').trim().toLowerCase();
+      const atPortAll = catches.filter(c => {
+        const cid = (c.portId || c.idPort || c.stationId || '').toString();
+        if (portId && cid && cid === String(portId)) return true;
+        const cl = (c.loc || '').trim().toLowerCase();
+        return cl && cl === pn;
+      });
+
+      const atPort = filterCatchesByIntelRange(atPortAll);
+      const total = atPort.length;
+
+      if (total === 0){
+        el.innerHTML = `
+          <div style="font-weight:900; color:var(--white); margin-bottom:6px;">${escapeHtml(portName)}</div>
+          <div class="muted">No catches found for this port in the selected range.</div>
+          <div class="muted" style="margin-top:8px;">Based on 0 catches.</div>
+        `;
+        return;
+      }
+
+      const tideBuckets = {};
+      const phases = {};
+      const moon = {};
+      const hours = {};
+
+      // Track how many catches actually contributed to each section
+      let tideN = 0;
+      let phaseN = 0;
+      let moonN = 0;
+      let hourN = 0;
+
+      for (const c of atPort){
+        // Hour-of-day from timestamp
+        const ts = catchTimestampMs(c);
+        if (ts){
+          const h = new Date(ts).getHours();
+          const key = `${String(h).padStart(2,'0')}:00`;
+          hours[key] = (hours[key]||0)+1;
+          hourN++;
+        }
+
+        // Tide context (prefer stored; otherwise try derive; otherwise fall back to saved tide label)
+        const tc = c.tideCtx || c.tideContext || tideContextFor(ts || Date.now(), c.portId || portId);
+        let tideAdded = false;
+        let phaseAdded = false;
+
+        if (tc){
+          if (tc.bucket){ tideBuckets[tc.bucket] = (tideBuckets[tc.bucket]||0)+1; tideAdded = true; }
+          if (tc.phase){ phases[tc.phase] = (phases[tc.phase]||0)+1; phaseAdded = true; }
+        } else {
+          const tlabel = (c.tide || "").toString().toLowerCase();
+          // Older records may only store a simple label like "7.6m High". Use a coarse bucket so intel isn't blank.
+          if (tlabel.includes("high")){ tideBuckets["HW (near)"] = (tideBuckets["HW (near)"]||0)+1; tideAdded = true; }
+          if (tlabel.includes("low")){ tideBuckets["LW (near)"] = (tideBuckets["LW (near)"]||0)+1; tideAdded = true; }
+          if (tlabel.includes("rising")){ phases["Rising"] = (phases["Rising"]||0)+1; phaseAdded = true; }
+          if (tlabel.includes("falling")){ phases["Falling"] = (phases["Falling"]||0)+1; phaseAdded = true; }
+        }
+
+        if (tideAdded) tideN++;
+        if (phaseAdded) phaseN++;
+
+        // Moon phase (stored, or derive)
+        const mp = c.moon || (ts ? moonPhaseInfo(ts) : null);
+        if (mp && mp.name){
+          moon[mp.name] = (moon[mp.name]||0)+1;
+          moonN++;
+        }
+      }
+
+      const bestTide = topN(tideBuckets, 1)[0];
+      const bestPhase = topN(phases, 1)[0];
+      const bestMoon = topN(moon, 1)[0];
+      const bestHour = topN(hours, 1)[0];
+
+      function fmtStat(pair, label, nUsed){
+        if (!pair || !pair[0]) return `<div class="muted">${escapeHtml(label)}: Not enough data yet.</div>`;
+        const denom = Math.max(1, nUsed || total);
+        const pct = Math.round((pair[1]/denom)*100);
+        return `<div><b>${escapeHtml(label)}:</b> <span class="muted">${escapeHtml(pair[0])}</span> <span class="muted">(${pct}%)</span> <span class="muted">• based on ${nUsed || 0}</span></div>`;
+      }
+
+      // If overall sample is small, still show whatever we can, but label the sample clearly.
+      const overallNote = total < 3
+        ? `<div class="muted" style="margin-top:8px;">Low sample size — patterns may be noisy.</div>`
+        : "";
+
+      el.innerHTML = `
+        <div style="font-weight:900; color:var(--white); margin-bottom:6px;">${escapeHtml(portName)}</div>
+        <div style="display:grid; gap:6px;">
+          ${fmtStat(bestTide, "Best tide window", tideN)}
+          ${fmtStat(bestPhase, "Rising vs falling", phaseN)}
+          ${fmtStat(bestHour, "Best time", hourN)}
+          ${fmtStat(bestMoon, "Best moon", moonN)}
+        </div>
+        ${overallNote}
+        <div class="muted" style="margin-top:8px;">Based on ${total} catch${total===1?"":"es"} in this range.</div>
+      `;
+    }
+
+
     async function saveCatch() {
       const s = document.getElementById('sp').value.trim();
       if (!s) return notify("Enter Species");
@@ -1101,6 +1809,10 @@ Notes: ${c.notes || ""}`.trim();
 
       const nowMs = Date.now();
       const activeSession = SessionEngine.ensureActive(getSessionMetaFromEnv());
+      renderSessionBar();
+
+            const moon = moonPhaseInfo(nowMs);
+      const tideCtx = tideContextFor(nowMs, envData.id || envData.portId || null);
 
       await addDoc(collection(db, "catches"), {
         userId: auth.currentUser.uid,
@@ -1113,6 +1825,9 @@ Notes: ${c.notes || ""}`.trim();
         dt: dStr,
         time: tStr,
         loc: envData.port,
+        portId: envData.id || envData.portId || "",
+        moon,
+        tideCtx,
 
         press: envData.press || "",
         baro: envData.press || "",
@@ -1132,6 +1847,7 @@ Notes: ${c.notes || ""}`.trim();
 
       updateSessionBadge();
       notify("RECORD SAVED");
+      renderMyIntel();
       document.getElementById('sp').value = "";
       document.getElementById('wt').value = "";
       document.getElementById('len').value = "";
@@ -1156,7 +1872,26 @@ Notes: ${c.notes || ""}`.trim();
 
       document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
+
+      // Intel range selector
+      applySavedIntelRange();
+      renderIntelRangeMeta();
+      const intelSel = document.getElementById('intelRange');
+      if (intelSel) {
+        intelSel.onchange = () => {
+          localStorage.setItem(INTEL_RANGE_KEY, intelSel.value);
+          renderMyIntel();
+        };
+      }
+
       document.getElementById('portList').onchange = (e) => {
+        const val = e.target.value;
+        if (val) handlePort(val);
+      };
+
+      // If the user clicks an already-highlighted option, 'change' may not fire.
+      // Apply selection on click as well.
+      document.getElementById('portList').onclick = (e) => {
         const val = e.target.value;
         if (val) handlePort(val);
       };
@@ -1179,7 +1914,7 @@ Notes: ${c.notes || ""}`.trim();
             if (!n) return notify("Ports not loaded yet");
 
             resetPortSearchUI();
-            document.getElementById('portList').value = n.id;
+            document.getElementById('portList').value = String(n.id);
             handlePort(n.id);
 
             const km = (n._distMeters / 1000).toFixed(1);
@@ -1193,19 +1928,28 @@ Notes: ${c.notes || ""}`.trim();
         );
       };
 
-      document.getElementById('addFavBtn').onclick = () => {
+      document.getElementById('addFavBtn').onclick = async () => {
+        // If the user typed in the search box but didn’t explicitly confirm a selection,
+        // the dropdown may already have the right value while envData.id is still empty.
+        if (!envData.id) {
+          const v = document.getElementById('portList')?.value;
+          if (v) {
+            try { await handlePort(String(v)); } catch {}
+          }
+        }
         if (!envData.id) return;
 
-        const exists = favs.some(f => f.id === envData.id);
+        const exists = favs.some(f => String(f.id) === String(envData.id));
         if (exists) {
           notify(`"${envData.port}" is already a favourite`);
           setFavButtonState();
           return;
         }
 
-        favs.push({ id: envData.id, name: envData.port });
+        favs.push({ id: String(envData.id), name: envData.port });
         localStorage.setItem('aos_favs', JSON.stringify(favs));
         updateFavsUI();
+        setFavButtonState();
         notify(`Added "${envData.port}" to favourites`);
       };
 
@@ -1222,25 +1966,24 @@ Notes: ${c.notes || ""}`.trim();
       };
 
 
-
-      document.getElementById('startSessionBtn').onclick = async () => {
-        // Start (auto-ends any existing)
+      document.getElementById('sessionStartBtn').onclick = () => {
         const s = SessionEngine.start(getSessionMetaFromEnv());
         updateSessionBadge();
-        document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+        renderSessionBar();
         notify("Session started");
       };
 
-      document.getElementById('endSessionBtn').onclick = async () => {
+      document.getElementById('sessionEndBtn').onclick = () => {
         const s = SessionEngine.getActive();
         if (!s) return notify("No active session");
         SessionEngine.end(s.id);
         updateSessionBadge();
-        document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+        renderSessionBar();
         notify("Session ended");
       };
 
-      document.getElementById('aboutBtn').onclick = () => {
+      document.getElementById('helpBtn').onclick = () => showHelp();
+document.getElementById('aboutBtn').onclick = () => {
         const year = new Date().getFullYear();
         openModal("About AnglerOS", `
           <div style="font-size:0.9rem; line-height:1.6;">
@@ -1262,6 +2005,8 @@ Notes: ${c.notes || ""}`.trim();
       await loadPorts();
       updateFavsUI();
       setFavButtonState();
+      renderSessionBar();
+      showQuickStartOnce();
 
       const qy = query(
         collection(db, "catches"),
@@ -1273,16 +2018,23 @@ Notes: ${c.notes || ""}`.trim();
         qy,
         (snap) => {
           catches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          document.getElementById('totalsBtn').innerText = `📊 TOTALS: ${catches.length}`;
+          updateSessionBadge();
+          renderSessionBar();
 
           const box = document.getElementById('totalsBox');
           if (box.style.display === 'block') {
-            document.getElementById('totalsSummary').innerHTML = buildTodaySummaryHtml();
+            document.getElementById('totalsSummary').innerHTML = buildSessionSummaryHtml();
+          }
+
+          // Default history view: today (unless user manually selected another date)
+          if (!userSelectedDate) {
+            selectedDate = todayStr();
           }
 
           renderCalendar();
           renderDiary();
-        },
+          renderMyIntel();
+},
         (err) => {
           console.error("Firestore listener error:", err);
           if (err?.code === "permission-denied") notify("Firestore blocked by rules (permission denied).");
@@ -1293,6 +2045,9 @@ Notes: ${c.notes || ""}`.trim();
 
     document.addEventListener('DOMContentLoaded', () => {
       wireUI();
+
+      // Tick session duration label
+      setInterval(() => { try { renderSessionBar(); } catch {} }, 30000);
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -1307,5 +2062,89 @@ Notes: ${c.notes || ""}`.trim();
       });
     });
   </script>
+
+<script>
+/* ===== SOLUNAR / BITE WINDOW ===== */
+function getSolunarWindows(date, lat, lon) {
+  // Simplified solunar approximation:
+  // Major: moon overhead/underfoot
+  // Minor: moonrise/moonset
+  // We approximate using lunar age already calculated in app
+
+  if (!lat || !lon || isNaN(lat) || isNaN(lon)) return null;
+
+  const dayMs = 86400000;
+  const lunarDay = 24.84 * 60 * 60 * 1000;
+
+  const base = new Date(date);
+  base.setHours(0,0,0,0);
+
+  // Use stored moon age if available
+  const moonAge = window.currentMoonAgeDays ?? 0;
+  const ageFraction = moonAge / 29.53;
+
+  const majorOffset = ageFraction * lunarDay;
+  const minorOffset = (ageFraction * lunarDay + lunarDay/2) % lunarDay;
+
+  const majorStart = new Date(base.getTime() + majorOffset - 60*60*1000);
+  const majorEnd   = new Date(base.getTime() + majorOffset + 60*60*1000);
+
+  const minorStart = new Date(base.getTime() + minorOffset - 45*60*1000);
+  const minorEnd   = new Date(base.getTime() + minorOffset + 45*60*1000);
+
+  return { majorStart, majorEnd, minorStart, minorEnd };
+}
+
+function updateBiteCard() {
+  const primary = document.getElementById("hBite");
+  const secondary = document.getElementById("hBiteD");
+
+  if (!primary || !secondary) return;
+
+  if (!window.currentLat || !window.currentLon) {
+    primary.textContent = "Location needed";
+    secondary.textContent = "Enable GPS or select favourite";
+    return;
+  }
+
+  const now = new Date();
+  const sol = getSolunarWindows(now, window.currentLat, window.currentLon);
+  if (!sol) {
+    primary.textContent = "Unavailable";
+    secondary.textContent = "";
+    return;
+  }
+
+  function fmt(t){ return t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+
+  let nextLabel = "";
+  let nextStart, nextEnd;
+
+  if (now < sol.majorEnd) {
+    nextLabel = "Major";
+    nextStart = sol.majorStart;
+    nextEnd = sol.majorEnd;
+  } else {
+    nextLabel = "Minor";
+    nextStart = sol.minorStart;
+    nextEnd = sol.minorEnd;
+  }
+
+  const mins = Math.max(0, Math.round((nextStart - now)/60000));
+
+  if (now >= nextStart && now <= nextEnd) {
+    primary.textContent = nextLabel + " window active";
+    secondary.textContent = fmt(nextStart) + "–" + fmt(nextEnd);
+  } else {
+    primary.textContent = nextLabel + " in " + mins + " min";
+    secondary.textContent = fmt(nextStart) + "–" + fmt(nextEnd);
+  }
+}
+
+// hook into existing refresh cycle
+setInterval(updateBiteCard, 60000);
+document.addEventListener("DOMContentLoaded", updateBiteCard);
+</script>
+
 </body>
 </html>
