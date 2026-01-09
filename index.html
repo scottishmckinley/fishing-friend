@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>BiteWise</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,8 +17,8 @@
     *{ box-sizing:border-box; }
 
     body{
-      font-family:'Segoe UI',sans-serif;background:var(--navy);
-      margin:0;padding:10px;color:var(--text);-webkit-tap-highlight-color:transparent;
+      font-family:\'Segoe UI\',sans-serif;background:var(--navy);
+      margin:0;padding:calc(10px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));color:var(--text);-webkit-tap-highlight-color:transparent;
     }
 
     .app-container{max-width:500px;margin:0 auto;padding-bottom:50px;display:none;}
@@ -33,7 +33,10 @@
     }
 
     .drawer{display:none;background:var(--card);border:1px solid var(--gold);border-radius:15px;padding:15px;margin-bottom:15px;}
-    #myIntelToggleBtn{position:sticky; top:10px; z-index:3;}
+    #myIntelToggleBtn{position:static; z-index:3;}
+    @media (min-width: 900px){
+      #myIntelToggleBtn{position:sticky; top:calc(10px + env(safe-area-inset-top));}
+    }
     #myIntelDrawer .intel-card{margin:0; border:none; background:transparent; padding:0;}
 
     .card{background:var(--card);border:1px solid var(--border);padding:15px;border-radius:20px;margin-bottom:15px;}
@@ -106,7 +109,7 @@
     #toast{
       visibility:hidden;min-width:250px;background:var(--gold);color:var(--navy);
       text-align:center;border-radius:10px;padding:15px;position:fixed;z-index:100000;
-      left:50%;bottom:20px;transform:translateX(-50%);font-weight:900;
+      left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);font-weight:900;
     }
     #toast.show{visibility:visible;}
 
@@ -129,7 +132,7 @@
     .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
 
     /* Modal */
-    #modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200000;justify-content:center;align-items:center;padding:12px;}
+    #modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200000;justify-content:center;align-items:center;padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));}
     #modal{width:100%;max-width:480px;background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:14px;}
     #modalTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
     #modalTitle{margin:0;color:var(--white);font-size:1rem;font-weight:900;}
@@ -508,9 +511,39 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      initializeFirestore,
+      persistentLocalCache,
+      persistentMultipleTabManager,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      where,
+      orderBy,
+      limit,
+      getDocs,
+      getDoc,
+      setDoc,
+      updateDoc,
+      deleteDoc,
+      doc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import {
+      getStorage,
+      ref as sRef,
+      uploadBytes,
+      getDownloadURL,
+      deleteObject
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDICIj5QIcCLhrq_tlC0QsLKwpB4T7CkoU",
@@ -523,7 +556,12 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+    // Offline persistence enabled via localCache above
     const storage = getStorage(app);
 
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
@@ -1047,6 +1085,89 @@ const byDay = new Map();
       }
     }
 
+
+    // ===== Offline-safe Storage ops queue (uploads + deletes) =====
+    const STORAGE_OPS_KEY = "bw_storageOps_v1";
+
+    function loadStorageOps() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_OPS_KEY) || "[]") || []; }
+      catch(e){ return []; }
+    }
+    function saveStorageOps(ops) {
+      try { localStorage.setItem(STORAGE_OPS_KEY, JSON.stringify(ops || [])); } catch(e){}
+    }
+    function enqueueStorageUpload(uid, catchId, dataUrl) {
+      if (!uid || !catchId || !dataUrl) return;
+      const ops = loadStorageOps();
+      ops.push({ type:"upload", uid, catchId, dataUrl, createdAt: Date.now() });
+      saveStorageOps(ops);
+    }
+    function enqueueStorageDelete(uid, path) {
+      if (!uid || !path) return;
+      const ops = loadStorageOps();
+      // Avoid duplicate deletes
+      if (!ops.some(o => o.type==="delete" && o.uid===uid && o.path===path)) {
+        ops.push({ type:"delete", uid, path, createdAt: Date.now() });
+        saveStorageOps(ops);
+      }
+    }
+
+    async function processStorageOpsOnce() {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+
+      let ops = loadStorageOps();
+      if (!ops.length) return;
+
+      // Only process ops for current user
+      const mine = ops.filter(o => o.uid === uid);
+      if (!mine.length) return;
+
+      // Process deletes first to avoid orphaned files on replace/remove
+      for (const op of mine.filter(o => o.type === "delete")) {
+        try {
+          await deleteObject(sRef(storage, op.path));
+          ops = ops.filter(o => !(o.type==="delete" && o.uid===uid && o.path===op.path));
+          saveStorageOps(ops);
+        } catch(e) {
+          // If offline or denied, keep for later
+        }
+      }
+
+      // Then process uploads
+      for (const op of mine.filter(o => o.type === "upload")) {
+        try {
+          const up = await uploadCatchPhotoToStorage(uid, op.catchId, op.dataUrl);
+          if (up) {
+            await updateDoc(doc(db, "catches", op.catchId), { ...up, photo:"", photoPending:false });
+            ops = ops.filter(o => !(o.type==="upload" && o.uid===uid && o.catchId===op.catchId && o.createdAt===op.createdAt));
+            saveStorageOps(ops);
+          } else {
+            // keep for later (uploadCatchPhotoToStorage returned null)
+          }
+        } catch(e) {
+          // keep for later
+        }
+      }
+    }
+
+    // Use queued local photo as preview while upload is pending
+    function getQueuedPhotoDataUrl(uid, catchId) {
+      try {
+        const ops = loadStorageOps();
+        const it = ops.find(o => o.type==="upload" && o.uid===uid && o.catchId===catchId);
+        return it ? it.dataUrl : "";
+      } catch(e){ return ""; }
+    }
+
+    // One-time binding for online events
+    let _storageOpsOnlineBound = false;
+    function bindStorageOpsOnlineHandler() {
+      if (_storageOpsOnlineBound) return;
+      _storageOpsOnlineBound = true;
+      window.addEventListener("online", () => { processStorageOpsOnce(); });
+    }
+
 async function fileToCompressedDataUrl(file, maxW=900, quality=0.72) {
       const img = await new Promise((resolve, reject) => {
         const i = new Image();
@@ -1154,7 +1275,18 @@ Notes: ${c.notes || ""}`.trim();
     // ===== Delete =====
     window.delCatch = async (id) => {
       if (!confirm("Delete record?")) return;
+
+      // Best-effort delete photo from Firebase Storage first (if stored)
+      try {
+        const c = catches.find(x => x.id === id);
+        const path = c?.photoPath || "";
+        if (path) {
+          try { await deleteObject(sRef(storage, path)); } catch(e) {}
+        }
+      } catch(e) {}
+
       await deleteDoc(doc(db, "catches", id));
+      notify("Record deleted");
     };
 
     
@@ -1643,10 +1775,18 @@ write(rows);
     window.startEdit = (id) => {
       const c = catches.find(x => x.id === id);
       if (!c) return;
-      editState.set(id, { photo: c.photo || "" });
+      editState.set(id, { photo: (c.photoUrl || c.photo || "") });
       renderDiary();
     };
     window.cancelEdit = (id) => { editState.delete(id); renderDiary(); };
+
+    // Remove photo during edit (clears current photo and queues Storage delete on save)
+    window.removeEditPhoto = (id) => {
+      const cur = editState.get(id) || {};
+      editState.set(id, { ...cur, photo:"", removePhoto:true });
+      renderDiary();
+    };
+
 
     window.saveEdit = async (id) => {
       const c = catches.find(x => x.id === id);
@@ -1657,18 +1797,63 @@ write(rows);
       const len = Number(document.getElementById(`el_${id}`).value || 0);
       const notes = document.getElementById(`en_${id}`).value || "";
       const staged = editState.get(id) || {};
-      const photo = staged.photo ?? (c.photo || "");
+      const stagedPhoto = staged.photo ?? "";
+      const wantsRemovePhoto = !!staged.removePhoto;
 
-      await updateDoc(doc(db, "catches", id), {
+      // If user picked a new photo, it will be a data URL (we compress on select)
+      const hasNewPhoto = String(stagedPhoto || "").startsWith("data:image/");
+
+      let patch = {
         sp: sp.toUpperCase(),
         wt,
         len,
         notes,
-        photoUrl: "",
-        photoPath: "",
-        photo: "",
         updatedAt: Date.now()
-      });
+      };
+
+      // Remove existing photo (and optionally queue delete if offline)
+      if (wantsRemovePhoto && !hasNewPhoto) {
+        const uid = auth.currentUser?.uid;
+        if (c.photoPath) {
+          if (navigator.onLine) {
+            try { await deleteObject(sRef(storage, c.photoPath)); } catch(e) {}
+          } else {
+            enqueueStorageDelete(uid, c.photoPath);
+          }
+        }
+        patch = { ...patch, photoUrl:"", photoPath:"", photo:"", photoPending:false };
+      }
+
+      // Replace photo in Storage if a new one was selected
+      if (hasNewPhoto) {
+        const uid = auth.currentUser?.uid;
+
+        // If replacing an existing Storage photo, delete it (or queue delete)
+        if (c.photoPath) {
+          if (navigator.onLine) {
+            try { await deleteObject(sRef(storage, c.photoPath)); } catch(e) {}
+          } else {
+            enqueueStorageDelete(uid, c.photoPath);
+          }
+        }
+
+        // Mark pending; if online try now, else queue upload
+        patch = { ...patch, photoPending: true, photoUrl:"", photoPath:"", photo:"" };
+
+        if (navigator.onLine) {
+          try {
+            const up = await uploadCatchPhotoToStorage(uid, id, stagedPhoto);
+            if (up) patch = { ...patch, ...up, photo:"", photoPending:false };
+            else enqueueStorageUpload(uid, id, stagedPhoto);
+          } catch(e) {
+            enqueueStorageUpload(uid, id, stagedPhoto);
+          }
+        } else {
+          enqueueStorageUpload(uid, id, stagedPhoto);
+        }
+      }
+
+      await updateDoc(doc(db, "catches", id), patch);
 
       editState.delete(id);
       renderDiary();
@@ -1762,7 +1947,8 @@ function renderDiary() {
         const isPB = pbMap.get(sp)?.id === c.id;
         const editing = editState.has(c.id);
         const staged = editState.get(c.id) || {};
-        const photoToShow = staged.photo ?? c.photo ?? "";
+        const queuedPhoto = (!staged.photo && c.photoPending) ? getQueuedPhotoDataUrl(currentUid, c.id) : "";
+        const photoToShow = staged.removePhoto ? "" : (staged.photo ?? c.photoUrl ?? queuedPhoto ?? c.photo ?? "");
 
         if (!editing) {
           const pbBadge = isPB ? `<span class="pb-badge">PB</span>` : "";
@@ -1822,6 +2008,7 @@ function renderDiary() {
               <div class="photo-actions">
   <input id="ep_${c.id}" type="file" class="photo-input" accept="image/*" />
   <label for="ep_${c.id}" class="photo-btn" title="Replace photo" aria-label="Replace photo">📷</label>
+  <button type="button" class="photo-btn" onclick="removeEditPhoto('${c.id}')" title="Remove photo" aria-label="Remove photo">🗑️</button>
 </div>
             </div>
             <textarea id="en_${c.id}" style="height:80px;" placeholder="Notes...">${escapeHtml(c.notes || "")}</textarea>
@@ -1840,7 +2027,7 @@ function renderDiary() {
           const file = input.files?.[0];
           if (!file) return;
           const dataUrl = await fileToCompressedDataUrl(file, 900, 0.72);
-          editState.set(c.id, { ...(editState.get(c.id)||{}), photo: dataUrl });
+          editState.set(c.id, { ...(editState.get(c.id)||{}), photo: dataUrl, removePhoto:false });
           renderDiary();
         };
       }
@@ -2324,8 +2511,10 @@ async function saveCatch() {
         wt,
         len,
         notes,
-        photo,
-
+        photoUrl: "",
+        photoPath: "",
+        photo: "",
+        photoPending: !!photo,
         dt: dStr,
         time: tStr,
         loc: envData.port,
@@ -2352,17 +2541,24 @@ async function saveCatch() {
 
       // Upload photo to Firebase Storage (optional) and patch catch record with URL
       if (photo) {
-        try{
-          const uid = auth.currentUser.uid;
-          const up = await uploadCatchPhotoToStorage(uid, docRef.id, photo);
-          if (up) {
-            await updateDoc(docRef, up);
-          } else {
-            // Fallback: keep legacy inline photo only if upload failed
-            await updateDoc(docRef, { photo });
+        const uid = auth.currentUser.uid;
+
+        // Mark as pending immediately (Firestore persistence will queue this while offline)
+        try { await updateDoc(docRef, { photoPending: true, photoUrl:"", photoPath:"", photo:"" }); } catch(e) {}
+
+        if (navigator.onLine) {
+          try {
+            const up = await uploadCatchPhotoToStorage(uid, docRef.id, photo);
+            if (up) {
+              await updateDoc(docRef, { ...up, photo: "", photoPending: false });
+            } else {
+              enqueueStorageUpload(uid, docRef.id, photo);
+            }
+          } catch(e) {
+            enqueueStorageUpload(uid, docRef.id, photo);
           }
-        } catch(e) {
-          try { await updateDoc(docRef, { photo }); } catch(_e) {}
+        } else {
+          enqueueStorageUpload(uid, docRef.id, photo);
         }
       }
 
@@ -2861,7 +3057,7 @@ document.getElementById('aboutBtn').onclick = () => {
             <div><b>BiteWise</b> v13.10.7</div>
             <div class="muted">© ${year} BiteWise. All rights reserved.</div>
             <div class="muted" style="margin-top:10px;">
-              Prototype build for testing (Firestore-only photo storage with compression).
+              Prototype build for testing (photos stored in Firebase Storage; thumbnails may be compressed).
             </div>
           </div>
         `);
@@ -2871,6 +3067,11 @@ document.getElementById('aboutBtn').onclick = () => {
     // ===== App init =====
     async function initApp(uid) {
       currentUid = uid;
+
+      // Offline-safe Storage ops: bind online handler + attempt to flush any queued uploads/deletes
+      bindStorageOpsOnlineHandler();
+      processStorageOpsOnce();
+
 
       initMapOnce();
       await loadPorts();
