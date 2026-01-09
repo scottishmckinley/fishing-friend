@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Angler OS</title>
+  <title>BiteWise</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -297,8 +297,8 @@
 
     <!-- My intel -->
     
-    <!-- My Intel toggle -->
-    <button class="btn-main" id="myIntelToggleBtn" style="width:100%; margin-bottom:12px;">🧠 My Intel</button>
+    <!-- My BiteWise Intel toggle -->
+    <button class="btn-main" id="myIntelToggleBtn" style="width:100%; margin-bottom:12px;">🧠 My BiteWise Intel</button>
 
     <div class="drawer" id="myIntelDrawer" style="display:none;">
 <div class="intel-card">
@@ -499,6 +499,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDICIj5QIcCLhrq_tlC0QsLKwpB4T7CkoU",
@@ -512,6 +513,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     const AD_KEY = '05819e75195f4d5f8e73742dd5d57c39';
     const PROXY = "https://corsproxy.io/?";
@@ -1006,13 +1008,35 @@ const byDay = new Map();
       renderTideOutlook(id);
     
 
-      // Refresh My Intel for the selected port
+      // Refresh My BiteWise Intel for the selected port
       try { renderMyIntel(); } catch {}
 }
     window.handlePort = handlePort;
 
     // ===== Photo compression (Firestore-friendly) =====
-    async function fileToCompressedDataUrl(file, maxW=900, quality=0.72) {
+    
+    async function dataUrlToBlob(dataUrl){
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    }
+
+    async function uploadCatchPhotoToStorage(uid, catchId, dataUrl){
+      try{
+        if (!uid || !catchId || !dataUrl || !String(dataUrl).startsWith("data:image/")) return null;
+        const blob = await dataUrlToBlob(dataUrl);
+        const type = blob.type || "image/jpeg";
+        const ext = type.includes("png") ? "png" : "jpg";
+        const path = `users/${uid}/catches/${catchId}.${ext}`;
+        const refObj = sRef(storage, path);
+        await uploadBytes(refObj, blob, { contentType: type });
+        const url = await getDownloadURL(refObj);
+        return { photoUrl: url, photoPath: path };
+      } catch(e){
+        return null;
+      }
+    }
+
+async function fileToCompressedDataUrl(file, maxW=900, quality=0.72) {
       const img = await new Promise((resolve, reject) => {
         const i = new Image();
         i.onload = () => resolve(i);
@@ -1046,9 +1070,9 @@ const byDay = new Map();
     }
 
     // ===== Share =====
-    function shareCatch(c) {
+    async function shareCatch(c) {
       const text =
-`AnglerOS Catch Log
+`BiteWise Catch Log
 Species: ${c.sp || ""}
 Weight: ${c.wt || 0} lb
 Length: ${c.len || 0} cm
@@ -1060,10 +1084,57 @@ Tide: ${c.tide || ""}
 Flow: ${c.flow || ""}
 Notes: ${c.notes || ""}`.trim();
 
-      if (navigator.share) {
-        navigator.share({ title:"AnglerOS Catch", text }).catch(()=>{});
-        return;
+      // Try to include photo on mobile via Web Share (files)
+      async function dataUrlToFile(dataUrl, filename){
+        const m = String(dataUrl||"").match(/^data:(image\/[^;]+);base64,(.+)$/);
+        if (!m) return null;
+        const mime = m[1];
+        const b64 = m[2];
+        const bin = atob(b64);
+        const len = bin.length;
+        const bytes = new Uint8Array(len);
+        for (let i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
+        return new File([bytes], filename, {type:mime});
       }
+
+      async function urlToFile(url, filename){
+        try{
+          const res = await fetch(url, {mode:'cors'});
+          if (!res.ok) return null;
+          const blob = await res.blob();
+          const type = blob.type || 'image/jpeg';
+          return new File([blob], filename, {type});
+        } catch(e){ return null; }
+      }
+
+      if (navigator.share) {
+        try{
+          let file = null;
+          const photo = c.photo || c.photoUrl || c.img || "";
+          if (photo) {
+            if (String(photo).startsWith("data:image/")) {
+              file = await dataUrlToFile(photo, "angleros-catch.jpg");
+            } else if (/^https?:\/\//i.test(photo)) {
+              file = await urlToFile(photo, "angleros-catch.jpg");
+            }
+          }
+
+          if (file && navigator.canShare && navigator.canShare({ files:[file] })) {
+            await navigator.share({ title:"BiteWise Catch", text, files:[file] });
+          } else {
+            await navigator.share({ title:"BiteWise Catch", text });
+            if (photo && !file) notify("Photo couldn't be attached on this device.");
+          }
+          return;
+        } catch(e){
+          // fall through to clipboard
+        }
+      }
+
+      navigator.clipboard?.writeText(text)
+        .then(() => notify("Copied to clipboard"))
+        .catch(() => notify("Share not supported"));
+    }
       navigator.clipboard?.writeText(text)
         .then(() => notify("Copied to clipboard"))
         .catch(() => notify("Share not supported"));
@@ -1252,7 +1323,7 @@ write(rows);
         acc: envData.acc ?? null
       };
 
-      // Refresh My Intel for the selected port
+      // Refresh My BiteWise Intel for the selected port
       try { renderMyIntel(); } catch {}
 
     }
@@ -1341,7 +1412,7 @@ write(rows);
           <ol style="margin:0 0 12px 18px; padding:0;">
             <li>Pick a <b>location</b> (favourite ★, map tap, or the port dropdown).</li>
             <li>Check the <b>HUD cards</b> (Weather / Tide / Flow / Pressure / Moon / Bite).</li>
-            <li>Log a catch in <b>New Catch</b> to build your <b>My Intel</b> over time.</li>
+            <li>Log a catch in <b>New Catch</b> to build your <b>My BiteWise Intel</b> over time.</li>
           </ol>
 
           <div class="intel-header">Locations</div>
@@ -1361,7 +1432,7 @@ write(rows);
             <div><b>Bite</b><br><span class="muted">Solunar bite windows (Major/Minor). Shows <b>active</b> windows and time to next.</span></div>
           </div>
 
-          <div class="intel-header">My Intel</div>
+          <div class="intel-header">My BiteWise Intel</div>
           <ul class="intel-list" style="margin-bottom:12px;">
             <li><b>Range filter</b>: Use <b>Last 7 / 30 / 90 / All‑time</b> to change what history is analysed.</li>
             <li><b>Transparency</b>: Each insight shows <b>based on X catches</b>. If there isn’t enough data, you’ll see <b>Not enough data yet</b>.</li>
@@ -1586,7 +1657,9 @@ write(rows);
         wt,
         len,
         notes,
-        photo,
+        photoUrl: "",
+        photoPath: "",
+        photo: "",
         updatedAt: Date.now()
       });
 
@@ -1839,7 +1912,7 @@ function renderDiary() {
 
     // ===== Save catch =====
     
-    // ===== My Intel (personal insights) =====
+    // ===== My BiteWise Intel (personal insights) =====
     function moonPhaseInfo(dateMs){
       // Simple synodic month model (good enough for angling insights)
       const synodic = 29.53058867; // days
@@ -1967,7 +2040,7 @@ function topN(mapObj, n=2){
       return Object.entries(mapObj).sort((a,b)=>b[1]-a[1]).slice(0,n);
     }
 
-    // ===== My Intel range filter =====
+    // ===== My BiteWise Intel range filter =====
     const INTEL_RANGE_KEY = "aos_intel_range_v1";
 
     function getIntelRangeValue(){
@@ -2238,7 +2311,7 @@ async function saveCatch() {
       const tideSnap = getCurrentTideSnapshot(nowMs);
       const tideCtx = tideSnap.tideCtx;
 
-      await addDoc(collection(db, "catches"), {
+      const docRef = await addDoc(collection(db, "catches"), {
         userId: auth.currentUser.uid,
         sp: s.toUpperCase(),
         wt,
@@ -2270,6 +2343,22 @@ async function saveCatch() {
         timestamp: Date.now()
       });
 
+      // Upload photo to Firebase Storage (optional) and patch catch record with URL
+      if (photo) {
+        try{
+          const uid = auth.currentUser.uid;
+          const up = await uploadCatchPhotoToStorage(uid, docRef.id, photo);
+          if (up) {
+            await updateDoc(docRef, up);
+          } else {
+            // Fallback: keep legacy inline photo only if upload failed
+            await updateDoc(docRef, { photo });
+          }
+        } catch(e) {
+          try { await updateDoc(docRef, { photo }); } catch(_e) {}
+        }
+      }
+
       updateSessionBadge();
       notify("RECORD SAVED");
       renderMyIntel();
@@ -2282,12 +2371,12 @@ async function saveCatch() {
 
     // ===== Wire UI =====
 
-      // My Intel drawer toggle
+      // My BiteWise Intel drawer toggle
       document.getElementById('myIntelToggleBtn').onclick = () => {
         const d = document.getElementById('myIntelDrawer');
         const open = d.style.display === 'block';
         d.style.display = open ? 'none' : 'block';
-        document.getElementById('myIntelToggleBtn').textContent = open ? '🧠 My Intel' : '🧠 My Intel (Hide)';
+        document.getElementById('myIntelToggleBtn').textContent = open ? '🧠 My BiteWise Intel' : '🧠 My BiteWise Intel (Hide)';
       };
 
       // Catch Explorer toggle
@@ -2727,10 +2816,10 @@ document.getElementById('expTopTimes').innerHTML = times.length
       document.getElementById('helpBtn').onclick = () => showHelp();
 document.getElementById('aboutBtn').onclick = () => {
         const year = new Date().getFullYear();
-        openModal("About AnglerOS", `
+        openModal("About BiteWise", `
           <div style="font-size:0.9rem; line-height:1.6;">
-            <div><b>AnglerOS</b> v13.10.7</div>
-            <div class="muted">© ${year} AnglerOS. All rights reserved.</div>
+            <div><b>BiteWise</b> v13.10.7</div>
+            <div class="muted">© ${year} BiteWise. All rights reserved.</div>
             <div class="muted" style="margin-top:10px;">
               Prototype build for testing (Firestore-only photo storage with compression).
             </div>
