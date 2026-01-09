@@ -244,14 +244,25 @@
 <body>
   <div id="toast">Message</div>
 
+  
   <div id="authScreen">
     <div class="auth-card">
-      <h2 style="color:var(--white); margin-top:0;">ANGLER<span style="color:var(--sea)">OS</span></h2>
+      <h2 style="color:var(--white); margin-top:0;">BITE<span style="color:var(--sea)">WISE</span></h2>
       <input type="email" id="loginEmail" placeholder="Email Address" />
       <input type="password" id="loginPass" placeholder="Password" />
       <button class="btn-main" id="loginBtn">LOG IN</button>
+
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn-sub" id="createAccountBtn" style="flex:1;">CREATE ACCOUNT</button>
+        <button class="btn-sub" id="forgotPassBtn" style="flex:1;">FORGOT?</button>
+      </div>
+
+      <div class="muted" style="margin-top:10px; font-size:0.85rem; line-height:1.25;">
+        Tip: Use the same email/password to log in on this device later.
+      </div>
     </div>
   </div>
+
 
   <div class="app-container" id="mainApp">
     <!-- Header -->
@@ -262,7 +273,7 @@
       </div>
 
       <div class="header-center">
-        <span class="app-logo">ANGLER<span style="color:var(--sea)">OS</span></span>
+        <span class="app-logo">BITE<span style="color:var(--sea)">WISE</span></span>
       </div>
 
       <div class="header-right">
@@ -497,9 +508,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDICIj5QIcCLhrq_tlC0QsLKwpB4T7CkoU",
@@ -1131,10 +1142,6 @@ Notes: ${c.notes || ""}`.trim();
         }
       }
 
-      navigator.clipboard?.writeText(text)
-        .then(() => notify("Copied to clipboard"))
-        .catch(() => notify("Share not supported"));
-    }
       navigator.clipboard?.writeText(text)
         .then(() => notify("Copied to clipboard"))
         .catch(() => notify("Share not supported"));
@@ -2692,6 +2699,39 @@ document.getElementById('expTopTimes').innerHTML = times.length
           notify("Login Error");
         }
       };
+
+      document.getElementById('createAccountBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass  = document.getElementById('loginPass').value;
+        if (!email || !pass || pass.length < 6) {
+          notify("Enter email + password (6+ chars)");
+          return;
+        }
+        try {
+          await createUserWithEmailAndPassword(auth, email, pass);
+          notify("Account created ✅");
+        } catch (e) {
+          console.error(e);
+          // Common case: account already exists
+          notify(e?.message || "Sign up error");
+        }
+      };
+
+      document.getElementById('forgotPassBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) {
+          notify("Enter your email first");
+          return;
+        }
+        try {
+          await sendPasswordResetEmail(auth, email);
+          notify("Reset email sent ✅");
+        } catch (e) {
+          console.error(e);
+          notify(e?.message || "Reset error");
+        }
+      };
+
 
       document.getElementById('logoutBtn').onclick = async () => {
         if (unsubCatches) { try { unsubCatches(); } catch(e) {} unsubCatches = null; }
