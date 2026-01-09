@@ -33,6 +33,9 @@
     }
 
     .drawer{display:none;background:var(--card);border:1px solid var(--gold);border-radius:15px;padding:15px;margin-bottom:15px;}
+    #myIntelToggleBtn{position:sticky; top:10px; z-index:3;}
+    #myIntelDrawer .intel-card{margin:0; border:none; background:transparent; padding:0;}
+
     .card{background:var(--card);border:1px solid var(--border);padding:15px;border-radius:20px;margin-bottom:15px;}
     .intel-card{border:1px solid var(--gold);border-radius:20px;padding:15px;margin-bottom:15px;background:var(--card);}
 
@@ -71,6 +74,11 @@
     .val{font-size:1.05rem;font-weight:900;color:var(--white);}
     .sub-val{font-size:0.72rem;font-weight:900;display:block;color:var(--sea);margin-top:2px;}
     .sub-val.red{color:var(--red);}
+    /* Bite card emphasis */
+    @keyframes aosPulse { 0%{transform:scale(1);} 50%{transform:scale(1.01);} 100%{transform:scale(1);} }
+    .hud-item.is-active{border-color:rgba(255,255,255,0.25); box-shadow:0 0 0 2px rgba(255,255,255,0.06), 0 10px 28px rgba(0,0,0,0.35);}
+    .hud-item.is-hot{animation:aosPulse 1.6s ease-in-out infinite;}
+
 
     .btn-main{
       width:100%;background:var(--sea);color:var(--navy);border:none;
@@ -288,7 +296,12 @@
     <div id="favBox" class="drawer"><div id="favList"></div></div>
 
     <!-- My intel -->
-    <div class="intel-card">
+    
+    <!-- My Intel toggle -->
+    <button class="btn-main" id="myIntelToggleBtn" style="width:100%; margin-bottom:12px;">🧠 My Intel</button>
+
+    <div class="drawer" id="myIntelDrawer" style="display:none;">
+<div class="intel-card">
       <div class="intel-header" style="justify-content:space-between; width:100%;">
         <span>🧠 MY INTEL</span>
         <select id="intelRange" style="width:auto; padding:8px 10px; margin:0; font-size:0.75rem; font-weight:900;">
@@ -302,11 +315,96 @@
       <div id="myIntelBody" class="muted" style="line-height:1.55;">
         Select a port to see patterns from your catches.
       </div>
+    
     </div>
+
+        </div>
 
     <div id="map"></div>
 
+
     <button class="btn-main" id="gpsSyncBtn">📍 Find Nearest Port</button>
+
+    <!-- Catch Explorer -->
+    <div class="card" id="explorerCard">
+      <div class="intel-header" style="justify-content:space-between; width:100%;">
+        <span>🔎 CATCH EXPLORER</span>
+        <button class="btn-sub" id="explorerToggleBtn" style="padding:8px 10px;">Show</button>
+      </div>
+      <div id="explorerBody" style="display:none; margin-top:10px;">
+        <div class="grid2" style="gap:8px;">
+          <select id="expPort" style="margin:0;">
+            <option value="all">All ports</option>
+            <option value="selected">Selected port</option>
+          </select>
+          <select id="expRange" style="margin:0;">
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 365 days</option>
+            <option value="all" selected>All-time</option>
+          </select>
+
+          <select id="expTidePhase" style="margin:0;">
+            <option value="any" selected>Any tide phase</option>
+            <option value="rising">Rising</option>
+            <option value="falling">Falling</option>
+          </select>
+          <select id="expTideStage" style="margin:0;">
+            <option value="any" selected>Any tide stage</option>
+            <option value="early">Early</option>
+            <option value="mid">Mid</option>
+            <option value="late">Late</option>
+          </select>
+
+          <select id="expWindDir" style="margin:0;">
+            <option value="any" selected>Any wind dir</option>
+            <option value="N">N</option><option value="NNE">NNE</option><option value="NE">NE</option><option value="ENE">ENE</option>
+            <option value="E">E</option><option value="ESE">ESE</option><option value="SE">SE</option><option value="SSE">SSE</option>
+            <option value="S">S</option><option value="SSW">SSW</option><option value="SW">SW</option><option value="WSW">WSW</option>
+            <option value="W">W</option><option value="WNW">WNW</option><option value="NW">NW</option><option value="NNW">NNW</option>
+          </select>
+          <div style="display:flex; gap:8px;">
+            <input id="expWindMin" type="number" placeholder="Wind min" style="margin:0;" />
+            <input id="expWindMax" type="number" placeholder="Wind max" style="margin:0;" />
+          </div>
+
+          <select id="expTime" style="margin:0;">
+            <option value="any" selected>Any time</option>
+            <option value="dawn">Dawn</option>
+            <option value="day">Day</option>
+            <option value="dusk">Dusk</option>
+            <option value="night">Night</option>
+          </select>
+          <button class="btn-main" id="expApplyBtn" style="margin:0;">Apply</button>
+        </div>
+
+        <div id="expSummary" class="muted" style="margin-top:10px;"></div>
+
+        <div class="card" style="padding:10px; margin:10px 0 0;">
+          <div class="intel-header" style="margin:0 0 6px;">⭐ Best conditions</div>
+          <div class="muted" style="font-size:0.85rem; margin-bottom:6px;">
+            Based on your catch history in the selected range (and port scope).
+          </div>
+          <div id="expBestConditions" class="muted"></div>
+        </div>
+
+
+        <div class="grid2" style="gap:10px; margin-top:10px;">
+          <div class="card" style="padding:10px; margin:0;">
+            <div class="intel-header" style="margin:0 0 6px;">Top ports</div>
+            <div id="expTopPorts" class="muted"></div>
+          </div>
+          <div class="card" style="padding:10px; margin:0;">
+            <div class="intel-header" style="margin:0 0 6px;">Top times</div>
+            <div id="expTopTimes" class="muted"></div>
+          </div>
+          <div class="card" style="padding:10px; margin:0;">
+            <div class="intel-header" style="margin:0 0 6px;">Top species</div>
+            <div id="expTopSpecies" class="muted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="card" style="padding:10px;">
       <div style="display:flex; gap:5px;">
@@ -341,7 +439,7 @@
         <span id="hMoonD" class="sub-val">--</span>
       </div>
 
-      <div class="hud-item">
+      <div class="hud-item" id="hudBite">
         <span class="label">Bite</span>
         <div id="hBite" class="val">--</div>
         <span id="hBiteD" class="sub-val">--</span>
@@ -419,6 +517,7 @@
     const PROXY = "https://corsproxy.io/?";
 
     let catches = [];
+    let unsubCatches = null;
     let allPorts = [];
     let favs = JSON.parse(localStorage.getItem('aos_favs')) || [];
     let map, marker;
@@ -791,6 +890,7 @@ const byDay = new Map();
       envData.port = p.name;
       window.currentLat = p.lat;
       window.currentLon = p.lon;
+      try { updateBiteCard(); } catch(e) {}
 
       // ✅ Keep UI in sync regardless of selection method
       resetPortSearchUI();
@@ -1013,7 +1113,15 @@ Notes: ${c.notes || ""}`.trim();
         if (!s || s.endAt) return s || null;
         s.endAt = now();
         s.updatedAt = now();
-        write(rows);
+        
+        // Auto-tag session on end
+        try {
+          const sessionCatches = catches.filter(c => c.sessionId === s.id);
+          const tags = computeSessionTags(s, sessionCatches);
+          s.tags = tags;
+          s.tagSummary = tags.join(" • ");
+        } catch(e) {}
+write(rows);
         return s;
       };
 
@@ -1028,6 +1136,113 @@ Notes: ${c.notes || ""}`.trim();
 
       return { read, write, getActive, start, end, ensureActive, durationMs, durationLabel };
     })();
+
+    // ===== Session auto-tags =====
+    function _hourLocal(ms){ try { return new Date(ms).getHours(); } catch { return 12; } }
+    function _todTag(startMs, endMs){
+      const h = _hourLocal(startMs);
+      if (h >= 4 && h < 8) return "dawn";
+      if (h >= 18 && h < 22) return "dusk";
+      if (h >= 22 || h < 4) return "night";
+      return "day";
+    }
+    function _mode(arr){
+      const m = {};
+      for (const v of arr){ if (!v) continue; m[v]=(m[v]||0)+1; }
+      let best=null, bestN=0;
+      for (const [k,n] of Object.entries(m)){ if (n>bestN){ best=k; bestN=n; } }
+      return best;
+    }
+    function _avg(nums){
+      const a = nums.filter(n => Number.isFinite(n));
+      if (!a.length) return null;
+      return a.reduce((s,x)=>s+x,0)/a.length;
+    }
+    function _inWindow(ms, w){
+      if (!w?.start || !w?.end) return false;
+      const t = ms;
+      return t >= w.start.getTime() && t <= w.end.getTime();
+    }
+
+    function computeSessionTags(session, sessionCatches){
+      const tags = [];
+      if (!session) return tags;
+
+      // Time-of-day
+      tags.push(_todTag(session.startAt, session.endAt || Date.now()));
+
+      // Multi-species
+      const species = [...new Set((sessionCatches||[]).map(c => (c.sp||"").toUpperCase()).filter(Boolean))];
+      if (species.length >= 2) tags.push("multi-species");
+      else if (species.length === 1) tags.push(species[0].toLowerCase());
+
+      // Tide phase + stage
+      const phases = (sessionCatches||[]).map(c => (c.tideCtx?.phase || "").toLowerCase());
+      const domPhase = _mode(phases);
+      if (domPhase === "rising") tags.push("flooding");
+      if (domPhase === "falling") tags.push("ebbing");
+
+      const prog = (sessionCatches||[]).map(c => Number(c.tideCtx?.progressPct));
+      const avgProg = _avg(prog);
+      if (avgProg !== null) {
+        if (avgProg < 33) tags.push("early tide");
+        else if (avgProg < 67) tags.push("mid tide");
+        else tags.push("late tide");
+      } else {
+        // fallback: before/after label
+        const rels = (sessionCatches||[]).map(c => (c.tideCtx?.relation || "").toLowerCase());
+        const domRel = _mode(rels);
+        if (domRel) {
+          if (domRel.includes("before hw")) tags.push("to HW");
+          else if (domRel.includes("before lw")) tags.push("to LW");
+          else if (domRel.includes("after hw")) tags.push("after HW");
+          else if (domRel.includes("after lw")) tags.push("after LW");
+        }
+      }
+
+      // Weather quick tags
+      const wtxt = (sessionCatches||[]).map(c => (c.weather||"").toLowerCase()).join(" ");
+      if (wtxt.includes("rain")) tags.push("rain");
+      else if (wtxt.includes("overcast")) tags.push("overcast");
+      else if (wtxt.includes("clear")) tags.push("clear");
+
+      // Solunar overlap (requires getSolunarWindows + location)
+      try{
+        const lat = session.lat ?? window.currentLat ?? envData?.lat ?? null;
+        const lon = session.lon ?? window.currentLon ?? envData?.lon ?? null;
+        const solFn = (typeof window.getSolunarWindows === "function") ? window.getSolunarWindows : null;
+        if (solFn && lat !== null && lon !== null) {
+          const day = new Date(session.startAt);
+          const sol = solFn(day, lat, lon);
+          if (sol) {
+            const majors = [
+              {start: sol.majorStart1, end: sol.majorEnd1},
+              {start: sol.majorStart2, end: sol.majorEnd2},
+            ];
+            const minors = [
+              {start: sol.minorStart1, end: sol.minorEnd1},
+              {start: sol.minorStart2, end: sol.minorEnd2},
+            ];
+            const inMajor = (sessionCatches||[]).some(c => _inWindow(Number(c.caughtAt||c.timestamp||0), majors[0]) || _inWindow(Number(c.caughtAt||c.timestamp||0), majors[1]));
+            const inMinor = (sessionCatches||[]).some(c => _inWindow(Number(c.caughtAt||c.timestamp||0), minors[0]) || _inWindow(Number(c.caughtAt||c.timestamp||0), minors[1]));
+            if (inMajor) tags.push("solunar major");
+            else if (inMinor) tags.push("solunar minor");
+          }
+        }
+      } catch(e){}
+
+      // Deduplicate & limit
+      const seen = new Set();
+      const out = [];
+      for (const t of tags){
+        const k = (t||"").trim();
+        if (!k) continue;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(k);
+      }
+      return out.slice(0, 6);
+    }
 
     function getSessionMetaFromEnv(){
       return {
@@ -1073,6 +1288,7 @@ Notes: ${c.notes || ""}`.trim();
           <div><b>Session:</b> ${escapeHtml(s.port || "—")}</div>
           <div><b>Start:</b> ${escapeHtml(formatLocal(s.startAt))}</div>
           <div><b>Duration:</b> ${escapeHtml(SessionEngine.durationLabel(SessionEngine.durationMs(s)))}</div>
+          <div><b>Tags:</b> ${escapeHtml((s.tags && s.tags.length) ? s.tags.join(" • ") : (computeSessionTags(s, sessionCatches).join(" • ") || "—"))}</div>
           <div style="margin-top:6px;"><b>Total caught:</b> ${totalCount}</div>
           <div><b>Total weight:</b> ${totalWeight.toFixed(1)} lb</div>
         </div>
@@ -1118,41 +1334,52 @@ Notes: ${c.notes || ""}`.trim();
     }
 
     function helpHtml(){
+      
       return `
         <div style="font-size:0.9rem; line-height:1.65;">
           <div class="intel-header" style="margin-top:0;">Quick start</div>
           <ol style="margin:0 0 12px 18px; padding:0;">
-            <li><b>Select a port</b> (or tap <b>Find Nearest Port</b>).</li>
-            <li>Tap <b>START</b> in the session bar (or just save your first catch to auto-start).</li>
-            <li><b>Save a catch</b> (species, weight/length, optional photo + notes).</li>
-            <li>Use the <b>History Calendar</b> to jump to a day’s catches.</li>
-            <li>Tap <b>END</b> when you finish.</li>
+            <li>Pick a <b>location</b> (favourite ★, map tap, or the port dropdown).</li>
+            <li>Check the <b>HUD cards</b> (Weather / Tide / Flow / Pressure / Moon / Bite).</li>
+            <li>Log a catch in <b>New Catch</b> to build your <b>My Intel</b> over time.</li>
           </ol>
 
-          <div class="intel-header">How sessions work</div>
+          <div class="intel-header">Locations</div>
           <ul class="intel-list" style="margin-bottom:12px;">
-            <li>Only <b>one active session</b> at a time.</li>
-            <li>Sessions are <b>overnight-safe</b> (midnight doesn’t break totals).</li>
-            <li>Your catches are saved automatically.</li>
+            <li><b>★ Favourites</b>: Save your regular marks for one‑tap selection.</li>
+            <li><b>Map</b>: Tap the map to move the marker. Use GPS to jump to your current position.</li>
+            <li><b>Port dropdown</b>: Quickly switch to a known port (also updates tide/weather sources).</li>
           </ul>
 
-          <div class="intel-header">What each card shows</div>
-          <div style="display:grid; gap:10px; margin-bottom:12px;">
-            <div><b>Map & GPS</b><br><span class="muted">Your current location, selected port, and favourites. Use it to set where you’re fishing.</span></div>
-            <div><b>Fishing Intel</b><br><span class="muted">A quick at-a-glance summary for the selected location.</span></div>
-            <div><b>Weather</b><br><span class="muted">Forecast and current conditions for the selected port/location.</span></div>
-            <div><b>Tide</b><br><span class="muted">Next tide and a 7‑day outlook for the selected port.</span></div>
-            <div><b>Flow & Pressure</b><br><span class="muted">Supporting conditions that can affect feeding behaviour.</span></div>
-            <div><b>Catch entry</b><br><span class="muted">Log a catch with time/date, details, notes and a photo.</span></div>
-            <div><b>Previous catches</b><br><span class="muted">Your recent catch log. Edit or delete entries.</span></div>
-            <div><b>History Calendar</b><br><span class="muted">Jump to a specific day to review what you caught.</span></div>
-            <div><b>Session Summary</b><br><span class="muted">Totals for the current session (count, duration, breakdown).</span></div>
+          <div class="intel-header">HUD cards</div>
+          <div class="intel-grid" style="margin-bottom:12px;">
+            <div><b>Weather</b><br><span class="muted">Current conditions + forecast for the selected location.</span></div>
+            <div><b>Tide</b><br><span class="muted">Next tide event + timing and a 7‑day outlook (where available).</span></div>
+            <div><b>Flow</b><br><span class="muted">Simple read on movement / “feeding zone” cues based on tide state.</span></div>
+            <div><b>Pressure</b><br><span class="muted">Barometric pressure and trend (stable / rising / falling).</span></div>
+            <div><b>Moon</b><br><span class="muted">Phase, illumination, and moon age for today.</span></div>
+            <div><b>Bite</b><br><span class="muted">Solunar bite windows (Major/Minor). Shows <b>active</b> windows and time to next.</span></div>
+          </div>
+
+          <div class="intel-header">My Intel</div>
+          <ul class="intel-list" style="margin-bottom:12px;">
+            <li><b>Range filter</b>: Use <b>Last 7 / 30 / 90 / All‑time</b> to change what history is analysed.</li>
+            <li><b>Transparency</b>: Each insight shows <b>based on X catches</b>. If there isn’t enough data, you’ll see <b>Not enough data yet</b>.</li>
+            <li><b>What it learns</b>: Patterns like best tide window, rising vs falling, moon phase, and more (as your log grows).</li>
+          </ul>
+
+          <div class="intel-header">Catches & history</div>
+          <div class="intel-grid" style="margin-bottom:12px;">
+            <div><b>New Catch</b><br><span class="muted">Log species, weight/length, notes, and photo. More logs = better intel.</span></div>
+            <div><b>Previous catches</b><br><span class="muted">Your recent log. Edit or delete entries anytime.</span></div>
+            <div><b>History Calendar</b><br><span class="muted">Jump to a day to review what you caught and the conditions.</span></div>
+            <div><b>Session</b><br><span class="muted">Use <b>🧭 SESSION</b> for quick totals and session timing.</span></div>
           </div>
 
           <div class="intel-header">Tips</div>
           <ul class="intel-list" style="margin-bottom:12px;">
-            <li>Use <b>★ Favourites</b> to save regular marks.</li>
-            <li>Tap <b>🧭 SESSION</b> for a quick summary at any time.</li>
+            <li>If <b>Bite</b> says “Location needed”, select a port or favourite (or enable GPS).</li>
+            <li>Use short, consistent notes (e.g. “2h after low”, “weed on flood”) — they become searchable patterns later.</li>
           </ul>
 
           <div style="margin-top:14px; display:flex; gap:10px;">
@@ -1163,6 +1390,7 @@ Notes: ${c.notes || ""}`.trim();
           </div>
         </div>
       `;
+
     }
 
     // ===== 7-day tide planner =====
@@ -1368,7 +1596,84 @@ Notes: ${c.notes || ""}`.trim();
     };
 
     // ===== Diary =====
-    function renderDiary() {
+    
+    // ===== Tide display (catch cards) =====
+    function _tideEventLabel(et){
+      if (et === "HighWater") return "HW";
+      if (et === "LowWater") return "LW";
+      return "";
+    }
+
+    function _fmtMins(mins){
+      if (mins === null || mins === undefined || !Number.isFinite(mins)) return "";
+      const m = Math.abs(Math.round(mins));
+      const h = Math.floor(m/60);
+      const mm = m % 60;
+      if (h <= 0) return `${mm}m`;
+      return `${h}h ${mm}m`;
+    }
+
+    function formatTideForCatch(c){
+      const fallback = (c?.tideHud?.summary || c?.tide || c?.tideHud?.detail || "").trim();
+
+      // If saved ctx is incomplete, try to recompute now using cached tide events.
+      let ctx = c?.tideCtx || null;
+      try {
+        const ms = Number(c?.caughtAt ?? c?.timestamp ?? c?.createdAt);
+        const pid = (c?.portId || c?.idPort || c?.stationId || "").toString();
+        if (Number.isFinite(ms) && typeof tideContextFor === "function") {
+          const fresh = tideContextFor(ms, pid);
+          // Prefer fresh if it has richer fields (relation/progress/minsToNext)
+          if (fresh && (fresh.relation || fresh.progressPct !== null || fresh.minsToNextEvent !== null)) {
+            ctx = fresh;
+          }
+        }
+      } catch(e){}
+
+      if (!ctx) return fallback || "--";
+
+      // Backwards-compatible field support (older ctx schema)
+      const phase = (ctx.phase || "").trim(); // Rising/Falling
+
+      // relation: may be missing on old saves — derive from nextType/summary
+      let relation = (ctx.relation || "").trim();
+      if (!relation) {
+        const nt = (ctx.nextType || "").toString().toLowerCase(); // "high"/"low"
+        if (nt === "high") relation = "Before HW";
+        else if (nt === "low") relation = "Before LW";
+      }
+
+      // mins to next: new schema minsToNextEvent; old schema minsToNext / minsToNearestEvent (if next not known)
+      let minsToNext = null;
+      if (ctx.minsToNextEvent !== null && ctx.minsToNextEvent !== undefined && Number.isFinite(ctx.minsToNextEvent)) minsToNext = ctx.minsToNextEvent;
+      else if (ctx.minsToNext !== null && ctx.minsToNext !== undefined && Number.isFinite(ctx.minsToNext)) minsToNext = ctx.minsToNext;
+      else if (ctx.minsToNearestEvent !== null && ctx.minsToNearestEvent !== undefined && Number.isFinite(ctx.minsToNearestEvent) && ctx.minsToNearestEvent >= 0) minsToNext = ctx.minsToNearestEvent;
+
+      // progress: only available when we know prev+next — otherwise leave null
+      const pct = (ctx.progressPct !== null && ctx.progressPct !== undefined && Number.isFinite(ctx.progressPct)) ? Math.round(ctx.progressPct) : null;
+
+      // Determine next event label
+      let nextLabel = _tideEventLabel(ctx.nextEventType);
+      if (!nextLabel) {
+        const nt = (ctx.nextType || "").toString().toLowerCase();
+        if (nt === "high") nextLabel = "HW";
+        else if (nt === "low") nextLabel = "LW";
+      }
+
+      const parts = [];
+      if (phase) parts.push(phase);
+      if (pct !== null) parts.push(`${pct}%`);
+      if (relation) parts.push(relation);
+
+      if (minsToNext !== null) {
+        parts.push(`${_fmtMins(minsToNext)} to ${nextLabel || "next"}`);
+      }
+
+      const out = parts.filter(Boolean).join(" • ");
+      return out || (fallback || "--");
+    }
+
+function renderDiary() {
       const list = selectedDate ? catches.filter(c => c.dt === selectedDate) : catches;
       const pbMap = computePBMap(catches);
 
@@ -1403,7 +1708,7 @@ Notes: ${c.notes || ""}`.trim();
                 <span>🌡️ ${escapeHtml(c.temp || '--')} — ${escapeHtml(c.weather || '--')}</span>
                 <span>💨 ${escapeHtml(c.wind || '--')} ${c.gust ? `• <span style="color:var(--red); font-weight:900;">${escapeHtml(c.gust)}</span>` : ""}</span>
                 <span>🧭 Pressure: ${escapeHtml(c.press || c.baro || '--')}</span>
-                <span>🌊 Tide: ${escapeHtml(c.tide || '--')}</span>
+                <span>🌊 Tide: ${escapeHtml(formatTideForCatch(c))}</span>
                 <span>🚀 Flow: ${escapeHtml(c.flow || '--')}</span>
                 <span>📝 Notes: ${c.notes ? escapeHtml(c.notes) : '--'}</span>
               </div>
@@ -1575,32 +1880,80 @@ Notes: ${c.notes || ""}`.trim();
 
         if (!parsed.length) return null;
 
-        // Nearest future event
+        // Find prev (last event <= t) and next (first event >= t)
         let next = parsed.find(e => e._t >= t) || null;
         let prev = null;
         for (let i=parsed.length-1;i>=0;i--){
           if (parsed[i]._t <= t){ prev = parsed[i]; break; }
         }
+
+        // If only one side exists, fall back to "nearest" behaviour
         const nearest = next || prev;
         if (!nearest) return null;
 
-        const minsTo = Math.round((nearest._t - t) / 60000); // + before event, - after event
-        const absH = Math.min(6, Math.max(0, Math.floor(Math.abs(minsTo)/60))); // cap at 6h for bucketing
-        const bucket = `${nearest.EventType === "HighWater" ? "HW" : "LW"} ${minsTo>=0 ? "-" : "+"}${absH}h`;
+        // Nearest (signed) minutes (positive before, negative after)
+        const minsToNearest = Math.round((nearest._t - t) / 60000);
 
-        // Rising/falling approximation based on the next event type
+        // Build more meaningful context if we have BOTH prev and next
         let phase = "Unknown";
-        if (next){
+        let minsToNext = null;
+        let minsSincePrev = null;
+        let segmentMins = null;
+        let progressPct = null;
+        let relation = "";
+        let bucket = "";
+
+        const typeLabel = (et) => (et === "HighWater" ? "HW" : (et === "LowWater" ? "LW" : ""));
+        const nextLabel = next ? typeLabel(next.EventType) : "";
+        const prevLabel = prev ? typeLabel(prev.EventType) : "";
+
+        if (prev && next && next._t !== prev._t) {
+          // Determine rising/falling from the bracketed events
+          if (prev.EventType === "LowWater" && next.EventType === "HighWater") phase = "Rising";
+          else if (prev.EventType === "HighWater" && next.EventType === "LowWater") phase = "Falling";
+          else phase = "Unknown";
+
+          minsToNext = Math.round((next._t - t) / 60000);
+          minsSincePrev = Math.round((t - prev._t) / 60000);
+          segmentMins = Math.round((next._t - prev._t) / 60000);
+
+          // Progress between prev->next (0-100)
+          progressPct = Math.max(0, Math.min(100, Math.round((minsSincePrev / segmentMins) * 100)));
+
+          // Human relation: before next tide (e.g. "Before HW") + how far through
+          relation = `Before ${nextLabel}`;
+          const absH = Math.min(6, Math.max(0, Math.floor(Math.abs(minsToNext)/60)));
+          bucket = `${nextLabel} -${absH}h`;
+        } else if (next) {
+          // Only know the next event
           phase = next.EventType === "HighWater" ? "Rising" : "Falling";
-        } else if (prev){
-          // after last known event, assume heading toward opposite (rough)
+          minsToNext = Math.round((next._t - t) / 60000);
+          relation = `Before ${nextLabel}`;
+          const absH = Math.min(6, Math.max(0, Math.floor(Math.abs(minsToNext)/60)));
+          bucket = `${nextLabel} -${absH}h`;
+        } else if (prev) {
+          // Only know the previous event
           phase = prev.EventType === "HighWater" ? "Falling" : "Rising";
+          minsSincePrev = Math.round((t - prev._t) / 60000);
+          relation = `After ${prevLabel}`;
+          const absH = Math.min(6, Math.max(0, Math.floor(Math.abs(minsSincePrev)/60)));
+          bucket = `${prevLabel} +${absH}h`;
         }
 
         return {
-          phase,
-          nearestEventType: nearest.EventType,
-          minsToNearestEvent: minsTo,
+          phase,                      // Rising/Falling/Unknown
+          relation,                   // Before HW / After LW etc.
+          progressPct,                // % through the segment (when prev+next known)
+          minsToNextEvent: minsToNext,
+          minsSincePrevEvent: minsSincePrev,
+          segmentMins,
+
+          nextEventType: next ? next.EventType : null,
+          prevEventType: prev ? prev.EventType : null,
+          nextHeight: (next && typeof next.Height === "number") ? next.Height : null,
+          prevHeight: (prev && typeof prev.Height === "number") ? prev.Height : null,
+
+          minsToNearestEvent: minsToNearest,
           bucket,
           height: (typeof nearest.Height === "number") ? nearest.Height : null
         };
@@ -1790,9 +2143,64 @@ function topN(mapObj, n=2){
         <div class="muted" style="margin-top:8px;">Based on ${total} catch${total===1?"":"es"} in this range.</div>
       `;
     }
+    // ===== Tide snapshot (for saving catches) =====
+    function getCurrentTideSnapshot(nowMs) {
+      const summaryEl = document.getElementById("hTide");
+      const detailEl  = document.getElementById("hTideD") || document.getElementById("tideDetail");
+      const summary = (summaryEl?.textContent || "").trim();
+      const detail  = (detailEl?.textContent || "").trim();
+
+      // Prefer computed context (uses cached tide events if available)
+      let ctx = null;
+      try {
+        ctx = tideContextFor(nowMs, envData.id || envData.portId || null);
+      } catch (e) {}
+      // Enrich ctx from HUD if some fields are missing (e.g. cache not ready)
+      if (ctx) {
+        if (!ctx.phase && detail) ctx.phase = /rising/i.test(detail) ? "Rising" : (/falling/i.test(detail) ? "Falling" : ctx.phase);
+        if ((!ctx.relation || ctx.relation==="") && summary) {
+          const nt = /high/i.test(summary) ? "HW" : (/low/i.test(summary) ? "LW" : "");
+          if (nt) ctx.relation = "Before " + nt;
+        }
+      }
 
 
-    async function saveCatch() {
+      // Fallback: parse HUD text if ctx is missing
+      if (!ctx && (summary || detail)) {
+        const rising = /rising/i.test(detail);
+        const falling = /falling/i.test(detail);
+        const m1 = detail.match(/in\s+(\d+)\s*h\s*(\d+)\s*m/i);
+        const m2 = detail.match(/in\s+(\d+)\s*m/i);
+        let minsTo = null;
+        if (m1) minsTo = (parseInt(m1[1],10)*60 + parseInt(m1[2],10));
+        else if (m2) minsTo = parseInt(m2[1],10);
+
+        // summary often like "6.9m High" / "1.2m Low"
+        let heightM = null, nextType = "";
+        const ms = summary.match(/([0-9]+(?:\.[0-9]+)?)\s*m/i);
+        if (ms) heightM = parseFloat(ms[1]);
+        if (/high/i.test(summary)) nextType = "High";
+        else if (/low/i.test(summary)) nextType = "Low";
+
+        ctx = {
+          source: "hud",
+          phase: rising ? "rising" : (falling ? "falling" : ""),
+          minsToNext: (minsTo !== null && Number.isFinite(minsTo)) ? minsTo : null,
+          nextType,
+          nextHeightM: (heightM !== null && Number.isFinite(heightM)) ? heightM : null,
+          summary,
+          detail
+        };
+      }
+
+      // Also provide a plain string snapshot for backwards compatibility
+      const tideStr = (envData.tide && String(envData.tide).trim()) ? String(envData.tide).trim()
+                    : (summary || detail ? [summary, detail].filter(Boolean).join(" — ") : "");
+
+      return { tideStr, tideCtx: ctx, tideHud: { summary, detail } };
+    }
+
+async function saveCatch() {
       const s = document.getElementById('sp').value.trim();
       if (!s) return notify("Enter Species");
 
@@ -1808,11 +2216,27 @@ function topN(mapObj, n=2){
       const photo = file ? await fileToCompressedDataUrl(file, 900, 0.72) : "";
 
       const nowMs = Date.now();
+      // Require a selected port/location (so tide/weather/flow/pressure can be captured)
+      const portVal = (document.getElementById('portList')?.value || "").toString().trim();
+      const hasPortSel = !!portVal;
+      const hasEnvPort = !!(envData && (envData.id || envData.portId) && String(envData.port||"").trim());
+
+      if (!hasPortSel || !hasEnvPort) {
+        try {
+          const msg = "Select a port/favourite (or pick from map) before saving a catch.";
+          if (typeof showToast === 'function') showToast(msg);
+          else if (typeof toast === 'function') toast(msg);
+          else alert(msg);
+        } catch(e){}
+        try { document.getElementById('portList')?.focus(); } catch(e){}
+        return;
+      }
       const activeSession = SessionEngine.ensureActive(getSessionMetaFromEnv());
       renderSessionBar();
 
             const moon = moonPhaseInfo(nowMs);
-      const tideCtx = tideContextFor(nowMs, envData.id || envData.portId || null);
+      const tideSnap = getCurrentTideSnapshot(nowMs);
+      const tideCtx = tideSnap.tideCtx;
 
       await addDoc(collection(db, "catches"), {
         userId: auth.currentUser.uid,
@@ -1835,7 +2259,8 @@ function topN(mapObj, n=2){
         weather: envData.weather || "",
         wind: envData.wind || "",
         gust: envData.gust || "",
-        tide: envData.tide || "",
+        tide: tideSnap.tideStr || "",
+        tideHud: tideSnap.tideHud || null,
         flow: envData.flow || "",
 
         sessionId: activeSession.id,
@@ -1856,6 +2281,315 @@ function topN(mapObj, n=2){
     }
 
     // ===== Wire UI =====
+
+      // My Intel drawer toggle
+      document.getElementById('myIntelToggleBtn').onclick = () => {
+        const d = document.getElementById('myIntelDrawer');
+        const open = d.style.display === 'block';
+        d.style.display = open ? 'none' : 'block';
+        document.getElementById('myIntelToggleBtn').textContent = open ? '🧠 My Intel' : '🧠 My Intel (Hide)';
+      };
+
+      // Catch Explorer toggle
+      document.getElementById('explorerToggleBtn').onclick = () => {
+        const b = document.getElementById('explorerBody');
+        const open = b.style.display === 'block';
+        b.style.display = open ? 'none' : 'block';
+        document.getElementById('explorerToggleBtn').textContent = open ? 'Show' : 'Hide';
+        if (!open) runExplorer(); // refresh when opened
+      };
+
+      function _timeBucket(ms){
+        const h = new Date(ms).getHours();
+        if (h >= 4 && h < 8) return 'dawn';
+        if (h >= 18 && h < 22) return 'dusk';
+        if (h >= 22 || h < 4) return 'night';
+        return 'day';
+      }
+      function _tideStageFromPct(p){
+        const n = Number(p);
+        if (!Number.isFinite(n)) return null;
+        if (n < 33) return 'early';
+        if (n < 67) return 'mid';
+        return 'late';
+      }
+      function _parseWindFromCatch(c){
+        const raw = ((c && (c.wind || c.windTxt || c.windText)) ? (c.wind || c.windTxt || c.windText) : '') + (c && c.gust ? (' ' + c.gust) : '');
+        const s = (raw || '').toString().trim().toUpperCase();
+        if (!s) return {dir16:null, dir8:null, speed:null};
+
+        // Direction token anywhere (no strict word-boundary to handle 'ENE,' etc.)
+        const dirMatch = s.match(/(NNE|ENE|ESE|SSE|SSW|WSW|WNW|NNW|NE|SE|SW|NW|N|E|S|W)/);
+        const dir16 = dirMatch ? dirMatch[1] : null;
+
+        // Map to 8-point for broad matching (ENE -> E, NNE -> NE, etc.)
+        const map8 = {
+          N:'N', NNE:'NE', NE:'NE', ENE:'E', E:'E', ESE:'E', SE:'SE', SSE:'S',
+          S:'S', SSW:'SW', SW:'SW', WSW:'W', W:'W', WNW:'W', NW:'NW', NNW:'N'
+        };
+        const dir8 = dir16 ? (map8[dir16] || dir16) : null;
+
+        // Speed parsing: mph or knots (convert knots->mph)
+        let speed = null;
+        const mph = s.match(/(\d+(?:\.\d+)?)\s*MPH/i);
+        if (mph) speed = Number(mph[1]);
+        if (!mph) {
+          const kn = s.match(/(\d+(?:\.\d+)?)\s*(KN|KTS)\b/i);
+          if (kn) {
+            const k = Number(kn[1]);
+            if (Number.isFinite(k)) speed = k * 1.15078;
+          }
+        }
+        return {dir16, dir8, speed: Number.isFinite(speed) ? speed : null};
+      }
+
+      function _withinRange(ms, rangeVal){
+        if (rangeVal === 'all') return true;
+        const days = Number(rangeVal);
+        if (!Number.isFinite(days)) return true;
+        return ms >= (Date.now() - days*86400000);
+      }
+
+      function _getCatchMs(c){
+        const v = c?.caughtAt ?? c?.timestamp ?? c?.createdAt ?? c?.ts ?? c?.when ?? c?.dateTime ?? null;
+        if (v === null || v === undefined) return null;
+
+        // Firestore Timestamp support
+        try {
+          if (typeof v?.toMillis === 'function') {
+            const ms = v.toMillis();
+            return Number.isFinite(ms) ? ms : null;
+          }
+          if (typeof v === 'object' && (v.seconds !== undefined || v._seconds !== undefined)) {
+            const sec = (v.seconds !== undefined) ? v.seconds : v._seconds;
+            const ms = Number(sec) * 1000;
+            return Number.isFinite(ms) ? ms : null;
+          }
+        } catch(e){}
+
+        if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+
+        if (typeof v === 'string') {
+          const s = v.trim();
+          if (!s) return null;
+          // numeric string
+          const n = Number(s);
+          if (Number.isFinite(n) && s.length >= 10) return n;
+          const p = Date.parse(s);
+          return Number.isFinite(p) ? p : null;
+        }
+
+        return null;
+      }
+
+
+      
+      function _fmtCond(c){
+        const parts = [];
+        if (c.time) parts.push(c.time);
+        if (c.wind) parts.push(c.wind);
+        if (c.tide) parts.push(c.tide);
+        return parts.filter(Boolean).join(" • ");
+      }
+
+      function computeBestConditions(allRows, scopePortId, scopePortName){
+        // Group by condition set. Score by avg weight primarily, then count.
+        const groups = new Map();
+
+        function keyFor(c){
+          const ms = _getCatchMs(c);
+          const time = _timeBucket(ms);
+          const w = _parseWindFromCatch(c);
+          const wind = w.dir16 || w.dir8 || null;
+          const phase = (c.tideCtx?.phase || "").toString().toLowerCase();
+          const stage = _tideStageFromPct(c.tideCtx?.progressPct);
+          const tide = (phase ? (phase === "rising" ? "flood" : (phase === "falling" ? "ebb" : phase)) : null) + (stage ? (" " + stage) : "");
+          return [time||"", wind||"", tide||""].join("|");
+        }
+
+        for (const c of allRows){
+          // port scope already applied before calling
+          const k = keyFor(c);
+          if (!groups.has(k)) groups.set(k, {n:0, w:0, sp:{}, example:c});
+          const g = groups.get(k);
+          g.n += 1;
+          g.w += (Number(c.wt)||0);
+          const sp = ((c.sp||"")+"").trim().toUpperCase() || "UNKNOWN";
+          g.sp[sp] = (g.sp[sp]||0)+1;
+        }
+
+        const arr = [];
+        for (const [k,g] of groups.entries()){
+          if (g.n < 2) continue; // avoid singletons
+          const [time, wind, tide] = k.split("|");
+          const avg = g.w / g.n;
+          const topSp = Object.entries(g.sp).sort((a,b)=>b[1]-a[1])[0];
+          arr.push({
+            time: time || null,
+            wind: wind || null,
+            tide: tide || null,
+            n: g.n,
+            totalW: g.w,
+            avgW: avg,
+            topSp: topSp ? `${topSp[0]} x${topSp[1]}` : ""
+          });
+        }
+
+        // Sort by avg weight then count then total weight
+        arr.sort((a,b)=> (b.avgW - a.avgW) || (b.n - a.n) || (b.totalW - a.totalW));
+        return arr.slice(0, 8);
+      }
+
+function runExplorer(){
+        const expRange = document.getElementById('expRange').value;
+        const expPort = document.getElementById('expPort').value;
+        const phase = document.getElementById('expTidePhase').value;
+        const stage = document.getElementById('expTideStage').value;
+        const wdir = document.getElementById('expWindDir').value;
+        const wminRaw = document.getElementById('expWindMin').value.trim();
+        const wmin = (wminRaw === '') ? null : Number(wminRaw);
+        const wmaxRaw = document.getElementById('expWindMax').value.trim();
+        const wmax = (wmaxRaw === '') ? null : Number(wmaxRaw);
+        const timeB = document.getElementById('expTime').value;
+
+        const reject = {ms:0, range:0, port:0, phaseMissing:0, phaseMismatch:0, stage:0, windDir:0, windMin:0, windMax:0, time:0};
+
+        const selectedPortId = (envData?.id || envData?.portId || '').toString();
+        const selectedPortName = (envData?.port || '').toString().trim().toLowerCase();
+        const all = (Array.isArray(catches) ? catches : []);
+        let parsedMsCount = 0;
+        let parsedWindCount = 0;
+        const rows = [];
+        for (const c of all) {
+          const ms = _getCatchMs(c);
+          if (ms !== null) parsedMsCount++;
+          if (!Number.isFinite(ms)) { reject.ms++; continue; }
+          if (!_withinRange(ms, expRange)) { reject.range++; continue; }
+
+          if (expPort === 'selected') {
+            const cid = (c.portId || c.idPort || c.stationId || '').toString();
+            const cl = (c.loc || '').toString().trim().toLowerCase();
+            if (selectedPortId && cid && cid === selectedPortId) {}
+            else if (selectedPortName && cl === selectedPortName) {}
+            else { reject.port++; continue; }
+          }
+
+          const ph = (c.tideCtx?.phase || '').toString().toLowerCase();
+          if (phase !== 'any') {
+            if (!ph) { reject.phaseMissing++; continue; }
+            if (ph !== phase) { reject.phaseMismatch++; continue; }
+          }
+
+          const st = _tideStageFromPct(c.tideCtx?.progressPct);
+          if (stage !== 'any' && st !== stage) { reject.stage++; continue; }
+
+          const w = _parseWindFromCatch(c);
+          if (w && (w.dir16 || w.dir8 || w.speed !== null)) parsedWindCount++;
+
+          if (wdir !== 'any') {
+            const want = wdir.toUpperCase();
+            const rawWind = ((c.wind||'') + ' ' + (c.gust||'')).toUpperCase();
+            const ok = (w.dir16 === want) || (w.dir8 === want) || rawWind.includes(want);
+            if (!ok) { reject.windDir++; continue; }
+          }
+
+          if (wmin !== null && Number.isFinite(wmin) && (w.speed === null || w.speed < wmin)) { reject.windMin++; continue; }
+          if (wmax !== null && Number.isFinite(wmax) && (w.speed === null || w.speed > wmax)) { reject.windMax++; continue; }
+
+          const tb = _timeBucket(ms);
+          if (timeB !== 'any' && tb !== timeB) { reject.time++; continue; }
+
+          rows.push(c);
+        }
+
+
+        // Summary
+        const total = rows.length;
+        const totalW = rows.reduce((s,c)=>s+(Number(c.wt)||0),0);
+        const avgW = total ? (totalW/total) : 0;
+
+        
+        // Best conditions insight: based on RANGE + PORT SCOPE only (ignores specific filters)
+        const scopeRows = (Array.isArray(catches) ? catches : []).filter(c => {
+          const ms = _getCatchMs(c);
+          if (!Number.isFinite(ms)) return false;
+          if (!_withinRange(ms, expRange)) return false;
+          if (expPort === 'selected') {
+            const cid = (c.portId || c.idPort || c.stationId || '').toString();
+            const cl = (c.loc || '').toString().trim().toLowerCase();
+            if (selectedPortId && cid && cid === selectedPortId) return true;
+            if (selectedPortName && cl === selectedPortName) return true;
+            return false;
+          }
+          return true;
+        });
+        const best = computeBestConditions(scopeRows, selectedPortId, selectedPortName);
+        const bestEl = document.getElementById('expBestConditions');
+        if (bestEl) {
+          bestEl.innerHTML = best.length ? best.map(b => {
+            const cond = _fmtCond(b);
+            return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);">
+                      <div style="max-width:70%;">
+                        <b>${escapeHtml(cond || "—")}</b>
+                        <div class="muted" style="font-size:.82rem; margin-top:2px;">${escapeHtml(b.topSp || "")}</div>
+                      </div>
+                      <div style="text-align:right;">
+                        <div>${b.n} catch${b.n===1?'':'es'}</div>
+                        <div class="muted" style="font-size:.82rem;">avg ${b.avgW.toFixed(1)}lb</div>
+                      </div>
+                    </div>`;
+          }).join('') : `<div class="muted">Not enough repeat data yet (need 2+ catches per condition set).</div>`;
+        }
+
+document.getElementById('expSummary').textContent =
+          total ? `${total} catch${total===1?'':'es'} match • Total ${totalW.toFixed(1)} lb • Avg ${avgW.toFixed(1)} lb`
+                : 'No catches match these filters.';
+
+        // Top ports
+        const byPort = {};
+        for (const c of rows){
+          const name = (c.loc || 'Unknown').toString();
+          if (!byPort[name]) byPort[name] = {n:0, w:0, sp:{}};
+          byPort[name].n += 1;
+          const sp = ((c.sp||'')+'').trim().toUpperCase() || 'UNKNOWN';
+          byPort[name].sp[sp] = (byPort[name].sp[sp]||0) + 1;
+          byPort[name].w += (Number(c.wt)||0);
+        }
+        const ports = Object.entries(byPort).sort((a,b)=> (b[1].n - a[1].n) || (b[1].w - a[1].w)).slice(0,7);
+        document.getElementById('expTopPorts').innerHTML = ports.length
+          ? ports.map(([k,v])=>{const topSp = Object.entries(v.sp||{}).sort((a,b)=>b[1]-a[1])[0]; const spTxt = topSp ? `${topSp[0]} x${topSp[1]}` : ''; return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);"><div><b>${escapeHtml(k)}</b><div class='muted' style='font-size:.82rem; margin-top:2px;'>${escapeHtml(spTxt)}</div></div><div>${v.n} • ${v.w.toFixed(1)}lb</div></div>`}).join('')
+          : `<div class="muted">—</div>`;
+
+        // Top times
+        const byTime = {};
+        for (const c of rows){
+          const ms = _getCatchMs(c);
+          if (ms !== null) parsedMsCount++;
+          const tb = _timeBucket(ms);
+          byTime[tb] = (byTime[tb] || 0) + 1;
+        }
+        const times = Object.entries(byTime).sort((a,b)=>b[1]-a[1]);
+        
+        // Top species (overall)
+        const bySp = {};
+        for (const c of rows){
+          const sp = ((c.sp||'')+'').trim().toUpperCase() || 'UNKNOWN';
+          bySp[sp] = (bySp[sp] || 0) + 1;
+        }
+        const sps = Object.entries(bySp).sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const spEl = document.getElementById('expTopSpecies');
+        if (spEl) {
+          spEl.innerHTML = sps.length
+            ? sps.map(([k,n])=>`<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);"><div><b>${escapeHtml(k)}</b></div><div>${n}</div></div>`).join('')
+            : `<div class="muted">—</div>`;
+        }
+
+document.getElementById('expTopTimes').innerHTML = times.length
+          ? times.map(([k,n])=>`<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);"><div><b>${k}</b></div><div>${n}</div></div>`).join('')
+          : `<div class="muted">—</div>`;
+      }
+
+      document.getElementById('expApplyBtn').onclick = runExplorer;
     function wireUI() {
       document.getElementById('loginBtn').onclick = async () => {
         try {
@@ -1870,7 +2604,15 @@ function topN(mapObj, n=2){
         }
       };
 
-      document.getElementById('logoutBtn').onclick = () => signOut(auth);
+      document.getElementById('logoutBtn').onclick = async () => {
+        if (unsubCatches) { try { unsubCatches(); } catch(e) {} unsubCatches = null; }
+        // clear local in-memory state to avoid UI trying to render protected data
+        catches = [];
+        renderCalendar();
+        renderDiary();
+        renderMyIntel();
+        await signOut(auth);
+      };
 
 
       // Intel range selector
@@ -2014,7 +2756,8 @@ document.getElementById('aboutBtn').onclick = () => {
         orderBy("timestamp", "desc")
       );
 
-      onSnapshot(
+      if (unsubCatches) { try { unsubCatches(); } catch(e) {} unsubCatches = null; }
+      unsubCatches = onSnapshot(
         qy,
         (snap) => {
           catches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -2036,6 +2779,7 @@ document.getElementById('aboutBtn').onclick = () => {
           renderMyIntel();
 },
         (err) => {
+          if (!auth.currentUser) return;
           console.error("Firestore listener error:", err);
           if (err?.code === "permission-denied") notify("Firestore blocked by rules (permission denied).");
           else notify("Firestore error: " + (err?.code || "unknown"));
@@ -2056,6 +2800,7 @@ document.getElementById('aboutBtn').onclick = () => {
           if (!currentUid) await initApp(user.uid);
         } else {
           currentUid = null;
+          if (unsubCatches) { try { unsubCatches(); } catch(e) {} unsubCatches = null; }
           document.getElementById('authScreen').style.display = 'flex';
           document.getElementById('mainApp').style.display = 'none';
         }
@@ -2064,51 +2809,454 @@ document.getElementById('aboutBtn').onclick = () => {
   </script>
 
 <script>
-/* ===== SOLUNAR / BITE WINDOW ===== */
-function getSolunarWindows(date, lat, lon) {
-  // Simplified solunar approximation:
-  // Major: moon overhead/underfoot
-  // Minor: moonrise/moonset
-  // We approximate using lunar age already calculated in app
-
-  if (!lat || !lon || isNaN(lat) || isNaN(lon)) return null;
-
+/* ===== SOLUNAR / BITE WINDOW (OFFLINE, LOCATION-AWARE) =====
+   Minor: Moonrise / Moonset (±45m)
+   Major: Upper / Lower transit (±60m)
+   Notes:
+   - Uses low/medium precision lunar position + standard rise/set scanning (SunCalc-style).
+   - Works offline; no external APIs.
+=========================================================== */
+(function () {
+  const rad = Math.PI / 180;
   const dayMs = 86400000;
-  const lunarDay = 24.84 * 60 * 60 * 1000;
+  const minMs = 60000;
 
-  const base = new Date(date);
-  base.setHours(0,0,0,0);
+  function toJulian(date) { return date.valueOf() / dayMs - 0.5 + 2440588; }
+  function fromJulian(j) { return new Date((j + 0.5 - 2440588) * dayMs); }
+  function toDays(date) { return toJulian(date) - 2451545; }
 
-  // Use stored moon age if available
-  const moonAge = window.currentMoonAgeDays ?? 0;
-  const ageFraction = moonAge / 29.53;
+  function rightAscension(l, b) {
+    const e = rad * 23.4397;
+    return Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
+  }
+  function declination(l, b) {
+    const e = rad * 23.4397;
+    return Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+  }
+  function siderealTime(d, lw) { return rad * (280.16 + 360.9856235 * d) - lw; }
 
-  const majorOffset = ageFraction * lunarDay;
-  const minorOffset = (ageFraction * lunarDay + lunarDay/2) % lunarDay;
+  // Low/medium precision Moon coordinates (good enough for solunar windows).
+  function moonCoords(d) {
+    const L = rad * (218.316 + 13.176396 * d);
+    const M = rad * (134.963 + 13.064993 * d);
+    const F = rad * (93.272 + 13.229350 * d);
 
-  const majorStart = new Date(base.getTime() + majorOffset - 60*60*1000);
-  const majorEnd   = new Date(base.getTime() + majorOffset + 60*60*1000);
+    const l = L + rad * 6.289 * Math.sin(M);   // longitude
+    const b = rad * 5.128 * Math.sin(F);       // latitude
 
-  const minorStart = new Date(base.getTime() + minorOffset - 45*60*1000);
-  const minorEnd   = new Date(base.getTime() + minorOffset + 45*60*1000);
+    return { ra: rightAscension(l, b), dec: declination(l, b) };
+  }
 
-  return { majorStart, majorEnd, minorStart, minorEnd };
-}
+  function altitude(H, phi, dec) {
+    return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+  }
+
+  function getMoonPosition(date, lat, lon) {
+    const lw = rad * -lon;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const c = moonCoords(d);
+
+    const H = siderealTime(d, lw) - c.ra;
+    const h = altitude(H, phi, c.dec);
+
+    // simple refraction correction
+    const hCorr = h + rad * 0.017 / Math.tan(h + rad * 10.26 / (h + rad * 5.10));
+    return { altitude: hCorr, hourAngle: H, dec: c.dec };
+  }
+
+  // Quadratic interpolation helpers (SunCalc-style)
+  function quadraticRoot(x0, x1, x2) {
+    const a = (x0 + x2) / 2 - x1;
+    const b = (x2 - x0) / 2;
+    const c = x1;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return null;
+    const dx = Math.sqrt(disc) / (Math.abs(2 * a) || 1e-12);
+    const r1 = -b / (2 * a) - dx;
+    const r2 = -b / (2 * a) + dx;
+    return [r1, r2].filter(r => r >= -1 && r <= 1);
+  }
+
+  function getMoonRiseSet(date, lat, lon) {
+    // scan in 2-hour steps (local time) to find rise/set crossings.
+    // h0: apparent moon radius + refraction (~0.133°) below horizon.
+    const h0 = rad * 0.133;
+
+    const t0 = new Date(date); t0.setHours(0,0,0,0);
+    let hc = getMoonPosition(t0, lat, lon).altitude - h0;
+
+    let rise = null, set = null;
+
+    for (let i = 1; i <= 24; i += 2) {
+      const t1 = new Date(t0.getTime() + i * 3600000);
+      const t2 = new Date(t0.getTime() + (i + 1) * 3600000);
+      const t3 = new Date(t0.getTime() + (i + 2) * 3600000);
+
+      const h1 = getMoonPosition(t1, lat, lon).altitude - h0;
+      const h2 = getMoonPosition(t2, lat, lon).altitude - h0;
+      const h3 = getMoonPosition(t3, lat, lon).altitude - h0;
+
+      // fit parabola through (0,h1) (1,h2) (2,h3) by shifting to x=-1,0,1
+      const a = (h1 + h3) / 2 - h2;
+      const b = (h3 - h1) / 2;
+      const c = h2;
+
+      const roots = quadraticRoot(h1, h2, h3);
+      if (roots && roots.length) {
+        for (const rt of roots) {
+          // rt is in [-1,1] for the centered parabola; map to hours offset from t2 (middle)
+          const time = new Date(t2.getTime() + rt * 3600000);
+          // determine rising/setting by slope sign
+          const deriv = 2 * a * rt + b;
+          if (deriv > 0 && !rise) rise = time;
+          if (deriv < 0 && !set) set = time;
+        }
+      }
+
+      if (rise && set) break;
+      hc = h3;
+    }
+
+    return { rise, set };
+  }
+
+  function getMoonTransits(date, lat, lon) {
+    // approximate upper/lower transit by scanning altitude over the day and finding max/min
+    const t0 = new Date(date); t0.setHours(0,0,0,0);
+    const stepMin = 10;
+    const steps = Math.round(24 * 60 / stepMin);
+
+    let maxAlt = -1e9, minAlt = 1e9;
+    let tMax = null, tMin = null;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = new Date(t0.getTime() + i * stepMin * minMs);
+      const alt = getMoonPosition(t, lat, lon).altitude;
+      if (alt > maxAlt) { maxAlt = alt; tMax = t; }
+      if (alt < minAlt) { minAlt = alt; tMin = t; }
+    }
+
+    // refine by local search around the best points (±30 min, 1-min steps)
+    function refine(center) {
+      if (!center) return center;
+      let bestT = center;
+      let bestAlt = getMoonPosition(center, lat, lon).altitude;
+      const cMs = center.getTime();
+      for (let j = -30; j <= 30; j++) {
+        const t = new Date(cMs + j * minMs);
+        const alt = getMoonPosition(t, lat, lon).altitude;
+        if (alt > bestAlt) { bestAlt = alt; bestT = t; }
+      }
+      return bestT;
+    }
+    function refineMin(center) {
+      if (!center) return center;
+      let bestT = center;
+      let bestAlt = getMoonPosition(center, lat, lon).altitude;
+      const cMs = center.getTime();
+      for (let j = -30; j <= 30; j++) {
+        const t = new Date(cMs + j * minMs);
+        const alt = getMoonPosition(t, lat, lon).altitude;
+        if (alt < bestAlt) { bestAlt = alt; bestT = t; }
+      }
+      return bestT;
+    }
+
+    return { upper: refine(tMax), lower: refineMin(tMin) };
+  }
+
+  function buildWindowsForDate(date, lat, lon) {
+    const t0 = new Date(date); t0.setHours(0,0,0,0);
+
+    const rs = getMoonRiseSet(t0, lat, lon);
+    const tr = getMoonTransits(t0, lat, lon);
+
+    const windows = [];
+
+    // Minor windows: ±45 min around rise/set (if available)
+    const minorHalf = 45 * minMs;
+    if (rs.rise) windows.push({ type: "Minor", start: new Date(rs.rise.getTime() - minorHalf), end: new Date(rs.rise.getTime() + minorHalf), kind: "rise" });
+    if (rs.set)  windows.push({ type: "Minor", start: new Date(rs.set.getTime()  - minorHalf), end: new Date(rs.set.getTime()  + minorHalf), kind: "set" });
+
+    // Major windows: ±60 min around upper/lower transit
+    const majorHalf = 60 * minMs;
+    if (tr.upper) windows.push({ type: "Major", start: new Date(tr.upper.getTime() - majorHalf), end: new Date(tr.upper.getTime() + majorHalf), kind: "upper" });
+    if (tr.lower) windows.push({ type: "Major", start: new Date(tr.lower.getTime() - majorHalf), end: new Date(tr.lower.getTime() + majorHalf), kind: "lower" });
+
+    windows.sort((a,b) => a.start - b.start);
+    return windows;
+  }
+
+  function fmtHM(d) {
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function parseMinutesFromTideSub(text) {
+    // expects patterns like "Rising — in 4h 14m" or "Falling — in 55m"
+    if (!text) return null;
+    const m = text.match(/in\s+(\d+)\s*h\s*(\d+)\s*m/i);
+    if (m) return (parseInt(m[1],10)*60 + parseInt(m[2],10));
+    const m2 = text.match(/in\s+(\d+)\s*m/i);
+    if (m2) return parseInt(m2[1],10);
+    return null;
+  }
+
+  function getStackSignals() {
+    // Tide turning soon: within 90 minutes of next high/low
+    const tideTxt = (document.getElementById("hTideD")?.textContent || "").trim();
+    const minsToTurn = parseMinutesFromTideSub(tideTxt);
+    const tideTurn = (minsToTurn !== null && minsToTurn <= 90);
+
+    // Flow "Feeding zone"
+    const flowTxt = (document.getElementById("hFlowD")?.textContent || "").toLowerCase();
+    const flowFeed = flowTxt.includes("feeding");
+
+    // Pressure stable or rising
+    const pressTxt = (document.getElementById("hPressD")?.textContent || "").toLowerCase();
+    const pressOk = pressTxt.includes("stable") || pressTxt.includes("rising");
+
+    const tags = [];
+    if (tideTurn) tags.push("Tide turn");
+    if (flowFeed) tags.push("Flow");
+    if (pressOk) tags.push("Pressure");
+
+    return { tideTurn, flowFeed, pressOk, tags };
+  }
+
+  function chooseNextWindow(now, windowsToday, windowsTomorrow) {
+    const all = [...windowsToday, ...windowsTomorrow];
+    // Determine if currently active
+    for (const w of all) {
+      if (now >= w.start && now <= w.end) return { ...w, state: "active" };
+    }
+    // Otherwise find next start
+    const upcoming = all.filter(w => w.start > now).sort((a,b)=>a.start-b.start)[0];
+    if (!upcoming) return null;
+    return { ...upcoming, state: "upcoming" };
+  }
+
+  
+/* ===== SOLUNAR (offline) =====
+   Minor windows: moonrise & moonset (approx)
+   Major windows: upper & lower transit (approx via altitude max/min sampling)
+   Based on simplified astronomical formulas (similar in spirit to SunCalc approach).
+*/
+(function(){
+  const rad = Math.PI / 180;
+  const dayMs = 86400000;
+  const J1970 = 2440588;
+  const J2000 = 2451545;
+
+  function toJulian(date){ return date.valueOf() / dayMs - 0.5 + J1970; }
+  function fromJulian(j){ return new Date((j + 0.5 - J1970) * dayMs); }
+  function toDays(date){ return toJulian(date) - J2000; }
+
+  function rightAscension(l, b){
+    const e = rad * 23.4397;
+    return Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l));
+  }
+  function declination(l, b){
+    const e = rad * 23.4397;
+    return Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l));
+  }
+  function azimuth(H, phi, dec){
+    return Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi));
+  }
+  function altitude(H, phi, dec){
+    return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+  }
+  function siderealTime(d, lw){ return rad * (280.16 + 360.9856235 * d) - lw; }
+
+  function moonCoords(d){
+    // Geocentric ecliptic coordinates of the Moon
+    const L = rad * (218.316 + 13.176396 * d);
+    const M = rad * (134.963 + 13.064993 * d);
+    const F = rad * (93.272  + 13.229350 * d);
+
+    const l = L + rad * 6.289 * Math.sin(M);          // longitude
+    const b = rad * 5.128 * Math.sin(F);              // latitude
+    const dt = 385001 - 20905 * Math.cos(M);          // distance to moon in km (not used)
+    return { ra: rightAscension(l, b), dec: declination(l, b), dist: dt };
+  }
+
+  function moonAltitude(date, lat, lon){
+    const lw = rad * -lon;
+    const phi = rad * lat;
+    const d = toDays(date);
+    const c = moonCoords(d);
+    const H = siderealTime(d, lw) - c.ra;
+    return altitude(H, phi, c.dec);
+  }
+
+  function getMoonTimes(date, lat, lon){
+    // returns approximate moonrise and moonset for the given date (local time of browser)
+    // sample every hour and use quadratic interpolation as in SunCalc.
+    const t = new Date(date);
+    t.setHours(0,0,0,0);
+
+    const hc = rad * 0.133; // moon apparent radius + refraction (~0.133 deg)
+
+    let rise = null, set = null;
+    let prev = moonAltitude(t, lat, lon) - hc;
+    for (let i=1; i<=24; i++){
+      const ti = new Date(t.getTime() + i*60*60*1000);
+      const cur = moonAltitude(ti, lat, lon) - hc;
+
+      // crossing between prev and cur
+      if (prev <= 0 && cur > 0 && !rise){
+        // refine in this hour
+        rise = refineCrossing(new Date(ti.getTime() - 60*60*1000), lat, lon, hc, true);
+      }
+      if (prev >= 0 && cur < 0 && !set){
+        set = refineCrossing(new Date(ti.getTime() - 60*60*1000), lat, lon, hc, false);
+      }
+      prev = cur;
+    }
+    return { rise, set };
+  }
+
+  function refineCrossing(startHour, lat, lon, hc, wantRise){
+    // binary search within the hour for altitude-hc crossing
+    let a = new Date(startHour);
+    let b = new Date(startHour.getTime() + 60*60*1000);
+    let fa = moonAltitude(a, lat, lon) - hc;
+    let fb = moonAltitude(b, lat, lon) - hc;
+    // ensure bracket; if not, return midpoint
+    for (let k=0; k<18; k++){
+      const mid = new Date((a.getTime()+b.getTime())/2);
+      const fm = moonAltitude(mid, lat, lon) - hc;
+      if ((fa <= 0 && fm > 0) || (fa >= 0 && fm < 0)){
+        b = mid; fb = fm;
+      } else {
+        a = mid; fa = fm;
+      }
+    }
+    return new Date((a.getTime()+b.getTime())/2);
+  }
+
+  function getTransits(date, lat, lon){
+    // approximate upper (max altitude) and lower (min altitude) transit by sampling
+    const base = new Date(date);
+    base.setHours(0,0,0,0);
+
+    const stepMin = 10; // 10-minute sampling
+    const steps = Math.floor(24*60/stepMin);
+    let maxA = -1e9, minA = 1e9;
+    let tMax = base, tMin = base;
+
+    for (let i=0;i<=steps;i++){
+      const ti = new Date(base.getTime() + i*stepMin*60000);
+      const alt = moonAltitude(ti, lat, lon);
+      if (alt > maxA){ maxA = alt; tMax = ti; }
+      if (alt < minA){ minA = alt; tMin = ti; }
+    }
+    // refine around max/min ±30 minutes
+    tMax = refineExtremum(tMax, lat, lon, true);
+    tMin = refineExtremum(tMin, lat, lon, false);
+    return { upper: tMax, lower: tMin };
+  }
+
+  function refineExtremum(guess, lat, lon, wantMax){
+    // golden-section-ish search in 1-hour window around guess
+    let a = new Date(guess.getTime() - 30*60000);
+    let b = new Date(guess.getTime() + 30*60000);
+    for (let k=0;k<16;k++){
+      const t1 = new Date(a.getTime() + (b.getTime()-a.getTime())*0.382);
+      const t2 = new Date(a.getTime() + (b.getTime()-a.getTime())*0.618);
+      const f1 = moonAltitude(t1, lat, lon);
+      const f2 = moonAltitude(t2, lat, lon);
+      if (wantMax ? (f1 < f2) : (f1 > f2)){
+        a = t1;
+      } else {
+        b = t2;
+      }
+    }
+    return new Date((a.getTime()+b.getTime())/2);
+  }
+
+  // Expose main function
+  window.getSolunarWindows = function(date, lat, lon){
+    try{
+      const d = new Date(date);
+      const mt = getMoonTimes(d, lat, lon);
+      const tr = getTransits(d, lat, lon);
+
+      const major1 = tr.upper;
+      const major2 = tr.lower;
+      const minor1 = mt.rise;
+      const minor2 = mt.set;
+
+      function w(start, mins){ return {start: start ? new Date(start) : null, end: start ? new Date(start.getTime() + mins*60000) : null}; }
+
+      const maj1 = w(major1, 120);
+      const maj2 = w(major2, 120);
+      const min1 = w(minor1, 60);
+      const min2 = w(minor2, 60);
+
+      return {
+        majorStart1: maj1.start, majorEnd1: maj1.end,
+        majorStart2: maj2.start, majorEnd2: maj2.end,
+        minorStart1: min1.start, minorEnd1: min1.end,
+        minorStart2: min2.start, minorEnd2: min2.end,
+      };
+    } catch(e){
+      console.warn("Solunar calc failed", e);
+      return null;
+    }
+  };
+})();
 
 function updateBiteCard() {
-  const primary = document.getElementById("hBite");
-  const secondary = document.getElementById("hBiteD");
+  const primary = document.getElementById("hBite") || document.getElementById("bitePrimary");
+  const secondary = document.getElementById("hBiteD") || document.getElementById("biteSecondary");
+  const biteTile = document.getElementById("hudBite");
 
   if (!primary || !secondary) return;
 
-  if (!window.currentLat || !window.currentLon) {
+  // Reset emphasis
+  if (biteTile) {
+    biteTile.classList.remove("is-active");
+    biteTile.classList.remove("is-hot");
+  }
+
+  // Location resolution (supports port dropdown, favourites, GPS, map)
+  const latCandidates = [window.currentLat, window.envData?.lat, (typeof envData !== 'undefined' ? envData.lat : undefined)];
+  const lonCandidates = [window.currentLon, window.envData?.lon, (typeof envData !== 'undefined' ? envData.lon : undefined)];
+
+  function firstNum(arr){
+    for (const v of arr) {
+      if (v === undefined || v === null) continue;
+      const n = Number(v);
+      if (!Number.isNaN(n)) return n;
+    }
+    return null;
+  }
+
+  let lat = firstNum(latCandidates);
+  let lon = firstNum(lonCandidates);
+
+  // Fallback to map center if available
+  try {
+    if ((lat === null || lon === null) && typeof map !== 'undefined' && map && map.getCenter) {
+      const c = map.getCenter();
+      if (lat === null) lat = c.lat;
+      if (lon === null) lon = c.lng;
+    }
+  } catch(e){}
+
+  if (lat === null || lon === null) {
     primary.textContent = "Location needed";
     secondary.textContent = "Enable GPS or select favourite";
     return;
   }
 
+  window.currentLat = lat;
+  window.currentLon = lon;
+
   const now = new Date();
-  const sol = getSolunarWindows(now, window.currentLat, window.currentLon);
+  const solFn = (typeof window.getSolunarWindows === 'function') ? window.getSolunarWindows : (typeof getSolunarWindows === 'function' ? getSolunarWindows : null);
+  const sol = solFn ? solFn(now, lat, lon) : null;
   if (!sol) {
     primary.textContent = "Unavailable";
     secondary.textContent = "";
@@ -2117,34 +3265,149 @@ function updateBiteCard() {
 
   function fmt(t){ return t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
 
-  let nextLabel = "";
-  let nextStart, nextEnd;
+  const windowsToday = [
+    {label:"Major", start: sol.majorStart1, end: sol.majorEnd1},
+    {label:"Major", start: sol.majorStart2, end: sol.majorEnd2},
+    {label:"Minor", start: sol.minorStart1, end: sol.minorEnd1},
+    {label:"Minor", start: sol.minorStart2, end: sol.minorEnd2},
+  ].filter(w => w.start && w.end).sort((a,b)=>a.start-b.start);
 
-  if (now < sol.majorEnd) {
-    nextLabel = "Major";
-    nextStart = sol.majorStart;
-    nextEnd = sol.majorEnd;
-  } else {
-    nextLabel = "Minor";
-    nextStart = sol.minorStart;
-    nextEnd = sol.minorEnd;
+  // Choose window: active > next today; if none, show next major tomorrow
+  let chosen = windowsToday.find(w => now >= w.start && now <= w.end);
+  let isActive = !!chosen;
+
+  if (!chosen) chosen = windowsToday.find(w => w.start > now);
+
+  let showingTomorrow = false;
+  if (!chosen) {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const sol2 = solFn ? solFn(tomorrow, lat, lon) : null;
+    if (sol2) {
+      const majorsTomorrow = [
+        {label:"Major", start: sol2.majorStart1, end: sol2.majorEnd1},
+        {label:"Major", start: sol2.majorStart2, end: sol2.majorEnd2},
+      ].filter(w => w.start && w.end).sort((a,b)=>a.start-b.start);
+      chosen = majorsTomorrow[0];
+      showingTomorrow = true;
+      isActive = false;
+    }
   }
 
-  const mins = Math.max(0, Math.round((nextStart - now)/60000));
+  if (!chosen) {
+    primary.textContent = "Unavailable";
+    secondary.textContent = "";
+    return;
+  }
 
-  if (now >= nextStart && now <= nextEnd) {
-    primary.textContent = nextLabel + " window active";
-    secondary.textContent = fmt(nextStart) + "–" + fmt(nextEnd);
+  // Primary line
+  if (isActive) {
+    primary.textContent = chosen.label + " active";
   } else {
-    primary.textContent = nextLabel + " in " + mins + " min";
-    secondary.textContent = fmt(nextStart) + "–" + fmt(nextEnd);
+    const mins = Math.max(0, Math.round((chosen.start - now)/60000));
+    primary.textContent = chosen.label + " in " + mins + " min";
+  }
+
+  // Stacked conditions (from other HUD cards)
+  function parseMinutesToTurn() {
+    const el = document.getElementById("hTideD") || document.getElementById("tideDetail");
+    const txt = (el && el.textContent) ? el.textContent : "";
+    const m1 = txt.match(/in\s+(\d+)\s*h\s*(\d+)\s*m/i);
+    if (m1) return (parseInt(m1[1],10)*60 + parseInt(m1[2],10));
+    const m2 = txt.match(/in\s+(\d+)\s*m/i);
+    if (m2) return parseInt(m2[1],10);
+    return null;
+  }
+
+  const stackLabels = [];
+  let stackCount = 0;
+
+  const minsToTurn = parseMinutesToTurn();
+  if (minsToTurn !== null && minsToTurn <= 90) { stackLabels.push("Tide turn"); stackCount++; }
+
+  const flowEl = document.getElementById("hFlowD") || document.getElementById("flowDetail");
+  const flowTxt = (flowEl && flowEl.textContent) ? flowEl.textContent.toLowerCase() : "";
+  if (flowTxt.includes("feeding zone")) { stackLabels.push("Flow"); stackCount++; }
+
+  const pEl = document.getElementById("hPressD") || document.getElementById("pressureDetail");
+  const pTxt = (pEl && pEl.textContent) ? pEl.textContent.toLowerCase() : "";
+  if (pTxt.includes("stable") || pTxt.includes("rising")) { stackLabels.push("Pressure"); stackCount++; }
+
+  // Trust stat: % of your catches here that occurred during solunar windows (in the currently selected intel range)
+  function getCatchTimeMs(c){
+    const v = c?.caughtAt ?? c?.timestamp ?? c?.createdAt;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function catchesAtCurrentSpot() {
+    try{
+      const portId = (envData?.id || envData?.portId || "").toString();
+      const portName = (envData?.port || "").trim().toLowerCase();
+      const at = (Array.isArray(catches) ? catches : []).filter(c => {
+        const cid = (c.portId || c.idPort || c.stationId || '').toString();
+        if (portId && cid && cid === portId) return true;
+        const cl = (c.loc || '').trim().toLowerCase();
+        return cl && portName && cl === portName;
+      });
+      if (typeof filterCatchesByIntelRange === "function") return filterCatchesByIntelRange(at);
+      return at;
+    }catch(e){ return []; }
+  }
+
+  function inAnyWindow(t, windows){
+    for (const w of windows){
+      if (!w?.start || !w?.end) continue;
+      if (t >= w.start && t <= w.end) return true;
+    }
+    return false;
+  }
+
+  let trustTxt = "";
+  try{
+    const relevant = catchesAtCurrentSpot().map(c => getCatchTimeMs(c)).filter(v => v !== null);
+    if (relevant.length >= 5) {
+      let inCount = 0;
+      for (const ms of relevant) {
+        const dt = new Date(ms);
+        const solC = solFn ? solFn(dt, lat, lon) : null;
+        if (!solC) continue;
+        const ws = [
+          {start: solC.majorStart1, end: solC.majorEnd1},
+          {start: solC.majorStart2, end: solC.majorEnd2},
+          {start: solC.minorStart1, end: solC.minorEnd1},
+          {start: solC.minorStart2, end: solC.minorEnd2},
+        ];
+        if (inAnyWindow(dt, ws)) inCount++;
+      }
+      const pct = Math.round((inCount / relevant.length) * 100);
+      trustTxt = ` • ${pct}% of catches in solunar`;
+    }
+  } catch(e){ /* ignore */ }
+
+  const baseSecondary = fmt(chosen.start) + "–" + fmt(chosen.end) + (showingTomorrow ? " (tomorrow)" : "");
+  if (stackCount > 0) {
+    const hot = (isActive && stackCount >= 2) ? " 🔥 " : " ";
+    secondary.textContent = baseSecondary + trustTxt + " •" + hot + stackLabels.join(" + ") + " (" + stackCount + "/3)";
+  } else {
+    secondary.textContent = baseSecondary + trustTxt;
+  }
+
+  // Visual emphasis when active
+  if (biteTile && isActive) {
+    biteTile.classList.add("is-active");
+    if (stackCount >= 2) biteTile.classList.add("is-hot");
   }
 }
 
-// hook into existing refresh cycle
-setInterval(updateBiteCard, 60000);
-document.addEventListener("DOMContentLoaded", updateBiteCard);
+  // Refresh once a minute, and also when app updates location/cards.
+  window.updateBiteCard = updateBiteCard;
+  try { updateBiteCard(); } catch(e) {}
+  document.addEventListener("DOMContentLoaded", () => { try { updateBiteCard(); } catch(e) {} });
+  setInterval(updateBiteCard, 60000);
+})();
 </script>
+
 
 </body>
 </html>
